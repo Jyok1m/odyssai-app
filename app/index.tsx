@@ -1,6 +1,7 @@
 import { StyleSheet } from "react-native";
 import { Text, View, Button } from "@/components/Themed";
 import { useRouter } from "expo-router";
+import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import React from "react";
 
 export default function LandingScreen() {
@@ -13,9 +14,10 @@ export default function LandingScreen() {
 	return (
 		<View style={styles.container}>
 			<View style={styles.welcomeSection}>
+				<MaterialCommunityIcons name="book-open-variant" size={80} color="#9a8c98" style={styles.icon} />
 				<Text style={styles.welcomeTitle}>Welcome to</Text>
 				<Text style={styles.appTitle}>Odyssai</Text>
-				<Text style={styles.subtitle}>Your intelligent RPG assistant</Text>
+				<Text style={styles.subtitle}>Your AI-powered RPG storyteller</Text>
 			</View>
 
 			<View style={styles.buttonSection}>
@@ -37,6 +39,9 @@ const styles = StyleSheet.create({
 		flex: 1,
 		alignItems: "center",
 		justifyContent: "center",
+	},
+	icon: {
+		marginBottom: 24,
 	},
 	welcomeTitle: {
 		fontSize: 28,
