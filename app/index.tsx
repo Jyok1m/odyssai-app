@@ -8,7 +8,7 @@ export default function LandingScreen() {
 	const router = useRouter();
 
 	const handleStartJourney = () => {
-		router.push("/(tabs)");
+		router.push("/chat");
 	};
 
 	return (

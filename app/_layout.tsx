@@ -48,7 +48,7 @@ function RootLayoutNav() {
 		<ThemeProvider value={DarkTheme}>
 			<Stack>
 				<Stack.Screen name="index" options={{ headerShown: false }} />
-				<Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+				<Stack.Screen name="chat" options={{ headerShown: false }} />
 				<Stack.Screen name="modal" options={{ presentation: "modal" }} />
 			</Stack>
 		</ThemeProvider>
