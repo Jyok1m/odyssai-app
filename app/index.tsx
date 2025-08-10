@@ -1,11 +1,26 @@
 import { StyleSheet } from "react-native";
-import { Text, View } from "@/components/Themed";
+import { Text, View, Button } from "@/components/Themed";
+import { useRouter } from "expo-router";
 import React from "react";
 
 export default function LandingScreen() {
+	const router = useRouter();
+
+	const handleStartJourney = () => {
+		router.push("/(tabs)");
+	};
+
 	return (
 		<View style={styles.container}>
-			<Text style={styles.title}>Landing Screen</Text>
+			<View style={styles.welcomeSection}>
+				<Text style={styles.welcomeTitle}>Welcome to</Text>
+				<Text style={styles.appTitle}>Odyssai</Text>
+				<Text style={styles.subtitle}>Your intelligent RPG assistant</Text>
+			</View>
+
+			<View style={styles.buttonSection}>
+				<Button title="Start the Journey" onPress={handleStartJourney} style={styles.startButton} />
+			</View>
 		</View>
 	);
 }
@@ -14,11 +29,48 @@ const styles = StyleSheet.create({
 	container: {
 		flex: 1,
 		alignItems: "center",
+		justifyContent: "space-between",
+		paddingVertical: 60,
+		paddingHorizontal: 24,
+	},
+	welcomeSection: {
+		flex: 1,
+		alignItems: "center",
 		justifyContent: "center",
+	},
+	welcomeTitle: {
+		fontSize: 28,
+		fontWeight: "300",
+		marginBottom: 8,
+		opacity: 0.8,
+	},
+	appTitle: {
+		fontSize: 48,
+		fontWeight: "bold",
+		marginBottom: 16,
+		letterSpacing: 2,
+	},
+	subtitle: {
+		fontSize: 18,
+		fontWeight: "300",
+		textAlign: "center",
+		opacity: 0.7,
+		lineHeight: 24,
+	},
+	buttonSection: {
+		width: "100%",
+		alignItems: "center",
+	},
+	startButton: {
+		width: "80%",
+		maxWidth: 300,
+		paddingVertical: 16,
+		borderRadius: 12,
 	},
 	title: {
 		fontSize: 20,
 		fontWeight: "bold",
+		marginBottom: 40,
 	},
 	debug: {
 		fontSize: 14,
