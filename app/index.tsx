@@ -1,4 +1,5 @@
-import { StyleSheet, Text, View } from "react-native";
+import { StyleSheet } from "react-native";
+import { Text, View } from "@/components/Themed";
 import React from "react";
 
 export default function LandingScreen() {
@@ -18,6 +19,10 @@ const styles = StyleSheet.create({
 	title: {
 		fontSize: 20,
 		fontWeight: "bold",
+	},
+	debug: {
+		fontSize: 14,
+		marginTop: 10,
 	},
 	separator: {
 		marginVertical: 30,
