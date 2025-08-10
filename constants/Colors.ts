@@ -1,19 +1,29 @@
-const tintColorLight = '#2f95dc';
-const tintColorDark = '#fff';
+const tintColorLight = "#4a4e69";
+const tintColorDark = "#9a8c98";
 
 export default {
-  light: {
-    text: '#000',
-    background: '#fff',
-    tint: tintColorLight,
-    tabIconDefault: '#ccc',
-    tabIconSelected: tintColorLight,
-  },
-  dark: {
-    text: '#fff',
-    background: '#000',
-    tint: tintColorDark,
-    tabIconDefault: '#ccc',
-    tabIconSelected: tintColorDark,
-  },
+	light: {
+		text: "#22223b",
+		background: "#f2e9e4",
+		tint: tintColorLight,
+		tabIconDefault: "#9a8c98",
+		tabIconSelected: tintColorLight,
+		card: "#c9ada7",
+		border: "#9a8c98",
+		primary: "#4a4e69",
+		secondary: "#c9ada7",
+		accent: "#9a8c98",
+	},
+	dark: {
+		text: "#f2e9e4",
+		background: "#22223b",
+		tint: tintColorDark,
+		tabIconDefault: "#9a8c98",
+		tabIconSelected: tintColorDark,
+		card: "#4a4e69",
+		border: "#9a8c98",
+		primary: "#9a8c98",
+		secondary: "#c9ada7",
+		accent: "#c9ada7",
+	},
 };
