@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { StyleSheet, FlatList, KeyboardAvoidingView, Platform } from "react-native";
 import { SafeAreaView, View, Text, TextInput, Pressable } from "@/components/Themed";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
@@ -9,8 +9,18 @@ import { AIThinkingAdvanced } from "../components/AIThinkingAdvanced";
 export default function ChatScreen() {
 	const [message, setMessage] = useState("");
 	const [showResetModal, setShowResetModal] = useState(false);
+	const flatListRef = useRef<FlatList>(null);
 	const { messages, isLoading } = useAppSelector((state) => state.messages);
 	const { sendMessage, resetChat } = useChatActions();
+
+	// Scroll automatiquement vers le dernier message
+	useEffect(() => {
+		if (messages.length > 0 && flatListRef.current) {
+			setTimeout(() => {
+				flatListRef.current?.scrollToEnd({ animated: true });
+			}, 100);
+		}
+	}, [messages.length, isLoading]);
 
 	// Debug messages
 	// console.log("Current messages:", messages);
@@ -64,6 +74,7 @@ export default function ChatScreen() {
 			{/* Messages Panel */}
 			<View style={styles.messagesPanel}>
 				<FlatList
+					ref={flatListRef}
 					data={messages}
 					renderItem={renderMessage}
 					keyExtractor={(item) => item.id}
