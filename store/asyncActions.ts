@@ -12,13 +12,14 @@ type ConversationState = {
 };
 
 // Fonction pour déterminer le prochain message basé sur l'état et la réponse de l'utilisateur
-const getNextMessage = (userMessage: string, currentState: ConversationState): { message: string; newState: ConversationState } => {
+const getNextMessage = (userMessage: string, currentState: ConversationState): { message: string; stepType: string; newState: ConversationState } => {
 	const lowerMessage = userMessage.toLowerCase().trim();
 
 	switch (currentState.step) {
 		case "welcome":
 			return {
 				message: "Do you want to create a new world? Respond by typing 'yes' or 'no'.",
+				stepType: "ask_new_world",
 				newState: { ...currentState, step: "ask_new_world" },
 			};
 
@@ -26,16 +27,19 @@ const getNextMessage = (userMessage: string, currentState: ConversationState): {
 			if (lowerMessage === "yes" || lowerMessage === "y") {
 				return {
 					message: "How would you like to name your world?",
+					stepType: "world_name",
 					newState: { ...currentState, step: "ask_world_name", createNewWorld: true },
 				};
 			} else if (lowerMessage === "no" || lowerMessage === "n") {
 				return {
 					message: "Which existing world would you like to enter?",
+					stepType: "world_name",
 					newState: { ...currentState, step: "ask_world_name", createNewWorld: false },
 				};
 			} else {
 				return {
 					message: "Please respond with 'yes' or 'no'. Do you want to create a new world?",
+					stepType: "ask_new_world",
 					newState: currentState,
 				};
 			}
@@ -46,6 +50,7 @@ const getNextMessage = (userMessage: string, currentState: ConversationState): {
 					message: currentState.createNewWorld
 						? "Describe the world's main genre. Give as much detail as you would like."
 						: "Do you want to play as a new character? Respond by typing 'yes' or 'no'.",
+					stepType: currentState.createNewWorld ? "world_genre" : "ask_new_character",
 					newState: {
 						...currentState,
 						step: currentState.createNewWorld ? "ask_world_genre" : "ask_new_character",
@@ -57,6 +62,7 @@ const getNextMessage = (userMessage: string, currentState: ConversationState): {
 					message: currentState.createNewWorld
 						? "Please provide a name for your new world."
 						: "Please provide the name of the world you want to enter.",
+					stepType: "world_name",
 					newState: currentState,
 				};
 			}
@@ -64,18 +70,21 @@ const getNextMessage = (userMessage: string, currentState: ConversationState): {
 		case "ask_world_genre":
 			return {
 				message: "Are there particular themes or narrative threads you'd like to explore? Let your imagination guide the story's soul.",
+				stepType: "story_directives",
 				newState: { ...currentState, step: "ask_story_directives" },
 			};
 
 		case "ask_story_directives":
 			return {
 				message: "I am generating the data for your new world. This may take a few moments, please be patient...",
+				stepType: "generating_world",
 				newState: { ...currentState, step: "generating_world" },
 			};
 
 		case "generating_world":
 			return {
 				message: "Do you want to play as a new character? Respond by typing 'yes' or 'no'.",
+				stepType: "ask_new_character",
 				newState: { ...currentState, step: "ask_new_character" },
 			};
 
@@ -83,16 +92,19 @@ const getNextMessage = (userMessage: string, currentState: ConversationState): {
 			if (lowerMessage === "yes" || lowerMessage === "y") {
 				return {
 					message: "How would you like to name your character?",
+					stepType: "character_name",
 					newState: { ...currentState, step: "ask_character_name", createNewCharacter: true },
 				};
 			} else if (lowerMessage === "no" || lowerMessage === "n") {
 				return {
 					message: "What is the name of the character you want to play as?",
+					stepType: "character_name",
 					newState: { ...currentState, step: "ask_character_name", createNewCharacter: false },
 				};
 			} else {
 				return {
 					message: "Please respond with 'yes' or 'no'. Do you want to play as a new character?",
+					stepType: "ask_new_character",
 					newState: currentState,
 				};
 			}
@@ -103,6 +115,7 @@ const getNextMessage = (userMessage: string, currentState: ConversationState): {
 					message: currentState.createNewCharacter
 						? "What is your character's gender?"
 						: "I am now imagining an additional layer of depth to the lore. This may take a few moments, please be patient...",
+					stepType: currentState.createNewCharacter ? "character_gender" : "generating_lore",
 					newState: {
 						...currentState,
 						step: currentState.createNewCharacter ? "ask_character_gender" : "generating_lore",
@@ -114,6 +127,7 @@ const getNextMessage = (userMessage: string, currentState: ConversationState): {
 					message: currentState.createNewCharacter
 						? "Please provide a name for your new character."
 						: "Please provide the name of the character you want to play as.",
+					stepType: "character_name",
 					newState: currentState,
 				};
 			}
@@ -121,36 +135,42 @@ const getNextMessage = (userMessage: string, currentState: ConversationState): {
 		case "ask_character_gender":
 			return {
 				message: "What is your character's description?",
+				stepType: "character_description",
 				newState: { ...currentState, step: "ask_character_description" },
 			};
 
 		case "ask_character_description":
 			return {
 				message: "I am generating your character data. This may take a few moments, please be patient...",
+				stepType: "generating_character",
 				newState: { ...currentState, step: "generating_character" },
 			};
 
 		case "generating_character":
 			return {
 				message: "I am now imagining an additional layer of depth to the lore. This may take a few moments, please be patient...",
+				stepType: "generating_lore",
 				newState: { ...currentState, step: "generating_lore" },
 			};
 
 		case "generating_lore":
 			return {
 				message: "I am now summarizing your story. This may take a few moments, please be patient...",
+				stepType: "generating_summary",
 				newState: { ...currentState, step: "generating_summary" },
 			};
 
 		case "generating_summary":
 			return {
 				message: "What do you want to do?",
+				stepType: "gameplay",
 				newState: { ...currentState, step: "gameplay" },
 			};
 
 		case "gameplay":
 			return {
 				message: "Do you wish to continue? Respond by typing 'yes' or 'no'.",
+				stepType: "ask_continue",
 				newState: { ...currentState, step: "ask_continue" },
 			};
 
@@ -158,11 +178,13 @@ const getNextMessage = (userMessage: string, currentState: ConversationState): {
 			if (lowerMessage === "yes" || lowerMessage === "y") {
 				return {
 					message: "What do you want to do?",
+					stepType: "gameplay",
 					newState: { ...currentState, step: "gameplay" },
 				};
 			} else {
 				return {
 					message: "Thank you for playing Odyssai! Feel free to start a new adventure anytime.",
+					stepType: "ended",
 					newState: { step: "ended" },
 				};
 			}
@@ -170,6 +192,7 @@ const getNextMessage = (userMessage: string, currentState: ConversationState): {
 		default:
 			return {
 				message: "Welcome to Odyssai. Start by answering a few questions and let's get started!",
+				stepType: "welcome",
 				newState: { step: "welcome" },
 			};
 	}
@@ -227,10 +250,11 @@ export const sendMessageToAI = createAsyncThunk("messages/sendMessageToAI", asyn
 	}
 
 	// Obtenir le prochain message basé sur l'entrée utilisateur et l'état actuel
-	const { message } = getNextMessage(userMessage, currentState);
+	const { message, stepType } = getNextMessage(userMessage, currentState);
 
 	const aiMessage: Message = {
 		id: `ai_${Date.now()}`,
+		step_type: stepType,
 		text: message,
 		isUser: false,
 		timestamp: getCurrentTimestamp(),
@@ -243,6 +267,7 @@ export const sendMessageToAI = createAsyncThunk("messages/sendMessageToAI", asyn
 export const resetConversation = createAsyncThunk("messages/resetConversation", async (_, { dispatch }) => {
 	const welcomeMessage: Message = {
 		id: "welcome_" + Date.now(),
+		step_type: "welcome",
 		text: "Welcome to Odyssai. Start by answering a few questions and let's get started!",
 		isUser: false,
 		timestamp: getCurrentTimestamp(),
@@ -255,6 +280,7 @@ export const resetConversation = createAsyncThunk("messages/resetConversation", 
 export const resetCompleteStore = createAsyncThunk("messages/resetCompleteStore", async (_, { dispatch }) => {
 	const welcomeMessage: Message = {
 		id: "welcome_" + Date.now(),
+		step_type: "welcome",
 		text: "Welcome to Odyssai. Start by answering a few questions and let's get started!",
 		isUser: false,
 		timestamp: getCurrentTimestamp(),

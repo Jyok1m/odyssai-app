@@ -7,12 +7,14 @@ const initialState: MessagesState = {
 	messages: [
 		{
 			id: "1",
+			step_type: "welcome",
 			text: "Welcome to Odyssai. Start by answering a few questions and let's get started!",
 			isUser: false,
 			timestamp: getCurrentTimestamp(),
 		},
 		{
 			id: "2",
+			step_type: "ask_new_world",
 			text: "Do you want to create a new world? Respond by typing 'yes' or 'no'.",
 			isUser: false,
 			timestamp: getCurrentTimestamp(),
@@ -54,12 +56,14 @@ const messagesSlice = createSlice({
 			// Reset to initial state with welcome message and first question
 			const welcomeMessage: Message = {
 				id: "welcome_" + Date.now(),
+				step_type: "welcome",
 				text: "Welcome to Odyssai. Start by answering a few questions and let's get started!",
 				isUser: false,
 				timestamp: getCurrentTimestamp(),
 			};
 			const firstQuestion: Message = {
 				id: "question_" + Date.now(),
+				step_type: "ask_new_world",
 				text: "Do you want to create a new world? Respond by typing 'yes' or 'no'.",
 				isUser: false,
 				timestamp: getCurrentTimestamp(),
@@ -88,6 +92,7 @@ const messagesSlice = createSlice({
 			.addCase(resetConversation.fulfilled, (state, action) => {
 				const firstQuestion: Message = {
 					id: "question_" + Date.now(),
+					step_type: "ask_new_world",
 					text: "Do you want to create a new world? Respond by typing 'yes' or 'no'.",
 					isUser: false,
 					timestamp: getCurrentTimestamp(),
@@ -99,6 +104,7 @@ const messagesSlice = createSlice({
 			.addCase(resetCompleteStore.fulfilled, (state, action) => {
 				const firstQuestion: Message = {
 					id: "question_" + Date.now(),
+					step_type: "ask_new_world",
 					text: "Do you want to create a new world? Respond by typing 'yes' or 'no'.",
 					isUser: false,
 					timestamp: getCurrentTimestamp(),
