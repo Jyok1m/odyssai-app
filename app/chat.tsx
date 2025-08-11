@@ -2,35 +2,28 @@ import React, { useState } from "react";
 import { StyleSheet, FlatList, KeyboardAvoidingView, Platform } from "react-native";
 import { SafeAreaView, View, Text, TextInput, Pressable } from "@/components/Themed";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
-
-interface Message {
-	id: string;
-	text: string;
-	isUser: boolean;
-	timestamp: Date;
-}
+import { useAppDispatch, useAppSelector, addMessage, sendMessageToAI, Message } from "../store";
+import { formatTimestamp, getCurrentTimestamp } from "../store/utils";
 
 export default function ChatScreen() {
 	const [message, setMessage] = useState("");
-	const [messages, setMessages] = useState<Message[]>([
-		{
-			id: "1",
-			text: "Welcome to Odyssai! I'm your intelligent RPG assistant. How can I help you create your adventure today?",
-			isUser: false,
-			timestamp: new Date(),
-		},
-	]);
+	const dispatch = useAppDispatch();
+	const { messages, isLoading } = useAppSelector((state) => state.messages);
 
 	const handleSend = () => {
 		if (message.trim()) {
-			// Pour l'instant, juste ajouter le message à la liste
+			// Ajouter le message de l'utilisateur à Redux store
 			const newMessage: Message = {
 				id: Date.now().toString(),
 				text: message,
 				isUser: true,
-				timestamp: new Date(),
+				timestamp: getCurrentTimestamp(),
 			};
-			setMessages((prev) => [...prev, newMessage]);
+			dispatch(addMessage(newMessage));
+
+			// Déclencher une réponse de l'IA (simulation)
+			dispatch(sendMessageToAI(message));
+
 			setMessage("");
 		}
 	};
@@ -43,7 +36,7 @@ export default function ChatScreen() {
 	const renderMessage = ({ item }: { item: Message }) => (
 		<View style={[styles.messageContainer, item.isUser ? styles.userMessage : styles.botMessage]}>
 			<Text style={[styles.messageText, item.isUser ? styles.userMessageText : styles.botMessageText]}>{item.text}</Text>
-			<Text style={styles.timestamp}>{item.timestamp.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</Text>
+			<Text style={styles.timestamp}>{formatTimestamp(item.timestamp)}</Text>
 		</View>
 	);
 
@@ -65,6 +58,12 @@ export default function ChatScreen() {
 					contentContainerStyle={styles.messagesContent}
 					showsVerticalScrollIndicator={false}
 				/>
+				{/* Indicateur de chargement */}
+				{isLoading && (
+					<View style={styles.loadingIndicator}>
+						<Text style={styles.loadingText}>L'IA réfléchit...</Text>
+					</View>
+				)}
 			</View>
 
 			{/* Input Section */}
@@ -190,5 +189,15 @@ const styles = StyleSheet.create({
 	},
 	recordButton: {
 		backgroundColor: "#c9ada7",
+	},
+	loadingIndicator: {
+		paddingHorizontal: 16,
+		paddingVertical: 8,
+		alignItems: "center",
+	},
+	loadingText: {
+		color: "#9a8c98",
+		fontSize: 14,
+		fontStyle: "italic",
 	},
 });

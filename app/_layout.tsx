@@ -4,6 +4,7 @@ import { useFonts } from "expo-font";
 import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { useEffect } from "react";
+import { ReduxProvider } from "../store";
 import "react-native-reanimated";
 
 export {
@@ -45,12 +46,14 @@ export default function RootLayout() {
 
 function RootLayoutNav() {
 	return (
-		<ThemeProvider value={DarkTheme}>
-			<Stack>
-				<Stack.Screen name="index" options={{ headerShown: false }} />
-				<Stack.Screen name="chat" options={{ headerShown: false }} />
-				<Stack.Screen name="modal" options={{ presentation: "modal" }} />
-			</Stack>
-		</ThemeProvider>
+		<ReduxProvider>
+			<ThemeProvider value={DarkTheme}>
+				<Stack>
+					<Stack.Screen name="index" options={{ headerShown: false }} />
+					<Stack.Screen name="chat" options={{ headerShown: false }} />
+					<Stack.Screen name="modal" options={{ presentation: "modal" }} />
+				</Stack>
+			</ThemeProvider>
+		</ReduxProvider>
 	);
 }
