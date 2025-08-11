@@ -1,10 +1,15 @@
+// Export principal du store
 export { store, persistor } from "./store";
 export type { RootState, AppDispatch } from "./store";
-export { useAppDispatch, useAppSelector } from "./hooks";
+
+// Export des hooks et utilitaires
+export { useAppDispatch, useAppSelector, formatTimestamp, getCurrentTimestamp } from "./messagesSlice";
+
+// Export des actions et composants
 export { useChatActions } from "./useChatActions";
+export { ReduxProvider } from "./ReduxProvider";
 export * from "./messagesSlice";
 export * from "./asyncActions";
-export * from "./selectors";
-export * from "./utils";
-export { ReduxProvider } from "./ReduxProvider";
+
+// Export des types
 export type { Message, MessagesState } from "./types";

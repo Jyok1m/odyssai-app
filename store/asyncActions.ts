@@ -1,6 +1,6 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
 import { Message } from "./types";
-import { getCurrentTimestamp } from "./utils";
+import { getCurrentTimestamp } from "./messagesSlice";
 
 // Types pour gérer l'état de la conversation
 type ConversationState = {
@@ -9,6 +9,158 @@ type ConversationState = {
 	worldName?: string;
 	createNewCharacter?: boolean;
 	characterName?: string;
+};
+
+// Types pour les appels API
+type ApiRequestData = {
+	stepType: string;
+	userMessage: string;
+	conversationState: ConversationState;
+	allMessages: Message[];
+};
+
+// Fonction pour faire les appels API à l'IA selon l'étape de la conversation
+const fetchAIResponse = async (requestData: ApiRequestData): Promise<string | null> => {
+	const { stepType, userMessage, conversationState, allMessages } = requestData;
+
+	// URL de base de votre API (à adapter selon votre configuration)
+	const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || "http://localhost:8000";
+
+	try {
+		// Selon l'étape, on appelle différents endpoints
+		switch (stepType) {
+			case "generating_world":
+				// Appel pour générer les données du monde
+				const worldResponse = await fetch(`${API_BASE_URL}/api/generate-world`, {
+					method: "POST",
+					headers: {
+						"Content-Type": "application/json",
+					},
+					body: JSON.stringify({
+						world_name: conversationState.worldName,
+						user_input: userMessage,
+						create_new_world: conversationState.createNewWorld,
+					}),
+				});
+
+				if (!worldResponse.ok) {
+					throw new Error("Failed to generate world data");
+				}
+
+				const worldData = await worldResponse.json();
+				return worldData.message || "World data generated successfully! Do you want to play as a new character? Respond by typing 'yes' or 'no'.";
+
+			case "generating_character":
+				// Appel pour générer les données du personnage
+				const characterResponse = await fetch(`${API_BASE_URL}/api/generate-character`, {
+					method: "POST",
+					headers: {
+						"Content-Type": "application/json",
+					},
+					body: JSON.stringify({
+						character_name: conversationState.characterName,
+						world_name: conversationState.worldName,
+						user_input: userMessage,
+						create_new_character: conversationState.createNewCharacter,
+					}),
+				});
+
+				if (!characterResponse.ok) {
+					throw new Error("Failed to generate character data");
+				}
+
+				const characterData = await characterResponse.json();
+				return (
+					characterData.message ||
+					"Character data generated successfully! I am now imagining an additional layer of depth to the lore. This may take a few moments, please be patient..."
+				);
+
+			case "generating_lore":
+				// Appel pour générer le lore
+				const loreResponse = await fetch(`${API_BASE_URL}/api/generate-lore`, {
+					method: "POST",
+					headers: {
+						"Content-Type": "application/json",
+					},
+					body: JSON.stringify({
+						world_name: conversationState.worldName,
+						character_name: conversationState.characterName,
+						conversation_history: allMessages,
+					}),
+				});
+
+				if (!loreResponse.ok) {
+					throw new Error("Failed to generate lore");
+				}
+
+				const loreData = await loreResponse.json();
+				return loreData.message || "Lore generated successfully! I am now summarizing your story. This may take a few moments, please be patient...";
+
+			case "generating_summary":
+				// Appel pour générer le résumé
+				const summaryResponse = await fetch(`${API_BASE_URL}/api/generate-summary`, {
+					method: "POST",
+					headers: {
+						"Content-Type": "application/json",
+					},
+					body: JSON.stringify({
+						world_name: conversationState.worldName,
+						character_name: conversationState.characterName,
+						conversation_history: allMessages,
+					}),
+				});
+
+				if (!summaryResponse.ok) {
+					throw new Error("Failed to generate summary");
+				}
+
+				const summaryData = await summaryResponse.json();
+				return summaryData.message || "What do you want to do?";
+
+			case "gameplay":
+				// Appel pour la génération de gameplay
+				const gameplayResponse = await fetch(`${API_BASE_URL}/api/gameplay-action`, {
+					method: "POST",
+					headers: {
+						"Content-Type": "application/json",
+					},
+					body: JSON.stringify({
+						world_name: conversationState.worldName,
+						character_name: conversationState.characterName,
+						player_action: userMessage,
+						conversation_history: allMessages,
+					}),
+				});
+
+				if (!gameplayResponse.ok) {
+					throw new Error("Failed to process gameplay action");
+				}
+
+				const gameplayData = await gameplayResponse.json();
+				return gameplayData.message || "Do you wish to continue? Respond by typing 'yes' or 'no'.";
+
+			default:
+				// Pour les autres étapes, pas d'appel API nécessaire
+				return null;
+		}
+	} catch (error) {
+		console.error("API call failed:", error);
+		// En cas d'erreur, retourner un message par défaut
+		switch (stepType) {
+			case "generating_world":
+				return "I encountered an issue generating your world. Let's continue anyway. Do you want to play as a new character? Respond by typing 'yes' or 'no'.";
+			case "generating_character":
+				return "I encountered an issue generating your character. Let's continue anyway. I am now imagining an additional layer of depth to the lore. This may take a few moments, please be patient...";
+			case "generating_lore":
+				return "I encountered an issue generating the lore. Let's continue anyway. I am now summarizing your story. This may take a few moments, please be patient...";
+			case "generating_summary":
+				return "I encountered an issue generating the summary. Let's start the adventure anyway. What do you want to do?";
+			case "gameplay":
+				return "I encountered an issue processing your action. Do you wish to continue? Respond by typing 'yes' or 'no'.";
+			default:
+				return null;
+		}
+	}
 };
 
 // Fonction pour déterminer le prochain message basé sur l'état et la réponse de l'utilisateur
@@ -200,9 +352,6 @@ const getNextMessage = (userMessage: string, currentState: ConversationState): {
 
 // Action asynchrone pour simuler une réponse de l'IA
 export const sendMessageToAI = createAsyncThunk("messages/sendMessageToAI", async (userMessage: string, { dispatch, getState }) => {
-	// Simuler un délai de réponse de l'IA
-	await new Promise((resolve) => setTimeout(resolve, 1500 + Math.random() * 1000));
-
 	// Récupérer l'état actuel de la conversation depuis le store
 	const state = getState() as any;
 	const messages = state.messages.messages;
@@ -252,10 +401,35 @@ export const sendMessageToAI = createAsyncThunk("messages/sendMessageToAI", asyn
 	// Obtenir le prochain message basé sur l'entrée utilisateur et l'état actuel
 	const { message, stepType } = getNextMessage(userMessage, currentState);
 
+	// Vérifier si on a besoin de faire un appel API pour cette étape
+	const apiSteps = ["generating_world", "generating_character", "generating_lore", "generating_summary", "gameplay"];
+	let finalMessage = message;
+
+	if (apiSteps.includes(stepType)) {
+		// Simuler un délai de réponse plus long pour les étapes de génération
+		await new Promise((resolve) => setTimeout(resolve, 2000 + Math.random() * 1000));
+
+		// Faire l'appel API
+		const apiResponse = await fetchAIResponse({
+			stepType,
+			userMessage,
+			conversationState: currentState,
+			allMessages: messages,
+		});
+
+		// Si l'API retourne une réponse, l'utiliser, sinon garder le message par défaut
+		if (apiResponse) {
+			finalMessage = apiResponse;
+		}
+	} else {
+		// Pour les autres étapes, simuler un délai court
+		await new Promise((resolve) => setTimeout(resolve, 1500 + Math.random() * 1000));
+	}
+
 	const aiMessage: Message = {
 		id: `ai_${Date.now()}`,
 		step_type: stepType,
-		text: message,
+		text: finalMessage,
 		isUser: false,
 		timestamp: getCurrentTimestamp(),
 	};

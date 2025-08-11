@@ -3,7 +3,7 @@ import { StyleSheet, FlatList, KeyboardAvoidingView, Platform } from "react-nati
 import { SafeAreaView, View, Text, TextInput, Pressable } from "@/components/Themed";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import { useAppSelector, useChatActions, Message } from "../store";
-import { formatTimestamp } from "../store/utils";
+import { formatTimestamp } from "../store/messagesSlice";
 import { ResetModal } from "../components/ResetModal";
 import { AIThinkingAdvanced } from "../components/AIThinkingAdvanced";
 
