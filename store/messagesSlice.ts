@@ -11,6 +11,12 @@ const initialState: MessagesState = {
 			isUser: false,
 			timestamp: getCurrentTimestamp(),
 		},
+		{
+			id: "2",
+			text: "Do you want to create a new world? Respond by typing 'yes' or 'no'.",
+			isUser: false,
+			timestamp: getCurrentTimestamp(),
+		},
 	],
 	isLoading: false,
 	error: null,
@@ -45,14 +51,20 @@ const messagesSlice = createSlice({
 			state.messages = state.messages.filter((msg) => msg.id !== action.payload);
 		},
 		resetStore: (state) => {
-			// Reset to initial state with a new welcome message
+			// Reset to initial state with welcome message and first question
 			const welcomeMessage: Message = {
 				id: "welcome_" + Date.now(),
 				text: "Welcome to Odyssai. Start by answering a few questions and let's get started!",
 				isUser: false,
 				timestamp: getCurrentTimestamp(),
 			};
-			state.messages = [welcomeMessage];
+			const firstQuestion: Message = {
+				id: "question_" + Date.now(),
+				text: "Do you want to create a new world? Respond by typing 'yes' or 'no'.",
+				isUser: false,
+				timestamp: getCurrentTimestamp(),
+			};
+			state.messages = [welcomeMessage, firstQuestion];
 			state.isLoading = false;
 			state.error = null;
 		},
@@ -74,12 +86,24 @@ const messagesSlice = createSlice({
 			})
 			// Handle resetConversation
 			.addCase(resetConversation.fulfilled, (state, action) => {
-				state.messages = [action.payload];
+				const firstQuestion: Message = {
+					id: "question_" + Date.now(),
+					text: "Do you want to create a new world? Respond by typing 'yes' or 'no'.",
+					isUser: false,
+					timestamp: getCurrentTimestamp(),
+				};
+				state.messages = [action.payload, firstQuestion];
 				state.error = null;
 			})
 			// Handle resetCompleteStore
 			.addCase(resetCompleteStore.fulfilled, (state, action) => {
-				state.messages = [action.payload];
+				const firstQuestion: Message = {
+					id: "question_" + Date.now(),
+					text: "Do you want to create a new world? Respond by typing 'yes' or 'no'.",
+					isUser: false,
+					timestamp: getCurrentTimestamp(),
+				};
+				state.messages = [action.payload, firstQuestion];
 				state.isLoading = false;
 				state.error = null;
 			});
