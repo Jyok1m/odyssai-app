@@ -11,14 +11,14 @@ interface ResetModalProps {
 
 export const ResetModal: React.FC<ResetModalProps> = ({ visible, onClose, onConfirm }) => {
 	const handleConfirm = () => {
-		Alert.alert("Confirmer la suppression", "Êtes-vous sûr de vouloir supprimer toute la conversation ? Cette action est irréversible.", [
+		Alert.alert("Confirm Reset", "Are you sure you want to delete the entire conversation? This action cannot be undone.", [
 			{
-				text: "Annuler",
+				text: "Cancel",
 				style: "cancel",
 				onPress: onClose,
 			},
 			{
-				text: "Supprimer",
+				text: "Reset",
 				style: "destructive",
 				onPress: () => {
 					onConfirm();
@@ -34,26 +34,26 @@ export const ResetModal: React.FC<ResetModalProps> = ({ visible, onClose, onConf
 				<View style={styles.modalContainer}>
 					<View style={styles.modalHeader}>
 						<MaterialCommunityIcons name="delete-sweep" size={24} color="#e74c3c" />
-						<Text style={styles.modalTitle}>Réinitialiser la conversation</Text>
+						<Text style={styles.modalTitle}>Reset Conversation</Text>
 					</View>
 
 					<Text style={styles.modalText}>
-						Cette action supprimera définitivement tous les messages de la conversation actuelle et recommencera une nouvelle session avec Odyssai.
+						This action will permanently delete all messages from the current conversation and start a new session with Odyssai.
 					</Text>
 
 					<View style={styles.warningBox}>
 						<MaterialCommunityIcons name="alert" size={16} color="#f39c12" />
-						<Text style={styles.warningText}>Cette action est irréversible</Text>
+						<Text style={styles.warningText}>This action cannot be undone</Text>
 					</View>
 
 					<View style={styles.buttonContainer}>
 						<Pressable style={[styles.button, styles.cancelButton]} onPress={onClose}>
-							<Text style={styles.cancelButtonText}>Annuler</Text>
+							<Text style={styles.cancelButtonText}>Cancel</Text>
 						</Pressable>
 
 						<Pressable style={[styles.button, styles.confirmButton]} onPress={handleConfirm}>
 							<MaterialCommunityIcons name="delete" size={18} color="#f2e9e4" />
-							<Text style={styles.confirmButtonText}>Réinitialiser</Text>
+							<Text style={styles.confirmButtonText}>Reset</Text>
 						</Pressable>
 					</View>
 				</View>

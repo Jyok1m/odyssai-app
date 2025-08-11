@@ -12,6 +12,9 @@ export default function ChatScreen() {
 	const { messages, isLoading } = useAppSelector((state) => state.messages);
 	const { sendMessage, resetChat } = useChatActions();
 
+	// Debug messages
+	// console.log("Current messages:", messages);
+
 	const handleSend = () => {
 		if (message.trim()) {
 			sendMessage(message);
@@ -20,7 +23,7 @@ export default function ChatScreen() {
 	};
 
 	const handleRecord = () => {
-		// Placeholder pour l'enregistrement audio
+		// Placeholder for audio recording
 		console.log("Recording audio...");
 	};
 
@@ -66,10 +69,10 @@ export default function ChatScreen() {
 					contentContainerStyle={styles.messagesContent}
 					showsVerticalScrollIndicator={false}
 				/>
-				{/* Indicateur de chargement */}
+				{/* Loading Indicator */}
 				{isLoading && (
 					<View style={styles.loadingIndicator}>
-						<Text style={styles.loadingText}>L'IA réfléchit...</Text>
+						<Text style={styles.loadingText}>AI is thinking...</Text>
 					</View>
 				)}
 			</View>
