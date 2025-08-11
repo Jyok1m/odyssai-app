@@ -13,7 +13,7 @@ export default function ChatScreen() {
 	const { sendMessage, resetChat } = useChatActions();
 
 	// Debug messages
-	console.log("Current messages:", messages);
+	// console.log("Current messages:", messages);
 
 	const handleSend = () => {
 		if (message.trim()) {
