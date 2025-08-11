@@ -9,11 +9,20 @@ export const sendMessageToAI = createAsyncThunk("messages/sendMessageToAI", asyn
 
 	// Simuler une réponse de l'IA (à remplacer par l'appel API réel)
 	const aiResponses = [
-		"That's an interesting idea for your RPG adventure! Tell me more about the setting.",
-		"I can help you develop that character concept. What's their background?",
-		"For that scenario, you might want to consider adding some plot twists...",
-		"Let's work on the world-building for your campaign. What kind of atmosphere are you going for?",
-		"That's a great hook for your story! How do you want the players to discover this?",
+		"Do you want to create a new world? Respond by typing 'yes' or 'no'.",
+		"How would you like to name your world?",
+		"Describe the world's main genre. Give as much detail as you would like.",
+		"Are there particular themes or narrative threads you'd like to explore? Let your imagination guide the story's soul.",
+		"Do you want to play as a new character? Respond by typing 'yes' or 'no'.",
+		"How would you like to name your character?",
+		"What is your character's gender?",
+		"What is your character's description?",
+		"I am generating the data for your new world. This may take a few moments, please be patient...",
+		"I am generating your character data. This may take a few moments, please be patient...",
+		"I am now imagining an additional layer of depth to the lore. This may take a few moments, please be patient...",
+		"I am now summarizing your story. This may take a few moments, please be patient...",
+		"What do you want to do?",
+		"Do you wish to continue? Respond by typing 'yes' or 'no'.",
 	];
 
 	const randomResponse = aiResponses[Math.floor(Math.random() * aiResponses.length)];
@@ -32,7 +41,7 @@ export const sendMessageToAI = createAsyncThunk("messages/sendMessageToAI", asyn
 export const resetConversation = createAsyncThunk("messages/resetConversation", async (_, { dispatch }) => {
 	const welcomeMessage: Message = {
 		id: "welcome_" + Date.now(),
-		text: "Welcome to Odyssai! I'm your intelligent RPG assistant. How can I help you create your adventure today?",
+		text: "Welcome to Odyssai. Start by answering a few questions and let's get started!",
 		isUser: false,
 		timestamp: getCurrentTimestamp(),
 	};
@@ -44,7 +53,7 @@ export const resetConversation = createAsyncThunk("messages/resetConversation", 
 export const resetCompleteStore = createAsyncThunk("messages/resetCompleteStore", async (_, { dispatch }) => {
 	const welcomeMessage: Message = {
 		id: "welcome_" + Date.now(),
-		text: "Welcome to Odyssai! I'm your intelligent RPG assistant. How can I help you create your adventure today?",
+		text: "Welcome to Odyssai. Start by answering a few questions and let's get started!",
 		isUser: false,
 		timestamp: getCurrentTimestamp(),
 	};

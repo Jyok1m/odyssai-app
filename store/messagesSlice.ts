@@ -7,7 +7,7 @@ const initialState: MessagesState = {
 	messages: [
 		{
 			id: "1",
-			text: "Welcome to Odyssai! I'm your intelligent RPG assistant. How can I help you create your adventure today?",
+			text: "Welcome to Odyssai. Start by answering a few questions and let's get started!",
 			isUser: false,
 			timestamp: getCurrentTimestamp(),
 		},
@@ -48,7 +48,7 @@ const messagesSlice = createSlice({
 			// Reset to initial state with a new welcome message
 			const welcomeMessage: Message = {
 				id: "welcome_" + Date.now(),
-				text: "Welcome to Odyssai! I'm your intelligent RPG assistant. How can I help you create your adventure today?",
+				text: "Welcome to Odyssai. Start by answering a few questions and let's get started!",
 				isUser: false,
 				timestamp: getCurrentTimestamp(),
 			};
