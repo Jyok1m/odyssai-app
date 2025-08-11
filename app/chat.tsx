@@ -5,6 +5,7 @@ import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import { useAppSelector, useChatActions, Message } from "../store";
 import { formatTimestamp } from "../store/utils";
 import { ResetModal } from "../components/ResetModal";
+import { AIThinkingAdvanced } from "../components/AIThinkingAdvanced";
 
 export default function ChatScreen() {
 	const [message, setMessage] = useState("");
@@ -72,7 +73,7 @@ export default function ChatScreen() {
 				{/* Loading Indicator */}
 				{isLoading && (
 					<View style={styles.loadingIndicator}>
-						<Text style={styles.loadingText}>AI is thinking...</Text>
+						<AIThinkingAdvanced />
 					</View>
 				)}
 			</View>
@@ -223,10 +224,5 @@ const styles = StyleSheet.create({
 		paddingHorizontal: 16,
 		paddingVertical: 8,
 		alignItems: "center",
-	},
-	loadingText: {
-		color: "#9a8c98",
-		fontSize: 14,
-		fontStyle: "italic",
 	},
 });

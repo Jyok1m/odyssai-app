@@ -5,7 +5,7 @@ import { getCurrentTimestamp } from "./utils";
 // Action asynchrone pour simuler une réponse de l'IA
 export const sendMessageToAI = createAsyncThunk("messages/sendMessageToAI", async (userMessage: string, { dispatch, getState }) => {
 	// Simuler un délai de réponse de l'IA
-	await new Promise((resolve) => setTimeout(resolve, 1000 + Math.random() * 2000));
+	await new Promise((resolve) => setTimeout(resolve, 3000 + Math.random() * 2000));
 
 	// Simuler une réponse de l'IA (à remplacer par l'appel API réel)
 	const aiResponses = [
