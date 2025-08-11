@@ -39,3 +39,15 @@ export const resetConversation = createAsyncThunk("messages/resetConversation", 
 
 	return welcomeMessage;
 });
+
+// Action pour reset complet du store
+export const resetCompleteStore = createAsyncThunk("messages/resetCompleteStore", async (_, { dispatch }) => {
+	const welcomeMessage: Message = {
+		id: "welcome_" + Date.now(),
+		text: "Welcome to Odyssai! I'm your intelligent RPG assistant. How can I help you create your adventure today?",
+		isUser: false,
+		timestamp: getCurrentTimestamp(),
+	};
+
+	return welcomeMessage;
+});

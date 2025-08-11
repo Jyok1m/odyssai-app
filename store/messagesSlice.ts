@@ -1,6 +1,6 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { Message, MessagesState } from "./types";
-import { sendMessageToAI, resetConversation } from "./asyncActions";
+import { sendMessageToAI, resetConversation, resetCompleteStore } from "./asyncActions";
 import { getCurrentTimestamp } from "./utils";
 
 const initialState: MessagesState = {
@@ -44,6 +44,18 @@ const messagesSlice = createSlice({
 		deleteMessage: (state, action: PayloadAction<string>) => {
 			state.messages = state.messages.filter((msg) => msg.id !== action.payload);
 		},
+		resetStore: (state) => {
+			// Reset to initial state with a new welcome message
+			const welcomeMessage: Message = {
+				id: "welcome_" + Date.now(),
+				text: "Welcome to Odyssai! I'm your intelligent RPG assistant. How can I help you create your adventure today?",
+				isUser: false,
+				timestamp: getCurrentTimestamp(),
+			};
+			state.messages = [welcomeMessage];
+			state.isLoading = false;
+			state.error = null;
+		},
 	},
 	extraReducers: (builder) => {
 		builder
@@ -64,10 +76,16 @@ const messagesSlice = createSlice({
 			.addCase(resetConversation.fulfilled, (state, action) => {
 				state.messages = [action.payload];
 				state.error = null;
+			})
+			// Handle resetCompleteStore
+			.addCase(resetCompleteStore.fulfilled, (state, action) => {
+				state.messages = [action.payload];
+				state.isLoading = false;
+				state.error = null;
 			});
 	},
 });
 
-export const { addMessage, setMessages, clearMessages, setLoading, setError, updateMessage, deleteMessage } = messagesSlice.actions;
+export const { addMessage, setMessages, clearMessages, setLoading, setError, updateMessage, deleteMessage, resetStore } = messagesSlice.actions;
 
 export default messagesSlice.reducer;

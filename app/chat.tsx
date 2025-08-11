@@ -2,28 +2,19 @@ import React, { useState } from "react";
 import { StyleSheet, FlatList, KeyboardAvoidingView, Platform } from "react-native";
 import { SafeAreaView, View, Text, TextInput, Pressable } from "@/components/Themed";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
-import { useAppDispatch, useAppSelector, addMessage, sendMessageToAI, Message } from "../store";
-import { formatTimestamp, getCurrentTimestamp } from "../store/utils";
+import { useAppSelector, useChatActions, Message } from "../store";
+import { formatTimestamp } from "../store/utils";
+import { ResetModal } from "../components/ResetModal";
 
 export default function ChatScreen() {
 	const [message, setMessage] = useState("");
-	const dispatch = useAppDispatch();
+	const [showResetModal, setShowResetModal] = useState(false);
 	const { messages, isLoading } = useAppSelector((state) => state.messages);
+	const { sendMessage, resetChat } = useChatActions();
 
 	const handleSend = () => {
 		if (message.trim()) {
-			// Ajouter le message de l'utilisateur à Redux store
-			const newMessage: Message = {
-				id: Date.now().toString(),
-				text: message,
-				isUser: true,
-				timestamp: getCurrentTimestamp(),
-			};
-			dispatch(addMessage(newMessage));
-
-			// Déclencher une réponse de l'IA (simulation)
-			dispatch(sendMessageToAI(message));
-
+			sendMessage(message);
 			setMessage("");
 		}
 	};
@@ -31,6 +22,18 @@ export default function ChatScreen() {
 	const handleRecord = () => {
 		// Placeholder pour l'enregistrement audio
 		console.log("Recording audio...");
+	};
+
+	const handleReset = () => {
+		resetChat();
+	};
+
+	const handleOpenResetModal = () => {
+		setShowResetModal(true);
+	};
+
+	const handleCloseResetModal = () => {
+		setShowResetModal(false);
 	};
 
 	const renderMessage = ({ item }: { item: Message }) => (
@@ -44,8 +47,13 @@ export default function ChatScreen() {
 		<SafeAreaView style={styles.container}>
 			{/* Header */}
 			<View style={styles.header}>
-				<MaterialCommunityIcons name="robot" size={24} color="#9a8c98" />
-				<Text style={styles.headerTitle}>Odyssai Assistant</Text>
+				<View style={styles.headerLeft}>
+					<MaterialCommunityIcons name="robot" size={24} color="#9a8c98" />
+					<Text style={styles.headerTitle}>Odyssai Assistant</Text>
+				</View>
+				<Pressable style={styles.resetButton} onPress={handleOpenResetModal}>
+					<MaterialCommunityIcons name="delete-sweep" size={20} color="#e74c3c" />
+				</Pressable>
 			</View>
 
 			{/* Messages Panel */}
@@ -88,6 +96,9 @@ export default function ChatScreen() {
 					</View>
 				</View>
 			</KeyboardAvoidingView>
+
+			{/* Reset Modal */}
+			<ResetModal visible={showResetModal} onClose={handleCloseResetModal} onConfirm={handleReset} />
 		</SafeAreaView>
 	);
 }
@@ -99,15 +110,30 @@ const styles = StyleSheet.create({
 	header: {
 		flexDirection: "row",
 		alignItems: "center",
+		justifyContent: "space-between",
 		paddingHorizontal: 20,
 		paddingVertical: 16,
 		borderBottomWidth: 1,
 		borderBottomColor: "#4a4e69",
 	},
+	headerLeft: {
+		flexDirection: "row",
+		alignItems: "center",
+	},
 	headerTitle: {
 		fontSize: 18,
 		fontWeight: "600",
 		marginLeft: 12,
+	},
+	resetButton: {
+		width: 40,
+		height: 40,
+		borderRadius: 20,
+		alignItems: "center",
+		justifyContent: "center",
+		backgroundColor: "transparent",
+		borderWidth: 1,
+		borderColor: "#e74c3c",
 	},
 	messagesPanel: {
 		flex: 1,
