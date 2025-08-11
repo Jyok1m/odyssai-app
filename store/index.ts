@@ -3,7 +3,8 @@ export { store, persistor } from "./store";
 export type { RootState, AppDispatch } from "./store";
 
 // Export des hooks et utilitaires
-export { useAppDispatch, useAppSelector, formatTimestamp, getCurrentTimestamp } from "./messagesSlice";
+export { useAppDispatch, useAppSelector } from "./messagesSlice";
+export { formatTimestamp, getCurrentTimestamp } from "./utils";
 
 // Export des actions et composants
 export { useChatActions } from "./useChatActions";

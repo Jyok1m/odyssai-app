@@ -1,6 +1,6 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
 import { Message } from "./types";
-import { getCurrentTimestamp } from "./messagesSlice";
+import { getCurrentTimestamp } from "./utils";
 
 // Types pour gérer l'état de la conversation
 type ConversationState = {

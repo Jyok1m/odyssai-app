@@ -2,21 +2,7 @@ import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { useDispatch, useSelector, TypedUseSelectorHook } from "react-redux";
 import { Message, MessagesState } from "./types";
 import { sendMessageToAI, resetConversation, resetCompleteStore } from "./asyncActions";
-
-// Utilitaires pour gérer les timestamps
-export const formatTimestamp = (timestamp: string): string => {
-	try {
-		const date = new Date(timestamp);
-		return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-	} catch (error) {
-		console.warn("Invalid timestamp format:", timestamp);
-		return "00:00";
-	}
-};
-
-export const getCurrentTimestamp = (): string => {
-	return new Date().toISOString();
-};
+import { formatTimestamp, getCurrentTimestamp } from "./utils";
 
 // Types Redux
 export type RootState = {
