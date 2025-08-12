@@ -22,14 +22,10 @@ export default function ChatScreen() {
 		}
 	}, [messages.length, isLoading]);
 
-	// Debug messages
-	// console.log("Current messages:", messages);
-
 	const handleSend = () => {
 		if (message.trim()) {
-			const messageType = messages.length > 0 ? messages[messages.length - 1].step_type : "user_message";
-
-			sendMessage(message, messageType);
+			const currentStep = messages.length > 0 ? messages[messages.length - 1].currentStep : "user_message";
+			sendMessage(message, currentStep);
 			setMessage("");
 		}
 	};

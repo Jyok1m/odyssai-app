@@ -3,7 +3,7 @@ import { getCurrentTimestamp } from "./utils";
 
 const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || "http://localhost:8000";
 
-// Appel API simplifié
+// Appel API
 const fetchAIResponse = async (endpoint: string, data: any): Promise<string> => {
 	try {
 		const response = await fetch(`${API_BASE_URL}/api/${endpoint}`, {
@@ -23,38 +23,77 @@ const fetchAIResponse = async (endpoint: string, data: any): Promise<string> => 
 };
 
 // Action principale pour envoyer un message
-export const sendMessageToAI = createAsyncThunk("messages/sendMessageToAI", async (userMessage: string, { getState }) => {
+export const sendMessageToAI = createAsyncThunk("messages/sendMessageToAI", async (text: string, { getState }) => {
 	const state = getState() as any;
 	const messages = state.messages.messages;
+	// let currentStep = msg_type ?? "response";
+
+	const prevAIQuestions = messages.filter((msg: any) => !msg.isUser);
+	const lastAIQuestion = prevAIQuestions[prevAIQuestions.length - 1];
+	const { currentStep, text: aiText } = lastAIQuestion;
+	const userAnswer = text.toString().toLowerCase().trim();
+
+	// console.log({ currentStep, aiText, userAnswer });
 
 	// Délai simulé
-	await new Promise((resolve) => setTimeout(resolve, 1000 + Math.random() * 1000));
+	await new Promise((resolve) => setTimeout(resolve, 3000 + Math.random() * 1000));
+
+	// console.log("Current messages:", messages);
 
 	// Réponse simple basée sur le message
-	let response = "I understand. What would you like to do next?";
+	let nextResponse = aiText; // Defaults
+	let nextStep = currentStep; // Defaults
 
-	// Si le message contient certains mots-clés, faire un appel API
-	if (userMessage.toLowerCase().includes("world")) {
-		response = await fetchAIResponse("generate-world", {
-			user_input: userMessage,
-			conversation_history: messages,
-		});
-	} else if (userMessage.toLowerCase().includes("character")) {
-		response = await fetchAIResponse("generate-character", {
-			user_input: userMessage,
-			conversation_history: messages,
-		});
-	} else if (userMessage.toLowerCase().includes("play") || userMessage.toLowerCase().includes("action")) {
-		response = await fetchAIResponse("gameplay-action", {
-			player_action: userMessage,
-			conversation_history: messages,
-		});
+	if (currentStep === "ask_new_world") {
+		nextStep = "world_name";
+		if (userAnswer === "yes") {
+			nextResponse = "Great! Let's create a new world. How would you like to name your world?";
+		} else if (userAnswer === "no") {
+			nextResponse = "Alright! Which world would you like to join?";
+		} else {
+			nextStep = currentStep;
+		}
 	}
+
+	// if (currentStep === "ask_new_world")
+	// 	// if (msg_type === "ask_new_world" && ["yes", "ye", "y"].includes(text.toString().toLowerCase().trim())) {
+	// 	// 	response = "Great! Let's create a new world.";
+	// 	// 	currentStep = "create_world";
+	// 	// } else {
+	// 	// 	response = "Do you want to create a new world? Respond by typing 'yes' or 'no'.";
+	// 	// 	currentStep = "ask_new_world";
+	// 	// }
+
+	// 	// Si le message contient certains mots-clés, faire un appel API
+	// 	// if (userMessage.toLowerCase().includes("world")) {
+	// 	// 	response = await fetchAIResponse("generate-world", {
+	// 	// 		user_input: userMessage,
+	// 	// 		conversation_history: messages,
+	// 	// 	});
+	// 	// } else if (userMessage.toLowerCase().includes("character")) {
+	// 	// 	response = await fetchAIResponse("generate-character", {
+	// 	// 		user_input: userMessage,
+	// 	// 		conversation_history: messages,
+	// 	// 	});
+	// 	// } else if (userMessage.toLowerCase().includes("play") || userMessage.toLowerCase().includes("action")) {
+	// 	// 	response = await fetchAIResponse("gameplay-action", {
+	// 	// 		player_action: userMessage,
+	// 	// 		conversation_history: messages,
+	// 	// 	});
+	// 	// }
+
+	console.log({
+		id: `ai_${Date.now()}`,
+		currentStep: nextStep,
+		text: nextResponse,
+		isUser: false,
+		timestamp: getCurrentTimestamp(),
+	});
 
 	return {
 		id: `ai_${Date.now()}`,
-		step_type: "response",
-		text: response,
+		currentStep: nextStep,
+		text: nextResponse,
 		isUser: false,
 		timestamp: getCurrentTimestamp(),
 	};
@@ -63,7 +102,7 @@ export const sendMessageToAI = createAsyncThunk("messages/sendMessageToAI", asyn
 // Actions de reset
 export const resetConversation = createAsyncThunk("messages/resetConversation", async () => ({
 	id: `welcome_${Date.now()}`,
-	step_type: "welcome",
+	currentStep: "welcome",
 	text: "Welcome to Odyssai. Start by answering a few questions and let's get started!",
 	isUser: false,
 	timestamp: getCurrentTimestamp(),
@@ -71,7 +110,7 @@ export const resetConversation = createAsyncThunk("messages/resetConversation", 
 
 export const resetCompleteStore = createAsyncThunk("messages/resetCompleteStore", async () => ({
 	id: `welcome_${Date.now()}`,
-	step_type: "welcome",
+	currentStep: "welcome",
 	text: "Welcome to Odyssai. Start by answering a few questions and let's get started!",
 	isUser: false,
 	timestamp: getCurrentTimestamp(),

@@ -9,10 +9,10 @@ export const useChatActions = () => {
 	const dispatch = useAppDispatch();
 
 	const sendMessage = useCallback(
-		(text: string, msg_type?: string) => {
+		(text: string, currentStep = "N/A") => {
 			const newMessage: Message = {
 				id: Date.now().toString(),
-				step_type: msg_type ?? "user_message",
+				currentStep: currentStep,
 				text,
 				isUser: true,
 				timestamp: getCurrentTimestamp(),
