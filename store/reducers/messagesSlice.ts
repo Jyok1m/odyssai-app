@@ -1,19 +1,7 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
-import { useDispatch, useSelector, TypedUseSelectorHook } from "react-redux";
 import { Message, MessagesState } from "../types/types";
 import { sendMessageToAI, resetConversation, resetCompleteStore } from "../asyncActions";
-import { formatTimestamp, getCurrentTimestamp } from "../utils/utils";
-
-// Types Redux
-export type RootState = {
-	messages: MessagesState;
-};
-
-export type AppDispatch = any;
-
-// Hooks Redux typés
-export const useAppDispatch = () => useDispatch<AppDispatch>();
-export const useAppSelector: TypedUseSelectorHook<RootState> = useSelector;
+import { getCurrentTimestamp } from "../utils/utils";
 
 const initialState: MessagesState = {
 	messages: [

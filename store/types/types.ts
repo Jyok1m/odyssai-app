@@ -11,3 +11,13 @@ export interface MessagesState {
 	isLoading: boolean;
 	error: string | null;
 }
+
+export interface GameData {
+	key: string;
+	value: string | number;
+}
+
+export interface GameDataState {
+	world_id: string;
+	world_name: string;
+}

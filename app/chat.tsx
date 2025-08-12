@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from "react";
 import { StyleSheet, FlatList, KeyboardAvoidingView, Platform } from "react-native";
 import { SafeAreaView, View, Text, TextInput, Pressable } from "@/components/Themed";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
-import { useAppSelector, useChatActions, Message, formatTimestamp } from "../store";
+import { useAppSelector, useAppDispatch, useChatActions, Message, formatTimestamp, resetStore } from "../store";
 import { ResetModal } from "../components/ResetModal";
 import { AIThinkingAdvanced } from "../components/AIThinkingAdvanced";
 
@@ -10,8 +10,18 @@ export default function ChatScreen() {
 	const [message, setMessage] = useState("");
 	const [showResetModal, setShowResetModal] = useState(false);
 	const flatListRef = useRef<FlatList>(null);
-	const { messages, isLoading } = useAppSelector((state) => state.messages);
+	const dispatch = useAppDispatch();
+	const messagesState = useAppSelector((state) => state.messages);
+	const messages = messagesState?.messages || [];
+	const isLoading = messagesState?.isLoading || false;
 	const { sendMessage, resetChat } = useChatActions();
+
+	// Initialiser les messages si ils sont vides au premier chargement
+	useEffect(() => {
+		if (messages.length === 0) {
+			dispatch(resetStore());
+		}
+	}, [messages.length, dispatch]);
 
 	// Scroll automatiquement vers le dernier message
 	useEffect(() => {

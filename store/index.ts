@@ -3,7 +3,7 @@ export { store, persistor } from "./store";
 export type { RootState, AppDispatch } from "./store";
 
 // Export des hooks et utilitaires
-export { useAppDispatch, useAppSelector } from "./reducers/messagesSlice";
+export { useAppDispatch, useAppSelector } from "./hooks/typedHooks";
 export { formatTimestamp, getCurrentTimestamp } from "./utils/utils";
 
 // Export des actions et composants

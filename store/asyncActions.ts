@@ -1,21 +1,28 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
 import { getCurrentTimestamp } from "./utils/utils";
+import { addData } from "./reducers/gameDataSlice";
 
 const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || "http://localhost:8000";
 
 // Appel API
-const fetchAIResponse = async (endpoint: string, data: any): Promise<string> => {
+const fetchAIResponse = async (method: string, endpoint: string, body?: any): Promise<any> => {
+	let options: RequestInit = { method: method };
+
+	if (method === "POST") {
+		options.headers = { "Content-Type": "application/json" };
+		options.body = JSON.stringify(body);
+	}
+
 	try {
-		const response = await fetch(`${API_BASE_URL}/api/${endpoint}`, {
-			method: "POST",
-			headers: { "Content-Type": "application/json" },
-			body: JSON.stringify(data),
-		});
+		const response = await fetch(`${API_BASE_URL}/api${endpoint}`, options);
 
-		if (!response.ok) throw new Error(`Failed to ${endpoint}`);
+		if (response.status !== 200) {
+			console.error("API call failed:", response);
+			return "An error occurred. Let's continue anyway.";
+		}
 
-		const result = await response.json();
-		return result.message || "Success";
+		const data = await response.json();
+		return data;
 	} catch (error) {
 		console.error("API call failed:", error);
 		return "An error occurred. Let's continue anyway.";
@@ -23,11 +30,23 @@ const fetchAIResponse = async (endpoint: string, data: any): Promise<string> => 
 };
 
 // Action principale pour envoyer un message
-export const sendMessageToAI = createAsyncThunk("messages/sendMessageToAI", async (text: string, { getState }) => {
+export const sendMessageToAI = createAsyncThunk("messages/sendMessageToAI", async (text: string, { getState, dispatch }) => {
 	const state = getState() as any;
-	const messages = state.messages.messages;
+	const messagesState = state.messages;
+	const messages = messagesState?.messages || [];
 	const prevAIQuestions = messages.filter((msg: any) => !msg.isUser);
 	const lastAIQuestion = prevAIQuestions[prevAIQuestions.length - 1];
+
+	if (!lastAIQuestion) {
+		return {
+			id: `ai_${Date.now()}`,
+			currentStep: "ask_new_world",
+			text: "Do you want to create a new world? Respond by typing 'yes' or 'no'.",
+			isUser: false,
+			timestamp: getCurrentTimestamp(),
+		};
+	}
+
 	const { currentStep, text: aiText } = lastAIQuestion;
 	const userAnswer = text.toString().toLowerCase().trim();
 
@@ -52,6 +71,13 @@ export const sendMessageToAI = createAsyncThunk("messages/sendMessageToAI", asyn
 		} else {
 			comprehensionError();
 		}
+	} else if (currentStep === "ask_world_name") {
+		const aiResponse = await fetchAIResponse("GET", `/check-world?world_name=${userAnswer}`);
+		console.log(aiResponse);
+
+		// nextStep = "create_world";
+		// nextResponse = `Great! Let's create a new world called "${userAnswer}".`;
+		// dispatch(addData({ key: "world_name", value: userAnswer }));
 	}
 
 	// if (currentStep === "ask_new_world")

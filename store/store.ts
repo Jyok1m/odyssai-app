@@ -1,20 +1,25 @@
-import { configureStore } from "@reduxjs/toolkit";
+import { configureStore, combineReducers } from "@reduxjs/toolkit";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { persistStore, persistReducer, FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, REGISTER } from "redux-persist";
 import messagesReducer from "./reducers/messagesSlice";
+import gameDataReducer from "./reducers/gameDataSlice";
 
 const persistConfig = {
 	key: "odyssai",
 	storage: AsyncStorage,
-	whitelist: ["messages"], // Seuls les messages seront persistés
+	whitelist: ["messages", "gameData"], // Persister les deux stores
+	version: 1, // Ajout d'une version pour gérer les migrations futures
 };
 
-const persistedReducer = persistReducer(persistConfig, messagesReducer);
+const rootReducer = combineReducers({
+	messages: messagesReducer,
+	gameData: gameDataReducer,
+});
+
+const persistedReducer = persistReducer(persistConfig, rootReducer);
 
 export const store = configureStore({
-	reducer: {
-		messages: persistedReducer,
-	},
+	reducer: persistedReducer,
 	middleware: (getDefaultMiddleware) =>
 		getDefaultMiddleware({
 			serializableCheck: {
