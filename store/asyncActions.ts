@@ -35,7 +35,7 @@ export const sendMessageToAI = createAsyncThunk("messages/sendMessageToAI", asyn
 	const messagesState = state.messages;
 	const gameData = state.gameData;
 	const messages = messagesState?.messages || [];
-	const { is_new_world } = gameData;
+	const { is_new_world, world_id, world_name, world_genre, story_directives } = gameData;
 
 	const prevAIQuestions = messages.filter((msg: any) => !msg.isUser);
 	const lastAIQuestion = prevAIQuestions[prevAIQuestions.length - 1];
@@ -44,6 +44,8 @@ export const sendMessageToAI = createAsyncThunk("messages/sendMessageToAI", asyn
 
 	// Délai simulé
 	await new Promise((resolve) => setTimeout(resolve, 3000 + Math.random() * 1000));
+
+	let response = [];
 
 	// Réponse simple basée sur le message
 	let nextQuestion = ""; // Defaults
@@ -58,47 +60,218 @@ export const sendMessageToAI = createAsyncThunk("messages/sendMessageToAI", asyn
 	console.log("Before => ", { currentStep, aiText, userAnswer });
 	console.log("Before => ", { gameData });
 
+	// Step - If user is at step create new world, ask for world name
 	if (currentStep === "ask_new_world") {
 		nextStep = "ask_world_name";
 		if (userAnswer === "yes") {
-			nextQuestion = "Great! Let's create a new world. How would you like to name your new world?";
 			dispatch(addData({ key: "is_new_world", value: true }));
+			nextQuestion = "Great! Let's create a new world. How would you like to name your new world?";
 		} else if (userAnswer === "no") {
-			nextQuestion = "Alright! Which world would you like to join?";
 			dispatch(addData({ key: "is_new_world", value: false }));
+			nextQuestion = "Alright! Which world would you like to join?";
 		} else {
 			comprehensionError();
 		}
-	} else if (currentStep === "ask_world_name") {
+	}
+
+	// Step - When user inputs world name, check if it exists
+	else if (currentStep === "ask_world_name") {
 		const aiResponse = await fetchAIResponse("GET", `/check-world?world_name=${userAnswer}`);
 		const { exists, world_name, world_id } = aiResponse;
+		const { is_new_world } = gameData;
 
-		if (is_new_world) {
-			if (exists) {
-				nextQuestion = `The world '${world_name}' already exists. Please choose a different name.`;
-				nextStep = currentStep; // Reset
-			} else {
-				nextQuestion = `Great! Let's create your new world! Describe the world’s main genre. Give as much detail as you would like.`;
-				nextStep = "ask_world_genre";
-				dispatch(addData({ key: "world_name", value: world_name }));
-			}
-		} else {
-			if (exists) {
-				nextQuestion = `Do you want to play as a new character? Respond by typing 'yes' or 'no'.`;
-				nextStep = "ask_create_new_character";
-				dispatch(addData({ key: "world_id", value: world_id }));
-			} else {
-				nextQuestion = `The world '${world_name}' does not exist. Do you want to create a new world? Respond by typing 'yes' or 'no'.`;
-				nextStep = "ask_new_world";
-			}
+		// If the user wants a new world and the name already exists, we ask for name again
+		if (is_new_world && exists) {
+			nextQuestion = `The world '${world_name}' already exists. Please choose a different name.`;
+			nextStep = currentStep; // Reset
 		}
 
-		// console.log(aiResponse);
+		// If the user wants a new world and the name doesn't exist, we go to the world genre QA
+		else if (is_new_world && !exists) {
+			dispatch(addData({ key: "world_name", value: world_name }));
 
-		// nextStep = "create_world";
-		// nextQuestion = `Great! Let's create a new world called "${userAnswer}".`;
-		// dispatch(addData({ key: "world_name", value: userAnswer }));
+			nextQuestion = `Great! Let's create your new world! Describe the world’s main genre. Give as much detail as you would like.`;
+			nextStep = "ask_world_genre";
+		}
+
+		// If the user doesn't want a new world and the name exists, we ask if player wants to create a new character
+		else if (!is_new_world && exists) {
+			dispatch(addData({ key: "world_name", value: world_name }));
+			dispatch(addData({ key: "world_id", value: world_id }));
+
+			response.push({
+				id: `ai_${Date.now()}`,
+				currentStep: "filler",
+				text: `Perfect, I found your world!`,
+				isUser: false,
+				timestamp: getCurrentTimestamp(),
+			});
+
+			nextQuestion = `So now, do you wish to play as a new character?`;
+			nextStep = "ask_create_new_character";
+		}
+
+		// If the user doesn't want a new world and the name doesn't exist, we ask if the player wants to create a new world
+		else if (!is_new_world && !exists) {
+			nextQuestion = `The world '${world_name}' does not exist. Do you want to create a new world?`;
+			nextStep = "ask_new_world";
+		}
 	}
+
+	// Step - When user asks chooses if he wants to play as a new character or not
+	else if (currentStep === "ask_create_new_character") {
+		nextStep = "ask_character_name";
+		if (userAnswer === "yes") {
+			nextQuestion = "Great! Let's create a new character. What would you like to name your character?";
+			dispatch(addData({ key: "is_new_character", value: true }));
+		} else if (userAnswer === "no") {
+			nextQuestion = "Alright! Which character would you like to play as?";
+			dispatch(addData({ key: "is_new_character", value: false }));
+		} else {
+			comprehensionError();
+		}
+	}
+
+	// Step when user asks for a character name
+	else if (currentStep === "ask_character_name") {
+		const aiResponse = await fetchAIResponse("GET", `/check-character?world_id=${world_id}&character_name=${userAnswer}`);
+		const { exists, character_name, character_id } = aiResponse;
+		const { is_new_character } = gameData;
+
+		// If the user wants a new character and the name already exists, we ask for name again
+		if (is_new_character && exists) {
+			nextQuestion = `The character '${character_name}' already exists. Please choose a different name.`;
+			nextStep = currentStep; // Reset
+		}
+
+		// If the user wants a new character and the name doesn't exist, we go to the character description QA
+		else if (is_new_character && !exists) {
+			dispatch(addData({ key: "character_name", value: character_name }));
+
+			response.push({
+				id: `ai_${Date.now()}`,
+				currentStep: "filler",
+				text: `Great! Let's start creating your new character!`,
+				isUser: false,
+				timestamp: getCurrentTimestamp(),
+			});
+
+			nextQuestion = `Will your character be male, female, or non-binary?`;
+			nextStep = "ask_character_gender";
+		}
+
+		// If the user doesn't want a new character and the name exists, we ask if player wants to create a new character
+		else if (!is_new_character && exists) {
+			dispatch(addData({ key: "character_name", value: character_name }));
+			dispatch(addData({ key: "character_id", value: character_id }));
+
+			nextQuestion = `Thank you. Are you ready to join back ${world_name}?`;
+			nextStep = "join-game";
+		}
+
+		// If the user doesn't want a new character and the name doesn't exist, we ask if the player wants to create a new character
+		else if (!is_new_character && !exists) {
+			nextQuestion = `The character '${character_name}' does not exist. Do you want to create a new character?`;
+			nextStep = "ask_new_character";
+		}
+	}
+
+	// Step - When user inputs world genre, we simply add it to Redux
+	else if (currentStep === "ask_world_genre") {
+		dispatch(addData({ key: "world_genre", value: userAnswer }));
+
+		nextQuestion = "Are there particular themes or narrative threads you’d like to explore? Let your imagination guide the story’s soul.";
+		nextStep = "ask_story_directives";
+	}
+
+	// Step - When user inputs story_directives, we simply add it to Redux
+	else if (currentStep === "ask_story_directives") {
+		dispatch(addData({ key: "story_directives", value: userAnswer }));
+
+		nextQuestion = "Thank you. Now, I'm going to weave the threads of your world’s story. Are you ready?";
+		nextStep = "create_world";
+	}
+
+	// Step - When user is ready to create new world, we create the world and ask for character creation
+	else if (currentStep === "create_world") {
+		// If user is ready for world generation
+		if (userAnswer === "yes") {
+			const aiResponse = await fetchAIResponse("POST", `/create-world`, { world_name, world_genre, story_directives });
+			const { world_id, synopsis } = aiResponse;
+
+			// Show synopsis to the user
+			response.push({
+				id: `ai_${Date.now()}`,
+				currentStep: "filler",
+				text: synopsis,
+				isUser: false,
+				timestamp: getCurrentTimestamp(),
+			});
+
+			dispatch(addData({ key: "world_id", value: world_id }));
+			dispatch(addData({ key: "synopsis", value: synopsis }));
+
+			// Send user to character creation QA
+			nextQuestion = "Now, how would you like to name your character?";
+			nextStep = "ask_character_name";
+		} else if (userAnswer === "no") {
+			response.push({
+				id: `ai_${Date.now()}`,
+				currentStep: "filler",
+				text: "Alright! Let me know if you change your mind.",
+				isUser: false,
+				timestamp: getCurrentTimestamp(),
+			});
+
+			nextQuestion = "Are you ready to move on with the creation of your world?";
+			nextStep = currentStep;
+		} else {
+			comprehensionError();
+		}
+	}
+
+	// else if (currentStep === "ask_create_new_character") {
+	// 	nextStep = "ask_character_name";
+	// 	if (userAnswer === "yes") {
+	// 		nextQuestion = "Great! Let's create a new world. How would you like to name your new world?";
+	// 		dispatch(addData({ key: "is_new_world", value: true }));
+	// 	} else if (userAnswer === "no") {
+	// 		nextQuestion = "Alright! Which world would you like to join?";
+	// 		dispatch(addData({ key: "is_new_world", value: false }));
+	// 	} else {
+	// 		comprehensionError();
+	// 	}
+	// }
+
+	// else if (currentStep === "ask_character_name") {
+	// 	const aiResponse = await fetchAIResponse("GET", `/check-character?world_id=${world_id}&character_name=${userAnswer}`, {
+	// 		world_name,
+	// 		world_genre,
+	// 		story_directives,
+	// 	});
+	// 	const { exists, character_name, character_id } = aiResponse;
+
+	// 	if (is_new_character) {
+	// 		if (exists) {
+	// 			nextQuestion = `The world '${world_name}' already exists. Please choose a different name.`;
+	// 			nextStep = currentStep; // Reset
+	// 		} else {
+	// 			nextQuestion = `Great! Let's create your new world! Describe the world’s main genre. Give as much detail as you would like.`;
+	// 			nextStep = "ask_world_genre";
+	// 			dispatch(addData({ key: "world_name", value: world_name }));
+	// 		}
+	// 	} else {
+	// 		if (exists) {
+	// 			nextQuestion = `Great! So now, do you want to play as a new character? Respond by typing 'yes' or 'no'.`;
+	// 			nextStep = "ask_create_new_character";
+	// 			dispatch(addData({ key: "world_name", value: world_name }));
+	// 			dispatch(addData({ key: "world_id", value: world_id }));
+	// 		} else {
+	// 			nextQuestion = `The world '${world_name}' does not exist. Do you want to create a new world? Respond by typing 'yes' or 'no'.`;
+	// 			nextStep = "ask_new_world";
+	// 		}
+	// 	}
+	// }
 
 	// if (currentStep === "ask_new_world")
 	// 	// if (msg_type === "ask_new_world" && ["yes", "ye", "y"].includes(text.toString().toLowerCase().trim())) {
@@ -127,13 +300,15 @@ export const sendMessageToAI = createAsyncThunk("messages/sendMessageToAI", asyn
 	// 	// 	});
 	// 	// }
 
-	return {
+	response.push({
 		id: `ai_${Date.now()}`,
 		currentStep: nextStep,
 		text: nextQuestion,
 		isUser: false,
 		timestamp: getCurrentTimestamp(),
-	};
+	});
+
+	return response;
 });
 
 // Actions de reset

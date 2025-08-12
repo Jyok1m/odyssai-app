@@ -18,7 +18,18 @@ export interface GameData {
 }
 
 export interface GameDataState {
+	// World
 	is_new_world: boolean;
 	world_id: string;
 	world_name: string;
+	world_genre: string;
+	story_directives: string;
+	synopsis: string;
+
+	// Character
+	is_new_character: boolean;
+	character_id: string;
+	character_name: string;
+	character_gender: string;
+	character_description: string;
 }

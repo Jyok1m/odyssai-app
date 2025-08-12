@@ -2,9 +2,20 @@ import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { GameData, GameDataState } from "../types/types";
 
 const initialState: GameDataState = {
+	// World
 	is_new_world: true,
 	world_id: "",
 	world_name: "",
+	world_genre: "",
+	story_directives: "",
+	synopsis: "",
+
+	// Character
+	is_new_character: true,
+	character_id: "",
+	character_name: "",
+	character_gender: "",
+	character_description: "",
 };
 
 const gameDataSlice = createSlice({
