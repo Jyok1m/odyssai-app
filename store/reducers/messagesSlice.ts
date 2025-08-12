@@ -15,7 +15,7 @@ const initialState: MessagesState = {
 		{
 			id: "2",
 			currentStep: "ask_new_world",
-			text: "Do you want to create a new world? Respond by typing 'yes' or 'no'.",
+			text: "Do you want to create a new world?",
 			isUser: false,
 			timestamp: getCurrentTimestamp(),
 		},
