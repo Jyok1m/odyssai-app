@@ -26,32 +26,31 @@ const fetchAIResponse = async (endpoint: string, data: any): Promise<string> => 
 export const sendMessageToAI = createAsyncThunk("messages/sendMessageToAI", async (text: string, { getState }) => {
 	const state = getState() as any;
 	const messages = state.messages.messages;
-	// let currentStep = msg_type ?? "response";
-
 	const prevAIQuestions = messages.filter((msg: any) => !msg.isUser);
 	const lastAIQuestion = prevAIQuestions[prevAIQuestions.length - 1];
 	const { currentStep, text: aiText } = lastAIQuestion;
 	const userAnswer = text.toString().toLowerCase().trim();
 
-	// console.log({ currentStep, aiText, userAnswer });
-
 	// Délai simulé
 	await new Promise((resolve) => setTimeout(resolve, 3000 + Math.random() * 1000));
 
-	// console.log("Current messages:", messages);
-
 	// Réponse simple basée sur le message
-	let nextResponse = aiText; // Defaults
-	let nextStep = currentStep; // Defaults
+	let nextResponse = ""; // Defaults
+	let nextStep = ""; // Defaults
+
+	const comprehensionError = () => {
+		nextResponse = "Sorry, I didn't quite catch that. " + aiText;
+		nextStep = currentStep;
+	};
 
 	if (currentStep === "ask_new_world") {
 		nextStep = "world_name";
 		if (userAnswer === "yes") {
-			nextResponse = "Great! Let's create a new world. How would you like to name your world?";
+			nextResponse = "Great! Let's create a new world. How would you like to name your new world?";
 		} else if (userAnswer === "no") {
 			nextResponse = "Alright! Which world would you like to join?";
 		} else {
-			nextStep = currentStep;
+			comprehensionError();
 		}
 	}
 
