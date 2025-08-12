@@ -93,7 +93,7 @@ const messagesSlice = createSlice({
 				const firstQuestion: Message = {
 					id: "question_" + Date.now(),
 					currentStep: "ask_new_world",
-					text: "Do you want to create a new world? Respond by typing 'yes' or 'no'.",
+					text: "Do you want to create a new world?",
 					isUser: false,
 					timestamp: getCurrentTimestamp(),
 				};
@@ -105,7 +105,7 @@ const messagesSlice = createSlice({
 				const firstQuestion: Message = {
 					id: "question_" + Date.now(),
 					currentStep: "ask_new_world",
-					text: "Do you want to create a new world? Respond by typing 'yes' or 'no'.",
+					text: "Do you want to create a new world?",
 					isUser: false,
 					timestamp: getCurrentTimestamp(),
 				};
