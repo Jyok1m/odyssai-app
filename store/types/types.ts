@@ -14,10 +14,11 @@ export interface MessagesState {
 
 export interface GameData {
 	key: string;
-	value: string | number;
+	value: string | number | boolean;
 }
 
 export interface GameDataState {
+	is_new_world: boolean;
 	world_id: string;
 	world_name: string;
 }

@@ -16,6 +16,14 @@ export default function ChatScreen() {
 	const isLoading = messagesState?.isLoading || false;
 	const { sendMessage, resetChat } = useChatActions();
 
+	const gameData = useAppSelector((state) => state.gameData);
+	const prevAIQuestions = messages.filter((msg: any) => !msg.isUser);
+	const lastAIQuestion = prevAIQuestions[prevAIQuestions.length - 1];
+	const { currentStep, text: aiText } = lastAIQuestion;
+
+	console.log("After => ", { currentStep, aiText });
+	console.log("After => ", { gameData });
+
 	// Initialiser les messages si ils sont vides au premier chargement
 	useEffect(() => {
 		if (messages.length === 0) {

@@ -2,6 +2,7 @@ import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { GameData, GameDataState } from "../types/types";
 
 const initialState: GameDataState = {
+	is_new_world: true,
 	world_id: "",
 	world_name: "",
 };
@@ -14,8 +15,8 @@ const gameDataSlice = createSlice({
 			const { key, value } = action.payload;
 			(state as any)[key] = value;
 		},
-		resetData: (state) => {
-			Object.assign(state, initialState);
+		resetData: () => {
+			return initialState;
 		},
 	},
 });

@@ -1,6 +1,7 @@
 import { useCallback } from "react";
 import { useAppDispatch } from "../hooks/typedHooks";
 import { addMessage, clearMessages } from "../reducers/messagesSlice";
+import { resetData } from "../reducers/gameDataSlice";
 import { resetCompleteStore, sendMessageToAI } from "../asyncActions";
 import { getCurrentTimestamp } from "../utils/utils";
 import { Message } from "../types/types";
@@ -25,7 +26,8 @@ export const useChatActions = () => {
 	);
 
 	const resetChat = useCallback(() => {
-		dispatch(resetCompleteStore());
+		dispatch(resetData()); // Reset gameData first
+		dispatch(resetCompleteStore()); // Then reset messages
 	}, [dispatch]);
 
 	const clearAllMessages = useCallback(() => {

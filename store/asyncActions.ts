@@ -33,20 +33,12 @@ const fetchAIResponse = async (method: string, endpoint: string, body?: any): Pr
 export const sendMessageToAI = createAsyncThunk("messages/sendMessageToAI", async (text: string, { getState, dispatch }) => {
 	const state = getState() as any;
 	const messagesState = state.messages;
+	const gameData = state.gameData;
 	const messages = messagesState?.messages || [];
+	const { is_new_world } = gameData;
+
 	const prevAIQuestions = messages.filter((msg: any) => !msg.isUser);
 	const lastAIQuestion = prevAIQuestions[prevAIQuestions.length - 1];
-
-	if (!lastAIQuestion) {
-		return {
-			id: `ai_${Date.now()}`,
-			currentStep: "ask_new_world",
-			text: "Do you want to create a new world? Respond by typing 'yes' or 'no'.",
-			isUser: false,
-			timestamp: getCurrentTimestamp(),
-		};
-	}
-
 	const { currentStep, text: aiText } = lastAIQuestion;
 	const userAnswer = text.toString().toLowerCase().trim();
 
@@ -54,29 +46,57 @@ export const sendMessageToAI = createAsyncThunk("messages/sendMessageToAI", asyn
 	await new Promise((resolve) => setTimeout(resolve, 3000 + Math.random() * 1000));
 
 	// Réponse simple basée sur le message
-	let nextResponse = ""; // Defaults
+	let nextQuestion = ""; // Defaults
 	let nextStep = ""; // Defaults
 
 	const comprehensionError = () => {
-		nextResponse = "Sorry, I didn't quite catch that. " + aiText;
+		const filteredText = aiText.replaceAll("Sorry, I didn't quite catch that. ", "").trim();
+		nextQuestion = "Sorry, I didn't quite catch that. " + filteredText;
 		nextStep = currentStep;
 	};
+
+	console.log("Before => ", { currentStep, aiText, userAnswer });
+	console.log("Before => ", { gameData });
 
 	if (currentStep === "ask_new_world") {
 		nextStep = "ask_world_name";
 		if (userAnswer === "yes") {
-			nextResponse = "Great! Let's create a new world. How would you like to name your new world?";
+			nextQuestion = "Great! Let's create a new world. How would you like to name your new world?";
+			dispatch(addData({ key: "is_new_world", value: true }));
 		} else if (userAnswer === "no") {
-			nextResponse = "Alright! Which world would you like to join?";
+			nextQuestion = "Alright! Which world would you like to join?";
+			dispatch(addData({ key: "is_new_world", value: false }));
 		} else {
 			comprehensionError();
 		}
 	} else if (currentStep === "ask_world_name") {
 		const aiResponse = await fetchAIResponse("GET", `/check-world?world_name=${userAnswer}`);
-		console.log(aiResponse);
+		const { exists, world_name, world_id } = aiResponse;
+
+		if (is_new_world) {
+			if (exists) {
+				nextQuestion = `The world '${world_name}' already exists. Please choose a different name.`;
+				nextStep = currentStep; // Reset
+			} else {
+				nextQuestion = `Great! Let's create your new world! Describe the world’s main genre. Give as much detail as you would like.`;
+				nextStep = "ask_world_genre";
+				dispatch(addData({ key: "world_name", value: world_name }));
+			}
+		} else {
+			if (exists) {
+				nextQuestion = `Do you want to play as a new character? Respond by typing 'yes' or 'no'.`;
+				nextStep = "ask_create_new_character";
+				dispatch(addData({ key: "world_id", value: world_id }));
+			} else {
+				nextQuestion = `The world '${world_name}' does not exist. Do you want to create a new world? Respond by typing 'yes' or 'no'.`;
+				nextStep = "ask_new_world";
+			}
+		}
+
+		// console.log(aiResponse);
 
 		// nextStep = "create_world";
-		// nextResponse = `Great! Let's create a new world called "${userAnswer}".`;
+		// nextQuestion = `Great! Let's create a new world called "${userAnswer}".`;
 		// dispatch(addData({ key: "world_name", value: userAnswer }));
 	}
 
@@ -110,7 +130,7 @@ export const sendMessageToAI = createAsyncThunk("messages/sendMessageToAI", asyn
 	return {
 		id: `ai_${Date.now()}`,
 		currentStep: nextStep,
-		text: nextResponse,
+		text: nextQuestion,
 		isUser: false,
 		timestamp: getCurrentTimestamp(),
 	};

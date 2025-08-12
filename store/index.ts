@@ -10,6 +10,7 @@ export { formatTimestamp, getCurrentTimestamp } from "./utils/utils";
 export { useChatActions } from "./hooks/useChatActions";
 export { ReduxProvider } from "./providers/ReduxProvider";
 export * from "./reducers/messagesSlice";
+export * from "./reducers/gameDataSlice";
 export * from "./asyncActions";
 
 // Export des types
