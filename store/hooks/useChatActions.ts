@@ -1,8 +1,8 @@
 import { useCallback } from "react";
-import { useAppDispatch } from "./messagesSlice";
-import { addMessage, clearMessages } from "./messagesSlice";
+import { useAppDispatch } from "./reducers/messagesSlice";
+import { addMessage, clearMessages } from "./reducers/messagesSlice";
 import { resetCompleteStore, sendMessageToAI } from "./asyncActions";
-import { getCurrentTimestamp } from "./utils";
+import { getCurrentTimestamp } from "./utils/utils";
 import { Message } from "./types";
 
 export const useChatActions = () => {

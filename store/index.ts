@@ -3,14 +3,14 @@ export { store, persistor } from "./store";
 export type { RootState, AppDispatch } from "./store";
 
 // Export des hooks et utilitaires
-export { useAppDispatch, useAppSelector } from "./messagesSlice";
-export { formatTimestamp, getCurrentTimestamp } from "./utils";
+export { useAppDispatch, useAppSelector } from "./reducers/messagesSlice";
+export { formatTimestamp, getCurrentTimestamp } from "./utils/utils";
 
 // Export des actions et composants
-export { useChatActions } from "./useChatActions";
-export { ReduxProvider } from "./ReduxProvider";
-export * from "./messagesSlice";
+export { useChatActions } from "./hooks/useChatActions";
+export { ReduxProvider } from "./providers/ReduxProvider";
+export * from "./reducers/messagesSlice";
 export * from "./asyncActions";
 
 // Export des types
-export type { Message, MessagesState } from "./types";
+export type { Message, MessagesState } from "./types/types";

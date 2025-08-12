@@ -1,8 +1,8 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { useDispatch, useSelector, TypedUseSelectorHook } from "react-redux";
-import { Message, MessagesState } from "./types";
-import { sendMessageToAI, resetConversation, resetCompleteStore } from "./asyncActions";
-import { formatTimestamp, getCurrentTimestamp } from "./utils";
+import { Message, MessagesState } from "../types/types";
+import { sendMessageToAI, resetConversation, resetCompleteStore } from "../asyncActions";
+import { formatTimestamp, getCurrentTimestamp } from "../utils/utils";
 
 // Types Redux
 export type RootState = {

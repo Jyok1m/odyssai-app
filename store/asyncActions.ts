@@ -1,5 +1,5 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
-import { getCurrentTimestamp } from "./utils";
+import { getCurrentTimestamp } from "./utils/utils";
 
 const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || "http://localhost:8000";
 
@@ -44,7 +44,7 @@ export const sendMessageToAI = createAsyncThunk("messages/sendMessageToAI", asyn
 	};
 
 	if (currentStep === "ask_new_world") {
-		nextStep = "world_name";
+		nextStep = "ask_world_name";
 		if (userAnswer === "yes") {
 			nextResponse = "Great! Let's create a new world. How would you like to name your new world?";
 		} else if (userAnswer === "no") {

@@ -1,11 +1,11 @@
 import { configureStore } from "@reduxjs/toolkit";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { persistStore, persistReducer, FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, REGISTER } from "redux-persist";
-import { storage } from "./storage";
-import messagesReducer from "./messagesSlice";
+import messagesReducer from "./reducers/messagesSlice";
 
 const persistConfig = {
 	key: "odyssai",
-	storage,
+	storage: AsyncStorage,
 	whitelist: ["messages"], // Seuls les messages seront persistés
 };
 
