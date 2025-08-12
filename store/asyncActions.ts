@@ -82,14 +82,6 @@ export const sendMessageToAI = createAsyncThunk("messages/sendMessageToAI", asyn
 	// 	// 	});
 	// 	// }
 
-	console.log({
-		id: `ai_${Date.now()}`,
-		currentStep: nextStep,
-		text: nextResponse,
-		isUser: false,
-		timestamp: getCurrentTimestamp(),
-	});
-
 	return {
 		id: `ai_${Date.now()}`,
 		currentStep: nextStep,
