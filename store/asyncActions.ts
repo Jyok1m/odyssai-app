@@ -35,7 +35,7 @@ export const sendMessageToAI = createAsyncThunk("messages/sendMessageToAI", asyn
 	const messagesState = state.messages;
 	const gameData = state.gameData;
 	const messages = messagesState?.messages || [];
-	const { is_new_world, world_id, world_name, world_genre, story_directives, character_name } = gameData;
+	const { is_new_world, world_id, world_name, world_genre, story_directives, character_name, character_id } = gameData;
 
 	const prevAIQuestions = messages.filter((msg: any) => !msg.isUser);
 	const lastAIQuestion = prevAIQuestions[prevAIQuestions.length - 1];
@@ -269,7 +269,6 @@ export const sendMessageToAI = createAsyncThunk("messages/sendMessageToAI", asyn
 			const { character_id } = aiResponse;
 
 			dispatch(addData({ key: "character_id", value: character_id }));
-
 			nextQuestion = `I have successfully generated your character! Are you ready to join the world of ${world_name}?`;
 			nextStep = "join_game";
 		} else if (userAnswer === "no") {
@@ -328,6 +327,47 @@ export const sendMessageToAI = createAsyncThunk("messages/sendMessageToAI", asyn
 		} else {
 			comprehensionError();
 		}
+	}
+
+	// Request prompt from the backend
+	else if (currentStep === "get_prompt") {
+		if (userAnswer === "yes") {
+			const aiResponse = await fetchAIResponse("GET", `/game-prompt?world_id=${world_id}&character_id=${character_id}`);
+			const { ai_prompt } = aiResponse;
+
+			nextQuestion = ai_prompt;
+			nextStep = "get_response";
+		} else if (userAnswer === "no") {
+			response.push({
+				id: `ai_${Date.now()}`,
+				currentStep: "filler",
+				text: "Alright! Let me know if you change your mind.",
+				isUser: false,
+				timestamp: getCurrentTimestamp(),
+			});
+
+			nextQuestion = "Are you ready to continue your story?";
+			nextStep = currentStep;
+		} else {
+			comprehensionError();
+		}
+	}
+
+	// Get answer from the player
+	else if (currentStep === "get_response") {
+		const aiResponse = await fetchAIResponse("POST", "/register-answer", { world_id, character_id, player_answer: userAnswer });
+		const { immediate_events } = aiResponse;
+
+		response.push({
+			id: `ai_${Date.now()}`,
+			currentStep: "filler",
+			text: immediate_events,
+			isUser: false,
+			timestamp: getCurrentTimestamp(),
+		});
+
+		nextQuestion = "Shall we continue with your story?";
+		nextStep = "get_prompt";
 	}
 
 	response.push({
