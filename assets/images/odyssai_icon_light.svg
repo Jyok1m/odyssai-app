@@ -1,0 +1,24 @@
+<svg width="1024" height="1024" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
+  <rect x="32" y="32" width="960" height="960" rx="220" class="bg" fill="#f2e9e4"/>
+  <!-- Book group -->
+  <g class="book" stroke="#4a4e69" stroke-width="32" stroke-linecap="round" stroke-linejoin="round" fill="none">
+    <!-- Book body -->
+    <rect x="252" y="332" width="520" height="360" rx="36" ry="36"/>
+    <!-- Spine (accent band) -->
+    <path d="M292 332 L292 692" stroke="#9a8c98" />
+    <!-- Page lines -->
+    <path d="M332 412 L712 412"/>
+    <path d="M332 472 L712 472"/>
+    <path d="M332 532 L712 532"/>
+    <!-- Bookmark ribbon -->
+    <path d="M712 332 L712 452 L672 428 Z" fill="#9a8c98" stroke="#9a8c98"/>
+  </g>
+  <!-- Subtle brand star (knowledge spark) -->
+  <g fill="#9a8c98">
+    <circle cx="760" cy="300" r="6"/>
+    <circle cx="785" cy="280" r="4"/>
+    <circle cx="735" cy="275" r="4"/>
+  </g>
+  <!-- Odyssai monogram "O" subtle mark -->
+  <circle cx="512" cy="756" r="18" stroke="#4a4e69" stroke-width="10" fill="none"/>
+</svg>

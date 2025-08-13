@@ -1,0 +1,38 @@
+<svg width="1024" height="1024" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
+  <style>
+    @media (prefers-color-scheme: dark) {
+      .bg { fill: #22223b; }
+      .stroke { stroke: #9a8c98; }
+      .accent-fill { fill: #c9ada7; }
+      .accent-stroke { stroke: #c9ada7; }
+    }
+    @media (prefers-color-scheme: light) {
+      .bg { fill: #f2e9e4; }
+      .stroke { stroke: #4a4e69; }
+      .accent-fill { fill: #9a8c98; }
+      .accent-stroke { stroke: #9a8c98; }
+    }
+  </style>
+  <rect x="32" y="32" width="960" height="960" rx="220" class="bg"/>
+  <!-- Book group -->
+  <g class="book stroke" stroke-width="32" stroke-linecap="round" stroke-linejoin="round" fill="none">
+    <!-- Book body -->
+    <rect x="252" y="332" width="520" height="360" rx="36" ry="36"/>
+    <!-- Spine (accent band) -->
+    <path d="M292 332 L292 692" class="accent-stroke"/>
+    <!-- Page lines -->
+    <path d="M332 412 L712 412"/>
+    <path d="M332 472 L712 472"/>
+    <path d="M332 532 L712 532"/>
+    <!-- Bookmark ribbon -->
+    <path d="M712 332 L712 452 L672 428 Z" class="accent-fill accent-stroke"/>
+  </g>
+  <!-- Subtle brand star (knowledge spark) -->
+  <g class="accent-fill">
+    <circle cx="760" cy="300" r="6"/>
+    <circle cx="785" cy="280" r="4"/>
+    <circle cx="735" cy="275" r="4"/>
+  </g>
+  <!-- Odyssai monogram "O" subtle mark -->
+  <circle cx="512" cy="756" r="18" class="stroke" stroke-width="10" fill="none"/>
+</svg>
