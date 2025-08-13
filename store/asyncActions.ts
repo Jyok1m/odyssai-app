@@ -1,6 +1,8 @@
+import "react-native-get-random-values";
 import { createAsyncThunk } from "@reduxjs/toolkit";
 import { getCurrentTimestamp } from "./utils/utils";
 import { addData } from "./reducers/gameDataSlice";
+import { v4 as uuidv4 } from "uuid";
 
 const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || "http://localhost:8000";
 
@@ -57,8 +59,8 @@ export const sendMessageToAI = createAsyncThunk("messages/sendMessageToAI", asyn
 		nextStep = currentStep;
 	};
 
-	console.log("Before => ", { currentStep, aiText, userAnswer });
-	console.log("Before => ", { gameData });
+	// console.log("Before => ", { currentStep, aiText, userAnswer });
+	// console.log("Before => ", { gameData });
 
 	/* ---------------------------------------------------------------- */
 	/*                               WORLD                              */
@@ -104,7 +106,7 @@ export const sendMessageToAI = createAsyncThunk("messages/sendMessageToAI", asyn
 			dispatch(addData({ key: "world_id", value: world_id }));
 
 			response.push({
-				id: `ai_${Date.now()}`,
+				id: uuidv4(),
 				currentStep: "filler",
 				text: `Perfect, I found your world!`,
 				isUser: false,
@@ -147,7 +149,7 @@ export const sendMessageToAI = createAsyncThunk("messages/sendMessageToAI", asyn
 
 			// Show synopsis to the user
 			response.push({
-				id: `ai_${Date.now()}`,
+				id: uuidv4(),
 				currentStep: "filler",
 				text: synopsis,
 				isUser: false,
@@ -162,7 +164,7 @@ export const sendMessageToAI = createAsyncThunk("messages/sendMessageToAI", asyn
 			nextStep = "ask_character_name";
 		} else if (userAnswer === "no") {
 			response.push({
-				id: `ai_${Date.now()}`,
+				id: `ai_${getCurrentTimestamp()}`,
 				currentStep: "filler",
 				text: "Alright! Let me know if you change your mind.",
 				isUser: false,
@@ -211,7 +213,7 @@ export const sendMessageToAI = createAsyncThunk("messages/sendMessageToAI", asyn
 			dispatch(addData({ key: "character_name", value: character_name }));
 
 			response.push({
-				id: `ai_${Date.now()}`,
+				id: uuidv4(),
 				currentStep: "filler",
 				text: `Great! Let's start creating your new character!`,
 				isUser: false,
@@ -234,7 +236,7 @@ export const sendMessageToAI = createAsyncThunk("messages/sendMessageToAI", asyn
 		// If the user doesn't want a new character and the name doesn't exist, we ask if the player wants to create a new character
 		else if (!is_new_character && !exists) {
 			nextQuestion = `The character '${character_name}' does not exist. Do you want to create a new character?`;
-			nextStep = "ask_new_character";
+			nextStep = "ask_create_new_character";
 		}
 	}
 
@@ -273,7 +275,7 @@ export const sendMessageToAI = createAsyncThunk("messages/sendMessageToAI", asyn
 			nextStep = "join_game";
 		} else if (userAnswer === "no") {
 			response.push({
-				id: `ai_${Date.now()}`,
+				id: uuidv4(),
 				currentStep: "filler",
 				text: "Alright! Let me know if you change your mind.",
 				isUser: false,
@@ -303,7 +305,7 @@ export const sendMessageToAI = createAsyncThunk("messages/sendMessageToAI", asyn
 
 			if (!is_new_world) {
 				response.push({
-					id: `ai_${Date.now()}`,
+					id: uuidv4(),
 					currentStep: "filler",
 					text: `Here is the story so far: ${world_summary}`,
 					isUser: false,
@@ -315,7 +317,7 @@ export const sendMessageToAI = createAsyncThunk("messages/sendMessageToAI", asyn
 			nextStep = "get_prompt";
 		} else if (userAnswer === "no") {
 			response.push({
-				id: `ai_${Date.now()}`,
+				id: uuidv4(),
 				currentStep: "filler",
 				text: "Alright! Let me know if you change your mind.",
 				isUser: false,
@@ -339,7 +341,7 @@ export const sendMessageToAI = createAsyncThunk("messages/sendMessageToAI", asyn
 			nextStep = "get_response";
 		} else if (userAnswer === "no") {
 			response.push({
-				id: `ai_${Date.now()}`,
+				id: uuidv4(),
 				currentStep: "filler",
 				text: "Alright! Let me know if you change your mind.",
 				isUser: false,
@@ -359,7 +361,7 @@ export const sendMessageToAI = createAsyncThunk("messages/sendMessageToAI", asyn
 		const { immediate_events } = aiResponse;
 
 		response.push({
-			id: `ai_${Date.now()}`,
+			id: uuidv4(),
 			currentStep: "filler",
 			text: immediate_events,
 			isUser: false,
@@ -371,7 +373,7 @@ export const sendMessageToAI = createAsyncThunk("messages/sendMessageToAI", asyn
 	}
 
 	response.push({
-		id: `ai_${Date.now()}`,
+		id: uuidv4(),
 		currentStep: nextStep,
 		text: nextQuestion,
 		isUser: false,
@@ -383,7 +385,7 @@ export const sendMessageToAI = createAsyncThunk("messages/sendMessageToAI", asyn
 
 // Actions de reset
 export const resetConversation = createAsyncThunk("messages/resetConversation", async () => ({
-	id: `welcome_${Date.now()}`,
+	id: uuidv4(),
 	currentStep: "welcome",
 	text: "Welcome to Odyssai. Start by answering a few questions and let's get started!",
 	isUser: false,
@@ -391,7 +393,7 @@ export const resetConversation = createAsyncThunk("messages/resetConversation", 
 }));
 
 export const resetCompleteStore = createAsyncThunk("messages/resetCompleteStore", async () => ({
-	id: `welcome_${Date.now()}`,
+	id: uuidv4(),
 	currentStep: "welcome",
 	text: "Welcome to Odyssai. Start by answering a few questions and let's get started!",
 	isUser: false,

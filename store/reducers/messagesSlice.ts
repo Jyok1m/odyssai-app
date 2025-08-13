@@ -1,19 +1,21 @@
+import "react-native-get-random-values";
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { Message, MessagesState } from "../types/types";
 import { sendMessageToAI, resetConversation, resetCompleteStore } from "../asyncActions";
 import { getCurrentTimestamp } from "../utils/utils";
+import { v4 as uuidv4 } from "uuid";
 
 const initialState: MessagesState = {
 	messages: [
 		{
-			id: "1",
+			id: uuidv4(),
 			currentStep: "welcome",
 			text: "Welcome to Odyssai. Start by answering a few questions and let's get started!",
 			isUser: false,
 			timestamp: getCurrentTimestamp(),
 		},
 		{
-			id: "2",
+			id: uuidv4(),
 			currentStep: "ask_new_world",
 			text: "Do you want to create a new world?",
 			isUser: false,
@@ -55,14 +57,14 @@ const messagesSlice = createSlice({
 		resetStore: (state) => {
 			// Reset to initial state with welcome message and first question
 			const welcomeMessage: Message = {
-				id: "welcome_" + Date.now(),
+				id: uuidv4(),
 				currentStep: "welcome",
 				text: "Welcome to Odyssai. Start by answering a few questions and let's get started!",
 				isUser: false,
 				timestamp: getCurrentTimestamp(),
 			};
 			const firstQuestion: Message = {
-				id: "question_" + Date.now(),
+				id: uuidv4(),
 				currentStep: "ask_new_world",
 				text: "Do you wish to create a new world?",
 				isUser: false,
@@ -91,7 +93,7 @@ const messagesSlice = createSlice({
 			// Handle resetConversation
 			.addCase(resetConversation.fulfilled, (state, action) => {
 				const firstQuestion: Message = {
-					id: "question_" + Date.now(),
+					id: uuidv4(),
 					currentStep: "ask_new_world",
 					text: "Do you want to create a new world?",
 					isUser: false,
@@ -103,7 +105,7 @@ const messagesSlice = createSlice({
 			// Handle resetCompleteStore
 			.addCase(resetCompleteStore.fulfilled, (state, action) => {
 				const firstQuestion: Message = {
-					id: "question_" + Date.now(),
+					id: uuidv4(),
 					currentStep: "ask_new_world",
 					text: "Do you want to create a new world?",
 					isUser: false,

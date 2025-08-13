@@ -8,7 +8,7 @@ interface AIThinkingAdvancedProps {
 }
 
 const thinkingPhrases = [
-	"AI is having an existential crisis",
+	"I'm thinking and having an existential crisis",
 	"Consulting the digital crystal ball",
 	"Asking the magic 8-ball for wisdom",
 	"Bribing the creativity demons",
@@ -26,21 +26,27 @@ const thinkingPhrases = [
 ];
 
 export const AIThinkingAdvanced: React.FC<AIThinkingAdvancedProps> = ({ style, textStyle }) => {
-	const [currentPhrase, setCurrentPhrase] = useState(0);
+	const [currentPhrase, setCurrentPhrase] = useState(() => Math.floor(Math.random() * thinkingPhrases.length));
 	const [phase, setPhase] = useState<"typing" | "dots">("typing");
 	const [dotsCount, setDotsCount] = useState(0);
 	const [cycleCount, setCycleCount] = useState(0);
 	const [cursorOpacity] = useState(new Animated.Value(1));
 
-	// Change phrase every few seconds
+	// Change phrase every few seconds with random selection
 	useEffect(() => {
-		if (phase === "dots" && cycleCount > 0 && cycleCount % 15 === 0) {
-			// Change phrase every 15 dot cycles (instead of 8) - slower change
-			setCurrentPhrase((prev) => (prev + 1) % thinkingPhrases.length);
+		if (phase === "dots" && cycleCount > 0 && cycleCount % 12 === 0) {
+			// Change phrase every 12 dot cycles - random selection
+			let newPhrase;
+			do {
+				newPhrase = Math.floor(Math.random() * thinkingPhrases.length);
+			} while (newPhrase === currentPhrase && thinkingPhrases.length > 1); // Avoid same phrase twice
+
+			setCurrentPhrase(newPhrase);
 			setPhase("typing");
 			setDotsCount(0);
+			setCycleCount(0); // Reset cycle count to restart the loop
 		}
-	}, [cycleCount, phase]);
+	}, [cycleCount, phase, currentPhrase]);
 
 	// Animation des points après le typing
 	useEffect(() => {
