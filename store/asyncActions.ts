@@ -6,6 +6,27 @@ import { v4 as uuidv4 } from "uuid";
 
 const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || "http://localhost:8000";
 
+// Simple function to classify user messages (with optional API fallback)
+const classifyUserMessage = async (message: string): Promise<"yes" | "no"> => {
+	try {
+		const response = await fetch(`${API_BASE_URL}/api/classify-message`, {
+			method: "POST",
+			headers: {
+				"Content-Type": "application/json",
+			},
+			body: JSON.stringify({
+				message: message,
+			}),
+		});
+
+		const data = await response.json();
+		return data.classification;
+	} catch (error) {
+		console.error("Error calling message classification API:", error);
+		return "no";
+	}
+};
+
 // Appel API
 const fetchAIResponse = async (method: string, endpoint: string, body?: any): Promise<any> => {
 	let options: RequestInit = { method: method };
@@ -69,10 +90,11 @@ export const sendMessageToAI = createAsyncThunk("messages/sendMessageToAI", asyn
 	// Step - If user is at step create new world, ask for world name
 	if (currentStep === "ask_new_world") {
 		nextStep = "ask_world_name";
-		if (userAnswer === "yes") {
+		const classification = await classifyUserMessage(userAnswer);
+		if (classification === "yes") {
 			dispatch(addData({ key: "is_new_world", value: true }));
 			nextQuestion = "Great! Let's create a new world. How would you like to name your new world?";
-		} else if (userAnswer === "no") {
+		} else if (classification === "no") {
 			dispatch(addData({ key: "is_new_world", value: false }));
 			nextQuestion = "Alright! Which world would you like to join?";
 		} else {
@@ -142,8 +164,10 @@ export const sendMessageToAI = createAsyncThunk("messages/sendMessageToAI", asyn
 
 	// Step - When user is ready to create new world, we create the world and ask for character creation
 	else if (currentStep === "create_world") {
+		const classification = await classifyUserMessage(userAnswer);
+
 		// If user is ready for world generation
-		if (userAnswer === "yes") {
+		if (classification === "yes") {
 			const aiResponse = await fetchAIResponse("POST", `/create-world`, { world_name, world_genre, story_directives });
 			const { world_id, synopsis } = aiResponse;
 
@@ -162,7 +186,7 @@ export const sendMessageToAI = createAsyncThunk("messages/sendMessageToAI", asyn
 			// Send user to character creation QA
 			nextQuestion = "Now, how would you like to name your character?";
 			nextStep = "ask_character_name";
-		} else if (userAnswer === "no") {
+		} else if (classification === "no") {
 			response.push({
 				id: `ai_${getCurrentTimestamp()}`,
 				currentStep: "filler",
@@ -185,10 +209,11 @@ export const sendMessageToAI = createAsyncThunk("messages/sendMessageToAI", asyn
 	// Step - When user asks chooses if he wants to play as a new character or not
 	else if (currentStep === "ask_create_new_character") {
 		nextStep = "ask_character_name";
-		if (userAnswer === "yes") {
+		const classification = await classifyUserMessage(userAnswer);
+		if (classification === "yes") {
 			dispatch(addData({ key: "is_new_character", value: true }));
 			nextQuestion = "Great! Let's create a new character. What would you like to name your character?";
-		} else if (userAnswer === "no") {
+		} else if (classification === "no") {
 			dispatch(addData({ key: "is_new_character", value: false }));
 			nextQuestion = "Alright! Which character would you like to play as?";
 		} else {
@@ -258,7 +283,8 @@ export const sendMessageToAI = createAsyncThunk("messages/sendMessageToAI", asyn
 
 	// Create new character
 	else if (currentStep === "create_character") {
-		if (userAnswer === "yes") {
+		const classification = await classifyUserMessage(userAnswer);
+		if (classification === "yes") {
 			const { character_gender, character_description } = gameData;
 
 			const aiResponse = await fetchAIResponse("POST", "/create-character", {
@@ -273,7 +299,7 @@ export const sendMessageToAI = createAsyncThunk("messages/sendMessageToAI", asyn
 			dispatch(addData({ key: "character_id", value: character_id }));
 			nextQuestion = `I have successfully generated your character! Are you ready to join the world of ${world_name}?`;
 			nextStep = "join_game";
-		} else if (userAnswer === "no") {
+		} else if (classification === "no") {
 			response.push({
 				id: uuidv4(),
 				currentStep: "filler",
@@ -295,7 +321,8 @@ export const sendMessageToAI = createAsyncThunk("messages/sendMessageToAI", asyn
 
 	// Join existing game
 	else if (currentStep === "join_game") {
-		if (userAnswer === "yes") {
+		const classification = await classifyUserMessage(userAnswer);
+		if (classification === "yes") {
 			const aiResponse = await fetchAIResponse("POST", "/join-game", { world_name, character_name });
 
 			const { world_id, character_id, world_summary } = aiResponse;
@@ -315,7 +342,7 @@ export const sendMessageToAI = createAsyncThunk("messages/sendMessageToAI", asyn
 
 			nextQuestion = `Shall we begin?`;
 			nextStep = "get_prompt";
-		} else if (userAnswer === "no") {
+		} else if (classification === "no") {
 			response.push({
 				id: uuidv4(),
 				currentStep: "filler",
