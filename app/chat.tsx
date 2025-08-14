@@ -166,7 +166,7 @@ export default function ChatScreen() {
 		try {
 			setIsTranscribing(true);
 
-			// uri check
+			// URI check
 			if (!audioUri || audioUri.trim() === "") {
 				throw new Error("Empty audio URI");
 			}
@@ -181,8 +181,10 @@ export default function ChatScreen() {
 			formData.append("model", "whisper-1");
 			formData.append("language", "en");
 
-			// Appel à l'API OpenAI (IMPORTANT: ne pas définir Content-Type manuellement)
-			const response = await fetch("https://api.openai.com/v1/audio/transcriptions", {
+			console.log("Sending request to OpenAI...");
+
+			// Utiliser Promise.race pour gérer le timeout
+			const fetchPromise = fetch("https://api.openai.com/v1/audio/transcriptions", {
 				method: "POST",
 				headers: {
 					Authorization: `Bearer ${process.env.EXPO_PUBLIC_OPENAI_API_KEY}`,
@@ -190,13 +192,23 @@ export default function ChatScreen() {
 				body: formData,
 			});
 
+			const timeoutPromise = new Promise((_, reject) => {
+				setTimeout(() => {
+					reject(new Error("Request timeout after 45 seconds"));
+				}, 45000); // 45 secondes timeout
+			});
+
+			console.log("Starting request timeout...");
+			const response: any = await Promise.race([fetchPromise, timeoutPromise]);
+
 			if (!response.ok) {
 				const errorText = await response.text();
-				console.error("API Error:", errorText);
-				throw new Error(`Error ${response.status}: ${errorText}`);
+				console.error("❌ API Error:", errorText);
+				throw new Error(`API Error ${response.status}: ${errorText}`);
 			}
 
 			const result = await response.json();
+			console.log("Result:", result);
 
 			// Ajouter le texte transcrit au champ de saisie
 			const transcribedText = result.text?.trim() || "";
@@ -206,11 +218,25 @@ export default function ChatScreen() {
 					return newMessage.trim();
 				});
 			} else {
-				Alert.alert("Info", "No text detected");
+				console.log("No text detected in audio");
+				Alert.alert("Info", "No text detected in the audio");
 			}
 		} catch (error: any) {
-			console.error("Error during transcription:", error);
-			Alert.alert("Transcription Error", `Failed to transcribe audio: ${error.message}`);
+			// Messages d'erreur plus spécifiques
+			let errorMessage = "Failed to transcribe audio";
+			if (error.message.includes("timeout") || error.message.includes("Network request timed out")) {
+				errorMessage = "Request timed out. The audio might be too long or there's a network issue.";
+			} else if (error.message.includes("Network")) {
+				errorMessage = "Network error. Please check your internet connection.";
+			} else if (error.message.includes("401")) {
+				errorMessage = "API authentication failed. Please check your OpenAI API key.";
+			} else if (error.message.includes("429")) {
+				errorMessage = "Rate limit exceeded. Please wait a moment and try again.";
+			} else if (error.message.includes("413")) {
+				errorMessage = "Audio file too large. Try recording a shorter message.";
+			}
+
+			Alert.alert("Transcription Error", `${errorMessage}\n\nTechnical details: ${error.message}`);
 		} finally {
 			setIsTranscribing(false);
 		}
