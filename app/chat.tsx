@@ -7,55 +7,63 @@ import { ResetModal } from "../components/ResetModal";
 import { AIThinkingAdvanced } from "../components/AIThinkingAdvanced";
 
 export default function ChatScreen() {
-	const [message, setMessage] = useState("");
-	const [showResetModal, setShowResetModal] = useState(false);
-	const flatListRef = useRef<FlatList>(null);
 	const dispatch = useAppDispatch();
 	const messagesState = useAppSelector((state) => state.messages);
 	const messages = messagesState?.messages || [];
 	const isLoading = messagesState?.isLoading || false;
 	const { sendMessage, resetChat } = useChatActions();
 
-	// Initialiser les messages si ils sont vides au premier chargement
+	const flatListRef = useRef<FlatList>(null);
+
+	/* ---------------------------------------------------------------- */
+	/*                            State hooks                           */
+	/* ---------------------------------------------------------------- */
+
+	const [message, setMessage] = useState("");
+	const [showResetModal, setShowResetModal] = useState(false);
+
+	/* ---------------------------------------------------------------- */
+	/*                           Effect hooks                           */
+	/* ---------------------------------------------------------------- */
+
 	useEffect(() => {
+		// Initialiser les messages si ils sont vides au premier chargement
 		if (messages.length === 0) {
 			dispatch(resetStore());
-		}
-	}, [messages.length, dispatch]);
-
-	// Scroll automatiquement vers le dernier message
-	useEffect(() => {
-		if (messages.length > 0 && flatListRef.current) {
+		} else if (messages.length > 0 && flatListRef.current) {
 			setTimeout(() => {
 				flatListRef.current?.scrollToEnd({ animated: true });
 			}, 100);
 		}
-	}, [messages.length, isLoading]);
+	}, [messages.length, dispatch, isLoading]);
 
-	const handleSend = () => {
-		if (message.trim()) {
-			const currentStep = messages.length > 0 ? messages[messages.length - 1].currentStep : "user_message";
-			sendMessage(message, currentStep);
-			setMessage("");
-		}
-	};
+	/* ---------------------------------------------------------------- */
+	/*                             Functions                            */
+	/* ---------------------------------------------------------------- */
 
+	/* ----------------------------- Voice ---------------------------- */
+
+	// Record message
 	const handleRecord = () => {
 		// Placeholder for audio recording
 		console.log("Recording audio...");
 	};
 
-	const handleReset = () => {
-		resetChat();
+	/* ----------------------------- Text ----------------------------- */
+
+	// Send text message
+	const handleSend = () => {
+		if (String(message).trim().length > 0) {
+			const { currentStep } = messages[messages.length - 1];
+
+			sendMessage(message, currentStep);
+			setMessage("");
+		}
 	};
 
-	const handleOpenResetModal = () => {
-		setShowResetModal(true);
-	};
-
-	const handleCloseResetModal = () => {
-		setShowResetModal(false);
-	};
+	/* ---------------------------------------------------------------- */
+	/*                             Variables                            */
+	/* ---------------------------------------------------------------- */
 
 	const renderMessage = ({ item }: { item: Message }) => (
 		<View style={[styles.messageContainer, item.isUser ? styles.userMessage : styles.botMessage]}>
@@ -63,6 +71,10 @@ export default function ChatScreen() {
 			<Text style={styles.timestamp}>{formatTimestamp(item.timestamp)}</Text>
 		</View>
 	);
+
+	/* ---------------------------------------------------------------- */
+	/*                                JSX                               */
+	/* ---------------------------------------------------------------- */
 
 	return (
 		<SafeAreaView style={styles.container}>
@@ -72,7 +84,7 @@ export default function ChatScreen() {
 					<MaterialCommunityIcons name="robot" size={24} color="#9a8c98" />
 					<Text style={styles.headerTitle}>Odyssai Assistant</Text>
 				</View>
-				<Pressable style={styles.resetButton} onPress={handleOpenResetModal}>
+				<Pressable style={styles.resetButton} onPress={() => setShowResetModal(true)}>
 					<MaterialCommunityIcons name="delete-sweep" size={20} color="#e74c3c" />
 				</Pressable>
 			</View>
@@ -120,7 +132,7 @@ export default function ChatScreen() {
 			</KeyboardAvoidingView>
 
 			{/* Reset Modal */}
-			<ResetModal visible={showResetModal} onClose={handleCloseResetModal} onConfirm={handleReset} />
+			<ResetModal visible={showResetModal} onClose={() => setShowResetModal(false)} onConfirm={resetChat} />
 		</SafeAreaView>
 	);
 }
