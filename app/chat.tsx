@@ -31,6 +31,7 @@ export default function ChatScreen() {
 	} = useTTS();
 
 	const flatListRef = useRef<FlatList>(null);
+	const seenMessageIds = useRef<Set<string>>(new Set());
 
 	/* ---------------------------------------------------------------- */
 	/*                            State hooks                           */
@@ -71,10 +72,25 @@ export default function ChatScreen() {
 		const handleMessagesUpdate = () => {
 			if (messages.length === 0) {
 				dispatch(resetStore());
-			} else if (flatListRef.current) {
-				setTimeout(() => {
-					flatListRef.current?.scrollToEnd({ animated: true });
-				}, 100);
+				// Réinitialiser le set des messages vus quand on reset
+				seenMessageIds.current.clear();
+			} else {
+				// Au premier chargement, marquer tous les messages existants comme "vus"
+				// pour éviter de jouer automatiquement les anciens messages
+				if (seenMessageIds.current.size === 0 && messages.length > 0) {
+					messages.forEach((message) => {
+						if (!message.isUser) {
+							seenMessageIds.current.add(message.id);
+						}
+					});
+					console.log(`Marked ${seenMessageIds.current.size} existing AI messages as seen`);
+				}
+
+				if (flatListRef.current) {
+					setTimeout(() => {
+						flatListRef.current?.scrollToEnd({ animated: true });
+					}, 100);
+				}
 			}
 		};
 
@@ -89,8 +105,14 @@ export default function ChatScreen() {
 
 				// Si c'est un nouveau message de l'IA et qu'il n'est pas en cours de chargement
 				if (!lastMessage.isUser && !isLoading && lastMessage.text.trim() !== "") {
-					console.log(`Queueing TTS for AI message: ${lastMessage.id}`);
-					queueTTSMessage(lastMessage.id, lastMessage.text);
+					// Vérifier si ce message est vraiment nouveau (pas rechargé depuis le store)
+					if (!seenMessageIds.current.has(lastMessage.id)) {
+						console.log(`Queueing TTS for NEW AI message: ${lastMessage.id}`);
+						seenMessageIds.current.add(lastMessage.id);
+						queueTTSMessage(lastMessage.id, lastMessage.text);
+					} else {
+						console.log(`Skipping TTS for existing AI message: ${lastMessage.id}`);
+					}
 				}
 			}
 		};
@@ -220,15 +242,16 @@ export default function ChatScreen() {
 	/* ----------------------------- TTS ------------------------------ */
 
 	// Handle TTS replay for a specific message
-	const handleTTSReplay = (messageId: string) => {
+	const handleTTSReplay = async (messageId: string, messageText: string) => {
 		console.log(`Replaying TTS for message: ${messageId}`);
-		playTTSMessage(messageId);
+		await playTTSMessage(messageId, messageText);
 	};
 
 	// Handle reset chat with TTS cleanup
 	const handleResetChat = () => {
 		console.log("Resetting chat and clearing TTS queue");
 		clearTTSQueue();
+		seenMessageIds.current.clear();
 		resetChat();
 	};
 
@@ -255,7 +278,7 @@ export default function ChatScreen() {
 							<Text style={[styles.timestamp, styles.botTimestamp]}>{formatTimestamp(item.timestamp)}</Text>
 							<Pressable
 								style={[styles.ttsButton, isTTSActive && styles.ttsButtonActive]}
-								onPress={() => handleTTSReplay(item.id)}
+								onPress={() => handleTTSReplay(item.id, item.text)}
 								disabled={isTTSLoading && !isTTSActive}
 							>
 								<MaterialCommunityIcons

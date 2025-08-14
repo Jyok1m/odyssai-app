@@ -16,7 +16,7 @@ interface UseTTSReturn {
 	currentItem: TTSQueueItem | null;
 	queue: TTSQueueItem[];
 	queueMessage: (id: string, text: string, options?: Partial<TTSOptions>) => Promise<void>;
-	playMessage: (id: string) => Promise<void>;
+	playMessage: (id: string, text?: string) => Promise<void>;
 	stopCurrentPlayback: () => void;
 	clearQueue: () => void;
 	skipToNext: () => void;
@@ -132,7 +132,7 @@ export const useTTS = (): UseTTSReturn => {
 
 	// Play a specific message (replay functionality)
 	const playMessage = useCallback(
-		async (id: string) => {
+		async (id: string, text?: string) => {
 			try {
 				// Check if message is already in cache
 				const cachedAudioUri = audioCache.get(id);
@@ -141,16 +141,24 @@ export const useTTS = (): UseTTSReturn => {
 					console.log(`Replaying cached audio for message: ${id}`);
 
 					// Stop current playback
-					stopCurrentPlayback();
+					if (isPlaying) {
+						audioPlayer.pause();
+						setIsPlaying(false);
+						setCurrentItem(null);
+					}
 
 					// Play immediately
-					setCurrentItem({ id, text: "", audioUri: cachedAudioUri });
+					setCurrentItem({ id, text: text || "", audioUri: cachedAudioUri });
 					setIsPlaying(true);
 
 					await audioPlayer.replace(cachedAudioUri);
 					audioPlayer.play();
+				} else if (text) {
+					// If not cached but we have text, generate and play
+					console.log(`Audio not cached for message ${id}, generating new audio`);
+					await queueMessage(id, text);
 				} else {
-					console.log(`Audio not cached for message ${id}, cannot replay`);
+					console.log(`Audio not cached for message ${id}, and no text provided for regeneration`);
 					Alert.alert("Replay Error", "Audio not available for replay");
 				}
 			} catch (error) {
@@ -158,7 +166,7 @@ export const useTTS = (): UseTTSReturn => {
 				Alert.alert("Replay Error", "Failed to replay audio");
 			}
 		},
-		[audioCache, audioPlayer]
+		[audioCache, audioPlayer, queueMessage, isPlaying]
 	);
 
 	// Stop current playback
