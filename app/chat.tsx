@@ -55,6 +55,13 @@ export default function ChatScreen() {
 		}
 	}, [messages.length, dispatch, isLoading]);
 
+	useEffect(() => {
+		console.log("Recorder state changed:", {
+			isRecording: recorderState.isRecording,
+			uri: audioRecorder.uri,
+		});
+	}, [recorderState.isRecording, audioRecorder.uri]);
+
 	/* ---------------------------------------------------------------- */
 	/*                             Functions                            */
 	/* ---------------------------------------------------------------- */
@@ -63,17 +70,38 @@ export default function ChatScreen() {
 
 	// Record message
 	const handleRecord = async () => {
-		// Placeholder for audio recording
-		await audioRecorder.prepareToRecordAsync();
-		audioRecorder.record();
-		console.log("Recording audio...");
+		try {
+			if (recorderState.isRecording) {
+				console.log("Already recording");
+				return;
+			}
+
+			await audioRecorder.prepareToRecordAsync();
+			await audioRecorder.record();
+			console.log("Recording audio started...");
+		} catch (error) {
+			console.error("Error starting recording:", error);
+			Alert.alert("Erreur", "Impossible de démarrer l'enregistrement");
+		}
 	};
 
 	const stopRecording = async () => {
-		// The recording will be available on `audioRecorder.uri`.
-		await audioRecorder.stop();
-		console.log("Audio recording stopped.");
-		console.log(audioRecorder.uri);
+		try {
+			if (!recorderState.isRecording) {
+				console.log("Not currently recording");
+				return;
+			}
+
+			const uri = await audioRecorder.stop();
+			console.log("Audio recording stopped.");
+			console.log("Recording URI:", uri);
+
+			// TODO: Traiter l'audio enregistré
+			// Ici vous pourriez envoyer l'audio au serveur ou le traiter
+		} catch (error) {
+			console.error("Error stopping recording:", error);
+			Alert.alert("Erreur", "Impossible d'arrêter l'enregistrement");
+		}
 	};
 
 	/* ----------------------------- Text ----------------------------- */
