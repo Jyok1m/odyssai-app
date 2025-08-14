@@ -439,11 +439,10 @@ const styles = StyleSheet.create({
 		borderRadius: 16,
 		paddingHorizontal: 16,
 		paddingVertical: 12,
-		flexWrap: "wrap",
 	},
 	messageContent: {
 		width: "100%",
-		backgroundColor: "inherit",
+		backgroundColor: "transparent",
 	},
 	messageText: {
 		fontSize: 16,
@@ -459,7 +458,7 @@ const styles = StyleSheet.create({
 		width: "100%",
 		marginTop: 4,
 		paddingHorizontal: 4,
-		backgroundColor: "inherit",
+		backgroundColor: "transparent",
 	},
 	userMessage: {
 		alignSelf: "flex-end",
