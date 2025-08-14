@@ -108,7 +108,6 @@ export default function ChatScreen() {
 					if (!message.isUser && !isLoading && message.text.trim() !== "") {
 						// Vérifier si ce message est vraiment nouveau (pas rechargé depuis le store)
 						if (!seenMessageIds.current.has(message.id)) {
-							console.log(`🎵 Queueing TTS for NEW AI message: ${message.id}`);
 							seenMessageIds.current.add(message.id);
 							queueTTSMessage(message.id, message.text);
 						}
