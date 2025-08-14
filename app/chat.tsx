@@ -101,17 +101,18 @@ export default function ChatScreen() {
 	useEffect(() => {
 		const handleNewAIMessages = () => {
 			if (messages.length > 0) {
-				const lastMessage = messages[messages.length - 1];
-
-				// Si c'est un nouveau message de l'IA et qu'il n'est pas en cours de chargement
-				if (!lastMessage.isUser && !isLoading && lastMessage.text.trim() !== "") {
-					// Vérifier si ce message est vraiment nouveau (pas rechargé depuis le store)
-					if (!seenMessageIds.current.has(lastMessage.id)) {
-						// console.log(`Queueing TTS for NEW AI message: ${lastMessage.id}`);
-						seenMessageIds.current.add(lastMessage.id);
-						queueTTSMessage(lastMessage.id, lastMessage.text);
+				// Traiter tous les messages IA non vus
+				messages.forEach((message) => {
+					// Si c'est un message de l'IA et qu'il n'est pas en cours de chargement
+					if (!message.isUser && !isLoading && message.text.trim() !== "") {
+						// Vérifier si ce message est vraiment nouveau (pas rechargé depuis le store)
+						if (!seenMessageIds.current.has(message.id)) {
+							console.log(`🎵 Queueing TTS for NEW AI message: ${message.id}`);
+							seenMessageIds.current.add(message.id);
+							queueTTSMessage(message.id, message.text);
+						}
 					}
-				}
+				});
 			}
 		};
 

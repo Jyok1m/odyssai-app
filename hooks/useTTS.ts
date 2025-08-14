@@ -43,12 +43,15 @@ export const useTTS = (): UseTTSReturn => {
 
 	// Process the queue
 	const processQueue = useCallback(async () => {
-		if (isProcessingQueue.current || queue.length === 0 || isPlaying) {
+		console.log(`🎵 Processing queue: ${queue.length} items, currentItem: ${currentItem?.id || "none"}, isProcessing: ${isProcessingQueue.current}`);
+
+		if (isProcessingQueue.current || queue.length === 0 || currentItem !== null) {
 			return;
 		}
 
 		isProcessingQueue.current = true;
 		const nextItem = queue[0];
+		console.log(`🎵 Starting TTS for message: ${nextItem.id}`);
 
 		try {
 			setCurrentItem(nextItem);
@@ -58,7 +61,7 @@ export const useTTS = (): UseTTSReturn => {
 
 			if (!audioUri) {
 				setIsLoading(true);
-				// console.log(`Generating TTS for message: ${nextItem.id}`);
+				console.log(`🎵 Generating TTS for message: ${nextItem.id}`);
 
 				const options: TTSOptions = {
 					text: nextItem.text,
@@ -71,12 +74,15 @@ export const useTTS = (): UseTTSReturn => {
 				// Cache the audio
 				setAudioCache((prev) => new Map(prev).set(nextItem.id, audioUri!));
 				setQueue((prev) => prev.map((item) => (item.id === nextItem.id ? { ...item, audioUri } : item)));
+				console.log(`🎵 TTS generated and cached for: ${nextItem.id}`);
+			} else {
+				console.log(`🎵 Using cached audio for: ${nextItem.id}`);
 			}
 
 			setIsLoading(false);
 
 			// Play the audio
-			// console.log(`Playing TTS for message: ${nextItem.id}`);
+			console.log(`🎵 Playing TTS for message: ${nextItem.id}`);
 			setIsPlaying(true);
 
 			audioPlayer.replace(audioUri);
@@ -90,22 +96,28 @@ export const useTTS = (): UseTTSReturn => {
 			// Remove failed item from queue and continue
 			setQueue((prev) => prev.slice(1));
 			setCurrentItem(null);
+			isProcessingQueue.current = false;
 		}
-
-		isProcessingQueue.current = false;
-	}, [queue, isPlaying, audioCache, audioPlayer]);
+	}, [queue, currentItem, audioCache, audioPlayer]);
 
 	// Handle audio player status changes
 	useEffect(() => {
 		const subscription = audioPlayer.addListener("playbackStatusUpdate", (status) => {
 			if (status.isLoaded) {
 				if (status.didJustFinish) {
-					// console.log("Audio playback finished");
+					console.log("Audio playback finished, processing next in queue");
 					setIsPlaying(false);
 					setCurrentItem(null);
 
 					// Remove completed item from queue
-					setQueue((prev) => prev.slice(1));
+					setQueue((prev) => {
+						const newQueue = prev.slice(1);
+						console.log(`Queue updated: ${newQueue.length} items remaining`);
+						return newQueue;
+					});
+
+					// Reset processing flag to allow next item
+					isProcessingQueue.current = false;
 				}
 			}
 		});
@@ -119,16 +131,23 @@ export const useTTS = (): UseTTSReturn => {
 	}, [processQueue]);
 
 	// Queue a new message for TTS
-	const queueMessage = useCallback(async (id: string, text: string, options?: Partial<TTSOptions>) => {
-		const newItem: TTSQueueItem = {
-			id,
-			text: text.trim(),
-			options,
-		};
+	const queueMessage = useCallback(
+		async (id: string, text: string, options?: Partial<TTSOptions>) => {
+			const newItem: TTSQueueItem = {
+				id,
+				text: text.trim(),
+				options,
+			};
 
-		// console.log(`Queueing message for TTS: ${id}`);
-		setQueue((prev) => [...prev, newItem]);
-	}, []);
+			console.log(`🎵 Queueing message for TTS: ${id} (Queue size will be: ${queue.length + 1})`);
+			setQueue((prev) => {
+				const newQueue = [...prev, newItem];
+				console.log(`🎵 Queue updated: ${newQueue.map((item) => item.id).join(", ")}`);
+				return newQueue;
+			});
+		},
+		[queue.length]
+	);
 
 	// Play a specific message (replay functionality)
 	const playMessage = useCallback(
