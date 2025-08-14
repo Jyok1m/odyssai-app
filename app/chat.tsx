@@ -277,7 +277,12 @@ export default function ChatScreen() {
 						<>
 							<Text style={[styles.timestamp, styles.botTimestamp]}>{formatTimestamp(item.timestamp)}</Text>
 							<Pressable
-								style={[styles.ttsButton, isTTSActive && styles.ttsButtonActive]}
+								style={({ pressed }) => [
+									styles.ttsButton,
+									isTTSActive && styles.ttsButtonActive,
+									pressed && { backgroundColor: "#f39c12", borderColor: "#f39c12" },
+									{ opacity: pressed ? 1 : isTTSLoading && !isTTSActive ? 0.5 : 1 },
+								]}
 								onPress={() => handleTTSReplay(item.id, item.text)}
 								disabled={isTTSLoading && !isTTSActive}
 							>
@@ -311,7 +316,7 @@ export default function ChatScreen() {
 					<MaterialCommunityIcons name="robot" size={24} color="#9a8c98" />
 					<Text style={styles.headerTitle}>Odyssai Assistant</Text>
 				</View>
-				<Pressable style={styles.resetButton} onPress={() => setShowResetModal(true)}>
+				<Pressable style={({ pressed }) => [styles.resetButton, { opacity: pressed ? 0.6 : 1 }]} onPress={() => setShowResetModal(true)}>
 					<MaterialCommunityIcons name="delete-sweep" size={20} color="#e74c3c" />
 				</Pressable>
 			</View>
@@ -349,11 +354,20 @@ export default function ChatScreen() {
 						editable={!isTranscribing}
 					/>
 					<View style={styles.buttonsContainer}>
-						<Pressable style={[styles.actionButton, styles.sendButton]} onPress={handleSend} disabled={isTranscribing}>
+						<Pressable
+							style={({ pressed }) => [styles.actionButton, styles.sendButton, { opacity: pressed ? 0.6 : isTranscribing ? 0.5 : 1 }]}
+							onPress={handleSend}
+							disabled={isTranscribing}
+						>
 							<MaterialCommunityIcons name="send" size={20} color="#f2e9e4" />
 						</Pressable>
 						<Pressable
-							style={[styles.actionButton, styles.recordButton, isTranscribing && styles.transcribingButton]}
+							style={({ pressed }) => [
+								styles.actionButton,
+								styles.recordButton,
+								isTranscribing && styles.transcribingButton,
+								{ opacity: pressed ? 0.6 : isTranscribing ? 0.8 : 1 },
+							]}
 							onPress={() => (recorderState.isRecording ? stopRecording() : handleRecord())}
 							disabled={isTranscribing}
 						>
