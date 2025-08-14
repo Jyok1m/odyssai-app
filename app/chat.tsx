@@ -374,19 +374,6 @@ export default function ChatScreen() {
 
 			{/* Reset Modal */}
 			<ResetModal visible={showResetModal} onClose={() => setShowResetModal(false)} onConfirm={handleResetChat} />
-
-			{/* TTS Status Indicator */}
-			{(isTTSLoading || isTTSPlaying) && (
-				<View style={styles.ttsStatusIndicator}>
-					<MaterialCommunityIcons name={isTTSLoading ? "loading" : "volume-high"} size={16} color="#f39c12" />
-					<Text style={styles.ttsStatusText}>{isTTSLoading ? "Generating speech..." : "Playing audio"}</Text>
-					{isTTSPlaying && (
-						<Pressable onPress={stopTTS} style={styles.ttsStopButton}>
-							<MaterialCommunityIcons name="stop" size={16} color="#e74c3c" />
-						</Pressable>
-					)}
-				</View>
-			)}
 		</SafeAreaView>
 	);
 }
