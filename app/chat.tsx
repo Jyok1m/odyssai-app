@@ -258,7 +258,7 @@ export default function ChatScreen() {
 			}
 
 			setTranscriptionController(null);
-			console.log("🏁 Transcription process completed");
+			// console.log("🏁 Transcription process completed");
 			setIsTranscribing(false);
 		}
 	};
