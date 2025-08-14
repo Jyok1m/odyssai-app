@@ -26,51 +26,58 @@ export default function ChatScreen() {
 	const [message, setMessage] = useState("");
 	const [showResetModal, setShowResetModal] = useState(false);
 	const [isTranscribing, setIsTranscribing] = useState(false);
-	// Ajouter un état pour suivre si on vient d'arrêter l'enregistrement
 	const [justStoppedRecording, setJustStoppedRecording] = useState(false);
 
 	/* ---------------------------------------------------------------- */
 	/*                           Effect hooks                           */
 	/* ---------------------------------------------------------------- */
 
+	// Configuration initiale de l'audio
 	useEffect(() => {
-		(async () => {
-			const status = await AudioModule.requestRecordingPermissionsAsync();
-			if (!status.granted) {
-				Alert.alert("Permission to access microphone was denied");
-			}
+		const setupAudio = async () => {
+			try {
+				const status = await AudioModule.requestRecordingPermissionsAsync();
+				if (!status.granted) {
+					Alert.alert("Permission to access microphone was denied");
+				}
 
-			setAudioModeAsync({
-				playsInSilentMode: true,
-				allowsRecording: true,
-			});
-		})();
+				await setAudioModeAsync({
+					playsInSilentMode: true,
+					allowsRecording: true,
+				});
+			} catch (error) {
+				console.error("Error setting up audio:", error);
+			}
+		};
+
+		setupAudio();
 	}, []);
 
+	// Gestion de l'initialisation et du scroll des messages
 	useEffect(() => {
-		// Initialiser les messages si ils sont vides au premier chargement
-		if (messages.length === 0) {
-			dispatch(resetStore());
-		} else if (messages.length > 0 && flatListRef.current) {
-			setTimeout(() => {
-				flatListRef.current?.scrollToEnd({ animated: true });
-			}, 100);
-		}
+		const handleMessagesUpdate = () => {
+			if (messages.length === 0) {
+				dispatch(resetStore());
+			} else if (flatListRef.current) {
+				setTimeout(() => {
+					flatListRef.current?.scrollToEnd({ animated: true });
+				}, 100);
+			}
+		};
+
+		handleMessagesUpdate();
 	}, [messages.length, dispatch, isLoading]);
 
+	// Gestion de la transcription après arrêt de l'enregistrement
 	useEffect(() => {
-		console.log("Recorder state changed:", {
-			isRecording: recorderState.isRecording,
-			uri: audioRecorder.uri,
-			justStopped: justStoppedRecording,
-		});
+		const handleTranscription = () => {
+			if (justStoppedRecording && !recorderState.isRecording && audioRecorder.uri) {
+				setJustStoppedRecording(false);
+				transcribeAudio(audioRecorder.uri);
+			}
+		};
 
-		// Si on vient d'arrêter l'enregistrement et l'URI est maintenant disponible
-		if (justStoppedRecording && !recorderState.isRecording && audioRecorder.uri) {
-			setJustStoppedRecording(false);
-			console.log("URI now available:", audioRecorder.uri);
-			transcribeAudio(audioRecorder.uri);
-		}
+		handleTranscription();
 	}, [recorderState.isRecording, audioRecorder.uri, justStoppedRecording]);
 
 	/* ---------------------------------------------------------------- */
