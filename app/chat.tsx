@@ -26,7 +26,6 @@ export default function ChatScreen() {
 		queue: ttsQueue,
 		queueMessage: queueTTSMessage,
 		playMessage: playTTSMessage,
-		stopCurrentPlayback: stopTTS,
 		clearQueue: clearTTSQueue,
 	} = useTTS();
 
@@ -41,6 +40,7 @@ export default function ChatScreen() {
 	const [showResetModal, setShowResetModal] = useState(false);
 	const [isTranscribing, setIsTranscribing] = useState(false);
 	const [justStoppedRecording, setJustStoppedRecording] = useState(false);
+	const [typingDots, setTypingDots] = useState("");
 
 	/* ---------------------------------------------------------------- */
 	/*                           Effect hooks                           */
@@ -131,6 +131,31 @@ export default function ChatScreen() {
 
 		handleTranscription();
 	}, [recorderState.isRecording, audioRecorder.uri, justStoppedRecording]);
+
+	// Animation des points pendant la transcription
+	useEffect(() => {
+		let interval: number;
+
+		if (isTranscribing) {
+			interval = setInterval(() => {
+				setTypingDots((prev) => {
+					if (prev === "") return ".";
+					if (prev === ".") return "..";
+					if (prev === "..") return "...";
+
+					return "";
+				});
+			}, 500);
+		} else {
+			setTypingDots("");
+		}
+
+		return () => {
+			if (interval) {
+				clearInterval(interval);
+			}
+		};
+	}, [isTranscribing]);
 
 	/* ---------------------------------------------------------------- */
 	/*                             Functions                            */
@@ -347,7 +372,7 @@ export default function ChatScreen() {
 						style={styles.textInput}
 						placeholder="Type your message..."
 						placeholderTextColor="#9a8c98"
-						value={message}
+						value={isTranscribing ? typingDots : message}
 						onChangeText={setMessage}
 						multiline
 						maxLength={500}
@@ -372,18 +397,13 @@ export default function ChatScreen() {
 							disabled={isTranscribing}
 						>
 							<MaterialCommunityIcons
-								name={isTranscribing ? "loading" : recorderState.isRecording ? "stop" : "microphone"}
+								name={recorderState.isRecording ? "stop" : "microphone"}
 								size={20}
-								color={isTranscribing ? "#f39c12" : recorderState.isRecording ? "#e74c3c" : "#f2e9e4"}
+								color={recorderState.isRecording ? "#e74c3c" : "#f2e9e4"}
 							/>
 						</Pressable>
 					</View>
 				</View>
-				{isTranscribing && (
-					<View style={styles.transcribingIndicator}>
-						<Text style={styles.transcribingText}>Transcribing...</Text>
-					</View>
-				)}
 			</KeyboardAvoidingView>
 
 			{/* Reset Modal */}
