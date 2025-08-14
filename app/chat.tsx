@@ -73,6 +73,7 @@ export default function ChatScreen() {
 		// The recording will be available on `audioRecorder.uri`.
 		await audioRecorder.stop();
 		console.log("Audio recording stopped.");
+		console.log(audioRecorder.uri);
 	};
 
 	/* ----------------------------- Text ----------------------------- */
@@ -150,7 +151,10 @@ export default function ChatScreen() {
 						<Pressable style={[styles.actionButton, styles.sendButton]} onPress={handleSend}>
 							<MaterialCommunityIcons name="send" size={20} color="#f2e9e4" />
 						</Pressable>
-						<Pressable style={[styles.actionButton, styles.recordButton]} onPress={recorderState.isRecording ? stopRecording : handleRecord}>
+						<Pressable
+							style={[styles.actionButton, styles.recordButton]}
+							onPress={() => (recorderState.isRecording ? stopRecording() : handleRecord())}
+						>
 							<MaterialCommunityIcons name={recorderState.isRecording ? "stop" : "microphone"} size={20} color="#f2e9e4" />
 						</Pressable>
 					</View>
