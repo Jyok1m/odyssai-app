@@ -35,7 +35,7 @@ export const useTTS = (): UseTTSReturn => {
 	// Default TTS options
 	const defaultOptions: Partial<TTSOptions> = {
 		languageCode: "en-US",
-		gender: "NEUTRAL",
+		voiceName: "en-US-Wavenet-D",
 		audioEncoding: "MP3",
 		speakingRate: 1.0,
 		pitch: 0.0,
