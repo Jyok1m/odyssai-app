@@ -6,6 +6,7 @@ import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import { useAppSelector, useAppDispatch, useChatActions, Message, formatTimestamp, resetStore } from "../store";
 import { ResetModal } from "../components/ResetModal";
 import { AIThinkingAdvanced } from "../components/AIThinkingAdvanced";
+import { useTTS } from "../hooks/useTTS";
 
 export default function ChatScreen() {
 	const audioRecorder = useAudioRecorder(RecordingPresets.HIGH_QUALITY);
@@ -16,6 +17,18 @@ export default function ChatScreen() {
 	const messages = messagesState?.messages || [];
 	const isLoading = messagesState?.isLoading || false;
 	const { sendMessage, resetChat } = useChatActions();
+
+	// TTS Hook
+	const {
+		isLoading: isTTSLoading,
+		isPlaying: isTTSPlaying,
+		currentItem: currentTTSItem,
+		queue: ttsQueue,
+		queueMessage: queueTTSMessage,
+		playMessage: playTTSMessage,
+		stopCurrentPlayback: stopTTS,
+		clearQueue: clearTTSQueue,
+	} = useTTS();
 
 	const flatListRef = useRef<FlatList>(null);
 
@@ -67,6 +80,23 @@ export default function ChatScreen() {
 
 		handleMessagesUpdate();
 	}, [messages.length, dispatch, isLoading]);
+
+	// Gestion TTS pour les nouveaux messages de l'IA
+	useEffect(() => {
+		const handleNewAIMessages = () => {
+			if (messages.length > 0) {
+				const lastMessage = messages[messages.length - 1];
+
+				// Si c'est un nouveau message de l'IA et qu'il n'est pas en cours de chargement
+				if (!lastMessage.isUser && !isLoading && lastMessage.text.trim() !== "") {
+					console.log(`Queueing TTS for AI message: ${lastMessage.id}`);
+					queueTTSMessage(lastMessage.id, lastMessage.text);
+				}
+			}
+		};
+
+		handleNewAIMessages();
+	}, [messages, isLoading, queueTTSMessage]);
 
 	// Gestion de la transcription après arrêt de l'enregistrement
 	useEffect(() => {
@@ -187,16 +217,60 @@ export default function ChatScreen() {
 		}
 	};
 
+	/* ----------------------------- TTS ------------------------------ */
+
+	// Handle TTS replay for a specific message
+	const handleTTSReplay = (messageId: string) => {
+		console.log(`Replaying TTS for message: ${messageId}`);
+		playTTSMessage(messageId);
+	};
+
+	// Handle reset chat with TTS cleanup
+	const handleResetChat = () => {
+		console.log("Resetting chat and clearing TTS queue");
+		clearTTSQueue();
+		resetChat();
+	};
+
 	/* ---------------------------------------------------------------- */
 	/*                             Variables                            */
 	/* ---------------------------------------------------------------- */
 
-	const renderMessage = ({ item }: { item: Message }) => (
-		<View style={[styles.messageContainer, item.isUser ? styles.userMessage : styles.botMessage]}>
-			<Text style={[styles.messageText, item.isUser ? styles.userMessageText : styles.botMessageText]}>{item.text}</Text>
-			<Text style={styles.timestamp}>{formatTimestamp(item.timestamp)}</Text>
-		</View>
-	);
+	const renderMessage = ({ item }: { item: Message }) => {
+		const isTTSActive = currentTTSItem?.id === item.id;
+		const hasTTSInQueue = ttsQueue.some((queueItem) => queueItem.id === item.id);
+
+		return (
+			<View style={[styles.messageContainer, item.isUser ? styles.userMessage : styles.botMessage]}>
+				<View style={styles.messageContent}>
+					<Text style={[styles.messageText, item.isUser ? styles.userMessageText : styles.botMessageText]} numberOfLines={0}>
+						{item.text}
+					</Text>
+				</View>
+				<View style={styles.messageFooter}>
+					<Text style={styles.timestamp}>{formatTimestamp(item.timestamp)}</Text>
+					{!item.isUser && (
+						<Pressable
+							style={[styles.ttsButton, isTTSActive && styles.ttsButtonActive]}
+							onPress={() => handleTTSReplay(item.id)}
+							disabled={isTTSLoading && !isTTSActive}
+						>
+							<MaterialCommunityIcons
+								name={isTTSActive ? (isTTSPlaying ? "volume-high" : "loading") : "volume-medium"}
+								size={16}
+								color={isTTSActive ? "#f39c12" : "#c9ada7"}
+							/>
+						</Pressable>
+					)}
+				</View>
+				{hasTTSInQueue && !isTTSActive && (
+					<View style={styles.ttsQueueIndicator}>
+						<Text style={styles.ttsQueueText}>Queued for TTS</Text>
+					</View>
+				)}
+			</View>
+		);
+	};
 
 	/* ---------------------------------------------------------------- */
 	/*                                JSX                               */
@@ -272,7 +346,20 @@ export default function ChatScreen() {
 			</KeyboardAvoidingView>
 
 			{/* Reset Modal */}
-			<ResetModal visible={showResetModal} onClose={() => setShowResetModal(false)} onConfirm={resetChat} />
+			<ResetModal visible={showResetModal} onClose={() => setShowResetModal(false)} onConfirm={handleResetChat} />
+
+			{/* TTS Status Indicator */}
+			{(isTTSLoading || isTTSPlaying) && (
+				<View style={styles.ttsStatusIndicator}>
+					<MaterialCommunityIcons name={isTTSLoading ? "loading" : "volume-high"} size={16} color="#f39c12" />
+					<Text style={styles.ttsStatusText}>{isTTSLoading ? "Generating speech..." : "Playing audio"}</Text>
+					{isTTSPlaying && (
+						<Pressable onPress={stopTTS} style={styles.ttsStopButton}>
+							<MaterialCommunityIcons name="stop" size={16} color="#e74c3c" />
+						</Pressable>
+					)}
+				</View>
+			)}
 		</SafeAreaView>
 	);
 }
@@ -325,6 +412,25 @@ const styles = StyleSheet.create({
 		borderRadius: 16,
 		paddingHorizontal: 16,
 		paddingVertical: 12,
+		flexWrap: "wrap",
+	},
+	messageContent: {
+		width: "100%",
+	},
+	messageText: {
+		fontSize: 16,
+		lineHeight: 22,
+		flexWrap: "wrap",
+		flexShrink: 1,
+		marginBottom: 8,
+	},
+	messageFooter: {
+		flexDirection: "row",
+		alignItems: "center",
+		justifyContent: "space-between",
+		width: "100%",
+		marginTop: 4,
+		paddingHorizontal: 4,
 	},
 	userMessage: {
 		alignSelf: "flex-end",
@@ -334,11 +440,6 @@ const styles = StyleSheet.create({
 		alignSelf: "flex-start",
 		backgroundColor: "#4a4e69",
 	},
-	messageText: {
-		fontSize: 16,
-		lineHeight: 22,
-		marginBottom: 4,
-	},
 	userMessageText: {
 		color: "#f2e9e4",
 	},
@@ -346,9 +447,67 @@ const styles = StyleSheet.create({
 		color: "#f2e9e4",
 	},
 	timestamp: {
+		fontSize: 11,
+		color: "#8E8E93",
+		textAlign: "left",
+		flexShrink: 1,
+		opacity: 0.7,
+	},
+	ttsButton: {
+		width: 28,
+		height: 28,
+		borderRadius: 14,
+		alignItems: "center",
+		justifyContent: "center",
+		backgroundColor: "rgba(201, 173, 167, 0.3)",
+		borderWidth: 1,
+		borderColor: "rgba(201, 173, 167, 0.5)",
+	},
+	ttsButtonActive: {
+		backgroundColor: "rgba(243, 156, 18, 0.4)",
+		borderColor: "#f39c12",
+	},
+	ttsQueueIndicator: {
+		marginTop: 4,
+		paddingHorizontal: 8,
+		paddingVertical: 2,
+		backgroundColor: "rgba(243, 156, 18, 0.2)",
+		borderRadius: 8,
+		alignSelf: "flex-start",
+	},
+	ttsQueueText: {
+		fontSize: 10,
+		color: "#f39c12",
+		fontStyle: "italic",
+	},
+	ttsStatusIndicator: {
+		position: "absolute",
+		top: 100,
+		left: 16,
+		right: 16,
+		backgroundColor: "rgba(74, 78, 105, 0.95)",
+		borderRadius: 8,
+		paddingHorizontal: 12,
+		paddingVertical: 8,
+		flexDirection: "row",
+		alignItems: "center",
+		gap: 8,
+		borderWidth: 1,
+		borderColor: "#f39c12",
+	},
+	ttsStatusText: {
+		flex: 1,
 		fontSize: 12,
-		color: "#c9ada7",
-		textAlign: "right",
+		color: "#f39c12",
+		fontWeight: "500",
+	},
+	ttsStopButton: {
+		width: 24,
+		height: 24,
+		borderRadius: 12,
+		alignItems: "center",
+		justifyContent: "center",
+		backgroundColor: "rgba(231, 76, 60, 0.2)",
 	},
 	inputSection: {
 		borderTopWidth: 1,
