@@ -41,6 +41,7 @@ export default function ChatScreen() {
 	const [isTranscribing, setIsTranscribing] = useState(false);
 	const [justStoppedRecording, setJustStoppedRecording] = useState(false);
 	const [typingDots, setTypingDots] = useState("");
+	const [transcriptionController, setTranscriptionController] = useState<AbortController | null>(null);
 
 	/* ---------------------------------------------------------------- */
 	/*                           Effect hooks                           */
@@ -164,6 +165,8 @@ export default function ChatScreen() {
 
 	// Transcribe audio with whisper
 	const transcribeAudio = async (audioUri: string) => {
+		let timeoutId: number | null = null;
+
 		try {
 			setIsTranscribing(true);
 
@@ -182,34 +185,37 @@ export default function ChatScreen() {
 			formData.append("model", "whisper-1");
 			formData.append("language", "en");
 
-			console.log("Sending request to OpenAI...");
+			// Créer un AbortController pour annuler la requête
+			const controller = new AbortController();
+			setTranscriptionController(controller);
 
-			// Utiliser Promise.race pour gérer le timeout
-			const fetchPromise = fetch("https://api.openai.com/v1/audio/transcriptions", {
+			// Créer le timeout qui annule la requête
+			timeoutId = setTimeout(() => {
+				controller.abort();
+			}, 30000) as any; // 30 secondes timeout
+
+			// Faire la requête avec signal d'abort
+			const response = await fetch("https://api.openai.com/v1/audio/transcriptions", {
 				method: "POST",
 				headers: {
 					Authorization: `Bearer ${process.env.EXPO_PUBLIC_OPENAI_API_KEY}`,
 				},
 				body: formData,
+				signal: controller.signal, // Important : permet d'annuler la requête
 			});
 
-			const timeoutPromise = new Promise((_, reject) => {
-				setTimeout(() => {
-					reject(new Error("Request timeout after 45 seconds"));
-				}, 45000); // 45 secondes timeout
-			});
-
-			console.log("Starting request timeout...");
-			const response: any = await Promise.race([fetchPromise, timeoutPromise]);
+			// Si on arrive ici, la requête a réussi - nettoyer le timeout
+			if (timeoutId) {
+				clearTimeout(timeoutId);
+				timeoutId = null;
+			}
 
 			if (!response.ok) {
 				const errorText = await response.text();
-				console.error("❌ API Error:", errorText);
 				throw new Error(`API Error ${response.status}: ${errorText}`);
 			}
 
 			const result = await response.json();
-			console.log("Result:", result);
 
 			// Ajouter le texte transcrit au champ de saisie
 			const transcribedText = result.text?.trim() || "";
@@ -219,14 +225,22 @@ export default function ChatScreen() {
 					return newMessage.trim();
 				});
 			} else {
-				console.log("No text detected in audio");
 				Alert.alert("Info", "No text detected in the audio");
 			}
 		} catch (error: any) {
+			// Nettoyer le timeout en cas d'erreur
+			if (timeoutId) {
+				clearTimeout(timeoutId);
+				timeoutId = null;
+			}
+
 			// Messages d'erreur plus spécifiques
 			let errorMessage = "Failed to transcribe audio";
-			if (error.message.includes("timeout") || error.message.includes("Network request timed out")) {
-				errorMessage = "Request timed out. The audio might be too long or there's a network issue.";
+
+			if (error.name === "AbortError") {
+				errorMessage = "Request was cancelled due to timeout. Try with text input for now.";
+			} else if (error.message.includes("timeout") || error.message.includes("Network request timed out")) {
+				errorMessage = "Request timed out. The audio might be too long or there's a network issue. Please try with text input for now.";
 			} else if (error.message.includes("Network")) {
 				errorMessage = "Network error. Please check your internet connection.";
 			} else if (error.message.includes("401")) {
@@ -239,7 +253,23 @@ export default function ChatScreen() {
 
 			Alert.alert("Transcription Error", `${errorMessage}\n\nTechnical details: ${error.message}`);
 		} finally {
+			// Nettoyer le timeout dans tous les cas
+			if (timeoutId) {
+				clearTimeout(timeoutId);
+			}
+
+			setTranscriptionController(null);
+			console.log("🏁 Transcription process completed");
 			setIsTranscribing(false);
+		}
+	};
+
+	// Cancel transcription
+	const cancelTranscription = () => {
+		if (transcriptionController) {
+			console.log("🚫 Cancelling transcription");
+			transcriptionController.abort();
+			setTranscriptionController(null);
 		}
 	};
 
@@ -345,11 +375,6 @@ export default function ChatScreen() {
 						</>
 					)}
 				</View>
-				{hasTTSInQueue && !isTTSActive && (
-					<View style={styles.ttsQueueIndicator}>
-						<Text style={styles.ttsQueueText}>Queued for TTS</Text>
-					</View>
-				)}
 			</View>
 		);
 	};
@@ -412,19 +437,14 @@ export default function ChatScreen() {
 							<MaterialCommunityIcons name="send" size={20} color="#f2e9e4" />
 						</Pressable>
 						<Pressable
-							style={({ pressed }) => [
-								styles.actionButton,
-								styles.recordButton,
-								isTranscribing && styles.transcribingButton,
-								{ opacity: pressed ? 0.6 : isTranscribing ? 0.8 : 1 },
-							]}
-							onPress={() => (recorderState.isRecording ? stopRecording() : handleRecord())}
+							style={({ pressed }) => [styles.actionButton, styles.recordButton, { opacity: pressed ? 0.6 : 1 }]}
+							onPress={() => (recorderState.isRecording ? stopRecording() : isTranscribing ? cancelTranscription() : handleRecord())}
 							disabled={isTranscribing}
 						>
 							<MaterialCommunityIcons
-								name={recorderState.isRecording ? "stop" : "microphone"}
+								name={recorderState.isRecording ? "stop" : isTranscribing ? "close" : "microphone"}
 								size={20}
-								color={recorderState.isRecording ? "#e74c3c" : "#f2e9e4"}
+								color={recorderState.isRecording ? "#e74c3c" : isTranscribing ? "#e74c3c" : "#f2e9e4"}
 							/>
 						</Pressable>
 					</View>
@@ -651,7 +671,31 @@ const styles = StyleSheet.create({
 		color: "#f39c12",
 		fontStyle: "italic",
 	},
-	transcribingButton: {
-		backgroundColor: "#f39c12",
+	transcriptionIndicator: {
+		flexDirection: "row",
+		alignItems: "center",
+		justifyContent: "center",
+		paddingHorizontal: 16,
+		paddingVertical: 8,
+		backgroundColor: "rgba(243, 156, 18, 0.1)",
+		borderRadius: 8,
+		marginHorizontal: 16,
+		marginBottom: 8,
+		gap: 8,
+	},
+	transcriptionText: {
+		fontSize: 14,
+		color: "#f39c12",
+		fontWeight: "500",
+	},
+	cancelButton: {
+		width: 24,
+		height: 24,
+		borderRadius: 12,
+		alignItems: "center",
+		justifyContent: "center",
+		backgroundColor: "rgba(231, 76, 60, 0.2)",
+		borderWidth: 1,
+		borderColor: "#e74c3c",
 	},
 });

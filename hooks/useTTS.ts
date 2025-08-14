@@ -43,15 +43,12 @@ export const useTTS = (): UseTTSReturn => {
 
 	// Process the queue
 	const processQueue = useCallback(async () => {
-		console.log(`🎵 Processing queue: ${queue.length} items, currentItem: ${currentItem?.id || "none"}, isProcessing: ${isProcessingQueue.current}`);
-
 		if (isProcessingQueue.current || queue.length === 0 || currentItem !== null) {
 			return;
 		}
 
 		isProcessingQueue.current = true;
 		const nextItem = queue[0];
-		console.log(`🎵 Starting TTS for message: ${nextItem.id}`);
 
 		try {
 			setCurrentItem(nextItem);
@@ -61,7 +58,6 @@ export const useTTS = (): UseTTSReturn => {
 
 			if (!audioUri) {
 				setIsLoading(true);
-				console.log(`🎵 Generating TTS for message: ${nextItem.id}`);
 
 				const options: TTSOptions = {
 					text: nextItem.text,
@@ -74,21 +70,16 @@ export const useTTS = (): UseTTSReturn => {
 				// Cache the audio
 				setAudioCache((prev) => new Map(prev).set(nextItem.id, audioUri!));
 				setQueue((prev) => prev.map((item) => (item.id === nextItem.id ? { ...item, audioUri } : item)));
-				console.log(`🎵 TTS generated and cached for: ${nextItem.id}`);
-			} else {
-				console.log(`🎵 Using cached audio for: ${nextItem.id}`);
 			}
 
 			setIsLoading(false);
 
 			// Play the audio
-			console.log(`🎵 Playing TTS for message: ${nextItem.id}`);
 			setIsPlaying(true);
 
 			audioPlayer.replace(audioUri);
 			audioPlayer.play();
 		} catch (error) {
-			console.error("Error processing TTS queue:", error);
 			Alert.alert("TTS Error", "Failed to generate or play audio");
 			setIsLoading(false);
 			setIsPlaying(false);
@@ -105,14 +96,12 @@ export const useTTS = (): UseTTSReturn => {
 		const subscription = audioPlayer.addListener("playbackStatusUpdate", (status) => {
 			if (status.isLoaded) {
 				if (status.didJustFinish) {
-					console.log("Audio playback finished, processing next in queue");
 					setIsPlaying(false);
 					setCurrentItem(null);
 
 					// Remove completed item from queue
 					setQueue((prev) => {
 						const newQueue = prev.slice(1);
-						console.log(`Queue updated: ${newQueue.length} items remaining`);
 						return newQueue;
 					});
 
@@ -139,10 +128,8 @@ export const useTTS = (): UseTTSReturn => {
 				options,
 			};
 
-			console.log(`🎵 Queueing message for TTS: ${id} (Queue size will be: ${queue.length + 1})`);
 			setQueue((prev) => {
 				const newQueue = [...prev, newItem];
-				console.log(`🎵 Queue updated: ${newQueue.map((item) => item.id).join(", ")}`);
 				return newQueue;
 			});
 		},
@@ -157,8 +144,6 @@ export const useTTS = (): UseTTSReturn => {
 				const cachedAudioUri = audioCache.get(id);
 
 				if (cachedAudioUri) {
-					// console.log(`Replaying cached audio for message: ${id}`);
-
 					// Stop current playback
 					if (isPlaying) {
 						audioPlayer.pause();
@@ -174,14 +159,11 @@ export const useTTS = (): UseTTSReturn => {
 					audioPlayer.play();
 				} else if (text) {
 					// If not cached but we have text, generate and play
-					// console.log(`Audio not cached for message ${id}, generating new audio`);
 					await queueMessage(id, text);
 				} else {
-					// console.log(`Audio not cached for message ${id}, and no text provided for regeneration`);
 					Alert.alert("Replay Error", "Audio not available for replay");
 				}
 			} catch (error) {
-				console.error("Error replaying message:", error);
 				Alert.alert("Replay Error", "Failed to replay audio");
 			}
 		},
@@ -191,7 +173,6 @@ export const useTTS = (): UseTTSReturn => {
 	// Stop current playback
 	const stopCurrentPlayback = useCallback(() => {
 		if (isPlaying) {
-			// console.log("Stopping current audio playback");
 			audioPlayer.pause();
 			setIsPlaying(false);
 			setCurrentItem(null);
@@ -200,7 +181,6 @@ export const useTTS = (): UseTTSReturn => {
 
 	// Clear the entire queue
 	const clearQueue = useCallback(() => {
-		// console.log("Clearing TTS queue");
 		stopCurrentPlayback();
 		setQueue([]);
 		setCurrentItem(null);
@@ -209,7 +189,6 @@ export const useTTS = (): UseTTSReturn => {
 	// Skip to next item in queue
 	const skipToNext = useCallback(() => {
 		if (queue.length > 0) {
-			// console.log("Skipping to next item in TTS queue");
 			stopCurrentPlayback();
 			setQueue((prev) => prev.slice(1));
 		}
