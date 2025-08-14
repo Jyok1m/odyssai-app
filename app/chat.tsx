@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
-import { StyleSheet, FlatList, KeyboardAvoidingView, Platform } from "react-native";
+import { StyleSheet, FlatList, KeyboardAvoidingView, Platform, Alert } from "react-native";
+import { useAudioRecorder, AudioModule, RecordingPresets, setAudioModeAsync, useAudioRecorderState } from "expo-audio";
 import { SafeAreaView, View, Text, TextInput, Pressable } from "@/components/Themed";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import { useAppSelector, useAppDispatch, useChatActions, Message, formatTimestamp, resetStore } from "../store";
@@ -7,6 +8,9 @@ import { ResetModal } from "../components/ResetModal";
 import { AIThinkingAdvanced } from "../components/AIThinkingAdvanced";
 
 export default function ChatScreen() {
+	const audioRecorder = useAudioRecorder(RecordingPresets.HIGH_QUALITY);
+	const recorderState = useAudioRecorderState(audioRecorder);
+
 	const dispatch = useAppDispatch();
 	const messagesState = useAppSelector((state) => state.messages);
 	const messages = messagesState?.messages || [];
@@ -27,6 +31,20 @@ export default function ChatScreen() {
 	/* ---------------------------------------------------------------- */
 
 	useEffect(() => {
+		(async () => {
+			const status = await AudioModule.requestRecordingPermissionsAsync();
+			if (!status.granted) {
+				Alert.alert("Permission to access microphone was denied");
+			}
+
+			setAudioModeAsync({
+				playsInSilentMode: true,
+				allowsRecording: true,
+			});
+		})();
+	}, []);
+
+	useEffect(() => {
 		// Initialiser les messages si ils sont vides au premier chargement
 		if (messages.length === 0) {
 			dispatch(resetStore());
@@ -44,9 +62,17 @@ export default function ChatScreen() {
 	/* ----------------------------- Voice ---------------------------- */
 
 	// Record message
-	const handleRecord = () => {
+	const handleRecord = async () => {
 		// Placeholder for audio recording
+		await audioRecorder.prepareToRecordAsync();
+		audioRecorder.record();
 		console.log("Recording audio...");
+	};
+
+	const stopRecording = async () => {
+		// The recording will be available on `audioRecorder.uri`.
+		await audioRecorder.stop();
+		console.log("Audio recording stopped.");
 	};
 
 	/* ----------------------------- Text ----------------------------- */
@@ -124,8 +150,8 @@ export default function ChatScreen() {
 						<Pressable style={[styles.actionButton, styles.sendButton]} onPress={handleSend}>
 							<MaterialCommunityIcons name="send" size={20} color="#f2e9e4" />
 						</Pressable>
-						<Pressable style={[styles.actionButton, styles.recordButton]} onPress={handleRecord}>
-							<MaterialCommunityIcons name="microphone" size={20} color="#f2e9e4" />
+						<Pressable style={[styles.actionButton, styles.recordButton]} onPress={recorderState.isRecording ? stopRecording : handleRecord}>
+							<MaterialCommunityIcons name={recorderState.isRecording ? "stop" : "microphone"} size={20} color="#f2e9e4" />
 						</Pressable>
 					</View>
 				</View>
