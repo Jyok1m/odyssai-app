@@ -25,6 +25,9 @@ export default function ChatScreen() {
 
 	const [message, setMessage] = useState("");
 	const [showResetModal, setShowResetModal] = useState(false);
+	const [isTranscribing, setIsTranscribing] = useState(false);
+	// Ajouter un état pour suivre si on vient d'arrêter l'enregistrement
+	const [justStoppedRecording, setJustStoppedRecording] = useState(false);
 
 	/* ---------------------------------------------------------------- */
 	/*                           Effect hooks                           */
@@ -59,14 +62,77 @@ export default function ChatScreen() {
 		console.log("Recorder state changed:", {
 			isRecording: recorderState.isRecording,
 			uri: audioRecorder.uri,
+			justStopped: justStoppedRecording,
 		});
-	}, [recorderState.isRecording, audioRecorder.uri]);
+
+		// Si on vient d'arrêter l'enregistrement et l'URI est maintenant disponible
+		if (justStoppedRecording && !recorderState.isRecording && audioRecorder.uri) {
+			setJustStoppedRecording(false);
+			console.log("URI now available:", audioRecorder.uri);
+			transcribeAudio(audioRecorder.uri);
+		}
+	}, [recorderState.isRecording, audioRecorder.uri, justStoppedRecording]);
 
 	/* ---------------------------------------------------------------- */
 	/*                             Functions                            */
 	/* ---------------------------------------------------------------- */
 
 	/* ----------------------------- Voice ---------------------------- */
+
+	// Transcribe audio with whisper
+	const transcribeAudio = async (audioUri: string) => {
+		try {
+			setIsTranscribing(true);
+
+			// uri check
+			if (!audioUri || audioUri.trim() === "") {
+				throw new Error("Empty audio URI");
+			}
+
+			// Create FormData for sending the audio file
+			const formData = new FormData();
+			formData.append("file", {
+				uri: audioUri,
+				type: "audio/m4a",
+				name: "audio.m4a",
+			} as any);
+			formData.append("model", "whisper-1");
+			formData.append("language", "en");
+
+			// Appel à l'API OpenAI (IMPORTANT: ne pas définir Content-Type manuellement)
+			const response = await fetch("https://api.openai.com/v1/audio/transcriptions", {
+				method: "POST",
+				headers: {
+					Authorization: `Bearer ${process.env.EXPO_PUBLIC_OPENAI_API_KEY}`,
+				},
+				body: formData,
+			});
+
+			if (!response.ok) {
+				const errorText = await response.text();
+				console.error("API Error:", errorText);
+				throw new Error(`Error ${response.status}: ${errorText}`);
+			}
+
+			const result = await response.json();
+
+			// Ajouter le texte transcrit au champ de saisie
+			const transcribedText = result.text?.trim() || "";
+			if (transcribedText) {
+				setMessage((prevMessage) => {
+					const newMessage = prevMessage ? `${prevMessage} ${transcribedText}` : transcribedText;
+					return newMessage.trim();
+				});
+			} else {
+				Alert.alert("Info", "No text detected");
+			}
+		} catch (error: any) {
+			console.error("Error during transcription:", error);
+			Alert.alert("Transcription Error", `Failed to transcribe audio: ${error.message}`);
+		} finally {
+			setIsTranscribing(false);
+		}
+	};
 
 	// Record message
 	const handleRecord = async () => {
@@ -78,7 +144,6 @@ export default function ChatScreen() {
 
 			await audioRecorder.prepareToRecordAsync();
 			audioRecorder.record();
-			console.log("Recording audio started...");
 		} catch (error) {
 			console.error("Error starting recording:", error);
 			Alert.alert("Erreur", "Impossible de démarrer l'enregistrement");
@@ -92,13 +157,13 @@ export default function ChatScreen() {
 				return;
 			}
 
-			const uri = await audioRecorder.stop();
+			console.log("Stopping recording...");
+			setJustStoppedRecording(true);
+			await audioRecorder.stop();
 			console.log("Audio recording stopped.");
-			console.log("Recording URI:", uri);
-
-			// TODO: Traiter l'audio
 		} catch (error) {
 			console.error("Error stopping recording:", error);
+			setJustStoppedRecording(false);
 			Alert.alert("Erreur", "Impossible d'arrêter l'enregistrement");
 		}
 	};
@@ -173,19 +238,30 @@ export default function ChatScreen() {
 						onChangeText={setMessage}
 						multiline
 						maxLength={500}
+						editable={!isTranscribing}
 					/>
 					<View style={styles.buttonsContainer}>
-						<Pressable style={[styles.actionButton, styles.sendButton]} onPress={handleSend}>
+						<Pressable style={[styles.actionButton, styles.sendButton]} onPress={handleSend} disabled={isTranscribing}>
 							<MaterialCommunityIcons name="send" size={20} color="#f2e9e4" />
 						</Pressable>
 						<Pressable
-							style={[styles.actionButton, styles.recordButton]}
+							style={[styles.actionButton, styles.recordButton, isTranscribing && styles.transcribingButton]}
 							onPress={() => (recorderState.isRecording ? stopRecording() : handleRecord())}
+							disabled={isTranscribing}
 						>
-							<MaterialCommunityIcons name={recorderState.isRecording ? "stop" : "microphone"} size={20} color="#f2e9e4" />
+							<MaterialCommunityIcons
+								name={isTranscribing ? "loading" : recorderState.isRecording ? "stop" : "microphone"}
+								size={20}
+								color={isTranscribing ? "#f39c12" : recorderState.isRecording ? "#e74c3c" : "#f2e9e4"}
+							/>
 						</Pressable>
 					</View>
 				</View>
+				{isTranscribing && (
+					<View style={styles.transcribingIndicator}>
+						<Text style={styles.transcribingText}>Transcribing...</Text>
+					</View>
+				)}
 			</KeyboardAvoidingView>
 
 			{/* Reset Modal */}
@@ -311,5 +387,18 @@ const styles = StyleSheet.create({
 		paddingHorizontal: 16,
 		paddingVertical: 8,
 		alignItems: "center",
+	},
+	transcribingIndicator: {
+		paddingHorizontal: 16,
+		paddingBottom: 8,
+		alignItems: "center",
+	},
+	transcribingText: {
+		fontSize: 12,
+		color: "#f39c12",
+		fontStyle: "italic",
+	},
+	transcribingButton: {
+		backgroundColor: "#f39c12",
 	},
 });
