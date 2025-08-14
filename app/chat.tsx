@@ -248,19 +248,23 @@ export default function ChatScreen() {
 					</Text>
 				</View>
 				<View style={styles.messageFooter}>
-					<Text style={styles.timestamp}>{formatTimestamp(item.timestamp)}</Text>
-					{!item.isUser && (
-						<Pressable
-							style={[styles.ttsButton, isTTSActive && styles.ttsButtonActive]}
-							onPress={() => handleTTSReplay(item.id)}
-							disabled={isTTSLoading && !isTTSActive}
-						>
-							<MaterialCommunityIcons
-								name={isTTSActive ? (isTTSPlaying ? "volume-high" : "loading") : "volume-medium"}
-								size={16}
-								color={isTTSActive ? "#f39c12" : "#c9ada7"}
-							/>
-						</Pressable>
+					{item.isUser ? (
+						<Text style={[styles.timestamp, styles.userTimestamp]}>{formatTimestamp(item.timestamp)}</Text>
+					) : (
+						<>
+							<Text style={[styles.timestamp, styles.botTimestamp]}>{formatTimestamp(item.timestamp)}</Text>
+							<Pressable
+								style={[styles.ttsButton, isTTSActive && styles.ttsButtonActive]}
+								onPress={() => handleTTSReplay(item.id)}
+								disabled={isTTSLoading && !isTTSActive}
+							>
+								<MaterialCommunityIcons
+									name={isTTSActive ? (isTTSPlaying ? "volume-high" : "loading") : "volume-medium"}
+									size={16}
+									color={isTTSActive ? "#f39c12" : "#c9ada7"}
+								/>
+							</Pressable>
+						</>
 					)}
 				</View>
 				{hasTTSInQueue && !isTTSActive && (
@@ -416,6 +420,7 @@ const styles = StyleSheet.create({
 	},
 	messageContent: {
 		width: "100%",
+		backgroundColor: "inherit",
 	},
 	messageText: {
 		fontSize: 16,
@@ -431,6 +436,7 @@ const styles = StyleSheet.create({
 		width: "100%",
 		marginTop: 4,
 		paddingHorizontal: 4,
+		backgroundColor: "inherit",
 	},
 	userMessage: {
 		alignSelf: "flex-end",
@@ -442,16 +448,29 @@ const styles = StyleSheet.create({
 	},
 	userMessageText: {
 		color: "#f2e9e4",
+		backgroundColor: "inherit",
 	},
 	botMessageText: {
 		color: "#f2e9e4",
+		backgroundColor: "inherit",
 	},
 	timestamp: {
 		fontSize: 11,
-		color: "#8E8E93",
 		textAlign: "left",
 		flexShrink: 1,
-		opacity: 0.7,
+		backgroundColor: "inherit",
+	},
+	userTimestamp: {
+		color: "#FFFFFF",
+		textAlign: "right",
+		width: "100%",
+		opacity: 1,
+		fontWeight: "500",
+	},
+	botTimestamp: {
+		color: "#C9ADA7",
+		textAlign: "left",
+		opacity: 0.8,
 	},
 	ttsButton: {
 		width: 28,
