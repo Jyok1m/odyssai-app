@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import { StyleSheet, FlatList, KeyboardAvoidingView, Platform, Alert } from "react-native";
-import { useAudioRecorder, AudioModule, RecordingPresets, setAudioModeAsync, useAudioRecorderState, useAudioPlayer } from "expo-audio";
+import { useAudioRecorder, AudioModule, RecordingPresets, setAudioModeAsync, useAudioRecorderState } from "expo-audio";
 import { SafeAreaView, View, Text, TextInput, Pressable } from "@/components/Themed";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import { useAppSelector, useAppDispatch, useChatActions, Message, formatTimestamp, resetStore } from "../store";
