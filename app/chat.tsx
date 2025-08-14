@@ -83,7 +83,7 @@ export default function ChatScreen() {
 							seenMessageIds.current.add(message.id);
 						}
 					});
-					console.log(`Marked ${seenMessageIds.current.size} existing AI messages as seen`);
+					// console.log(`Marked ${seenMessageIds.current.size} existing AI messages as seen`);
 				}
 
 				if (flatListRef.current) {
@@ -107,11 +107,9 @@ export default function ChatScreen() {
 				if (!lastMessage.isUser && !isLoading && lastMessage.text.trim() !== "") {
 					// Vérifier si ce message est vraiment nouveau (pas rechargé depuis le store)
 					if (!seenMessageIds.current.has(lastMessage.id)) {
-						console.log(`Queueing TTS for NEW AI message: ${lastMessage.id}`);
+						// console.log(`Queueing TTS for NEW AI message: ${lastMessage.id}`);
 						seenMessageIds.current.add(lastMessage.id);
 						queueTTSMessage(lastMessage.id, lastMessage.text);
-					} else {
-						console.log(`Skipping TTS for existing AI message: ${lastMessage.id}`);
 					}
 				}
 			}
@@ -241,10 +239,10 @@ export default function ChatScreen() {
 				return;
 			}
 
-			console.log("Stopping recording...");
+			// console.log("Stopping recording...");
 			setJustStoppedRecording(true);
 			await audioRecorder.stop();
-			console.log("Audio recording stopped.");
+			// console.log("Audio recording stopped.");
 		} catch (error) {
 			console.error("Error stopping recording:", error);
 			setJustStoppedRecording(false);
@@ -268,13 +266,13 @@ export default function ChatScreen() {
 
 	// Handle TTS replay for a specific message
 	const handleTTSReplay = async (messageId: string, messageText: string) => {
-		console.log(`Replaying TTS for message: ${messageId}`);
+		// console.log(`Replaying TTS for message: ${messageId}`);
 		await playTTSMessage(messageId, messageText);
 	};
 
 	// Handle reset chat with TTS cleanup
 	const handleResetChat = () => {
-		console.log("Resetting chat and clearing TTS queue");
+		// console.log("Resetting chat and clearing TTS queue");
 		clearTTSQueue();
 		seenMessageIds.current.clear();
 		resetChat();

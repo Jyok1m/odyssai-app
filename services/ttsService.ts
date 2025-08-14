@@ -65,7 +65,7 @@ class TTSService {
 				},
 			};
 
-			console.log("Sending TTS request to Google Cloud API");
+			// console.log("Sending TTS request to Google Cloud API");
 			const response = await fetch(`https://texttospeech.googleapis.com/v1/text:synthesize?key=${API_KEY}`, {
 				method: "POST",
 				headers: {
@@ -88,7 +88,7 @@ class TTSService {
 
 			// Convert base64 audio to data URI
 			const audioDataUri = `data:audio/mp3;base64,${result.audioContent}`;
-			console.log("TTS audio generated successfully");
+			// console.log("TTS audio generated successfully");
 			return audioDataUri;
 		} catch (error) {
 			console.error("TTS synthesis error:", error);

@@ -58,7 +58,7 @@ export const useTTS = (): UseTTSReturn => {
 
 			if (!audioUri) {
 				setIsLoading(true);
-				console.log(`Generating TTS for message: ${nextItem.id}`);
+				// console.log(`Generating TTS for message: ${nextItem.id}`);
 
 				const options: TTSOptions = {
 					text: nextItem.text,
@@ -76,10 +76,10 @@ export const useTTS = (): UseTTSReturn => {
 			setIsLoading(false);
 
 			// Play the audio
-			console.log(`Playing TTS for message: ${nextItem.id}`);
+			// console.log(`Playing TTS for message: ${nextItem.id}`);
 			setIsPlaying(true);
 
-			await audioPlayer.replace(audioUri);
+			audioPlayer.replace(audioUri);
 			audioPlayer.play();
 		} catch (error) {
 			console.error("Error processing TTS queue:", error);
@@ -100,7 +100,7 @@ export const useTTS = (): UseTTSReturn => {
 		const subscription = audioPlayer.addListener("playbackStatusUpdate", (status) => {
 			if (status.isLoaded) {
 				if (status.didJustFinish) {
-					console.log("Audio playback finished");
+					// console.log("Audio playback finished");
 					setIsPlaying(false);
 					setCurrentItem(null);
 
@@ -126,7 +126,7 @@ export const useTTS = (): UseTTSReturn => {
 			options,
 		};
 
-		console.log(`Queueing message for TTS: ${id}`);
+		// console.log(`Queueing message for TTS: ${id}`);
 		setQueue((prev) => [...prev, newItem]);
 	}, []);
 
@@ -138,7 +138,7 @@ export const useTTS = (): UseTTSReturn => {
 				const cachedAudioUri = audioCache.get(id);
 
 				if (cachedAudioUri) {
-					console.log(`Replaying cached audio for message: ${id}`);
+					// console.log(`Replaying cached audio for message: ${id}`);
 
 					// Stop current playback
 					if (isPlaying) {
@@ -155,10 +155,10 @@ export const useTTS = (): UseTTSReturn => {
 					audioPlayer.play();
 				} else if (text) {
 					// If not cached but we have text, generate and play
-					console.log(`Audio not cached for message ${id}, generating new audio`);
+					// console.log(`Audio not cached for message ${id}, generating new audio`);
 					await queueMessage(id, text);
 				} else {
-					console.log(`Audio not cached for message ${id}, and no text provided for regeneration`);
+					// console.log(`Audio not cached for message ${id}, and no text provided for regeneration`);
 					Alert.alert("Replay Error", "Audio not available for replay");
 				}
 			} catch (error) {
@@ -172,7 +172,7 @@ export const useTTS = (): UseTTSReturn => {
 	// Stop current playback
 	const stopCurrentPlayback = useCallback(() => {
 		if (isPlaying) {
-			console.log("Stopping current audio playback");
+			// console.log("Stopping current audio playback");
 			audioPlayer.pause();
 			setIsPlaying(false);
 			setCurrentItem(null);
@@ -181,7 +181,7 @@ export const useTTS = (): UseTTSReturn => {
 
 	// Clear the entire queue
 	const clearQueue = useCallback(() => {
-		console.log("Clearing TTS queue");
+		// console.log("Clearing TTS queue");
 		stopCurrentPlayback();
 		setQueue([]);
 		setCurrentItem(null);
@@ -190,7 +190,7 @@ export const useTTS = (): UseTTSReturn => {
 	// Skip to next item in queue
 	const skipToNext = useCallback(() => {
 		if (queue.length > 0) {
-			console.log("Skipping to next item in TTS queue");
+			// console.log("Skipping to next item in TTS queue");
 			stopCurrentPlayback();
 			setQueue((prev) => prev.slice(1));
 		}
