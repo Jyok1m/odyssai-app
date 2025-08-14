@@ -77,7 +77,7 @@ export default function ChatScreen() {
 			}
 
 			await audioRecorder.prepareToRecordAsync();
-			await audioRecorder.record();
+			audioRecorder.record();
 			console.log("Recording audio started...");
 		} catch (error) {
 			console.error("Error starting recording:", error);
@@ -96,8 +96,7 @@ export default function ChatScreen() {
 			console.log("Audio recording stopped.");
 			console.log("Recording URI:", uri);
 
-			// TODO: Traiter l'audio enregistré
-			// Ici vous pourriez envoyer l'audio au serveur ou le traiter
+			// TODO: Traiter l'audio
 		} catch (error) {
 			console.error("Error stopping recording:", error);
 			Alert.alert("Erreur", "Impossible d'arrêter l'enregistrement");
