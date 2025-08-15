@@ -93,7 +93,7 @@ export const sendMessageToAI = createAsyncThunk("messages/sendMessageToAI", asyn
 			nextQuestion = "Great! Let's create a new world. How would you like to name your new world?";
 		} else if (classification === "no") {
 			dispatch(addData({ key: "is_new_world", value: false }));
-			nextQuestion = "Alright! What is the name of the world would you like to join?";
+			nextQuestion = "Alright! What is the name of the world you would like to join?";
 		} else {
 			comprehensionError();
 		}
