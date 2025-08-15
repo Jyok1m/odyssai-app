@@ -65,9 +65,19 @@ export default function ChatScreen() {
 	useEffect(() => {
 		const setupAudio = async () => {
 			try {
-				const status = await AudioModule.requestRecordingPermissionsAsync();
-				if (!status.granted) {
-					Alert.alert("Permission to access microphone was denied");
+				const recordingStatus = await AudioModule.requestRecordingPermissionsAsync();
+				if (!recordingStatus.granted) {
+					Alert.alert("Access denied", "Microphone access is required to record voice messages. Please enable the permission in the app settings.", [
+						{ text: "Cancel", style: "cancel" },
+						{
+							text: "Settings",
+							onPress: () => {
+								// On mobile, this would open app settings
+								console.log("User should go to app settings to enable microphone permission");
+							},
+						},
+					]);
+					return;
 				}
 
 				await setAudioModeAsync({
@@ -75,10 +85,14 @@ export default function ChatScreen() {
 					allowsRecording: true,
 				});
 
-				// Enable TTS after audio setup
 				setIsTTSReady(true);
 			} catch (error) {
-				console.error("Error setting up audio:", error);
+				console.error("❌ Error setting up audio:", error);
+				Alert.alert(
+					"Audio setup error",
+					"Unable to set up audio. Voice recording will not be available.\n\nDDetails: " + (error instanceof Error ? error.message : String(error)),
+					[{ text: "OK" }]
+				);
 			}
 		};
 
@@ -293,33 +307,59 @@ export default function ChatScreen() {
 	const handleRecord = async () => {
 		try {
 			if (recorderState.isRecording) {
-				console.log("Already recording");
+				console.log("⚠️ Already recording");
 				return;
 			}
 
+			const recordingStatus = await AudioModule.requestRecordingPermissionsAsync();
+			if (!recordingStatus.granted) {
+				Alert.alert("Permission required", "Microphone access is required to record. Please grant permission in settings.");
+				return;
+			}
+
+			// Prepare the recorder
 			await audioRecorder.prepareToRecordAsync();
-			audioRecorder.record();
+
+			// Start recording
+			await audioRecorder.record();
 		} catch (error) {
-			console.error("Error starting recording:", error);
-			Alert.alert("Erreur", "Impossible de démarrer l'enregistrement");
+			console.error("❌ Error starting recording:", error);
+
+			let errorMessage = "Unable to start recording";
+			if (error instanceof Error) {
+				if (error.message.includes("permission")) {
+					errorMessage = "Microphone permission denied. Please enable it in settings.";
+				} else if (error.message.includes("busy") || error.message.includes("in use")) {
+					errorMessage = "Microphone is being used by another application.";
+				} else if (error.message.includes("hardware")) {
+					errorMessage = "Hardware issue with the microphone.";
+				} else {
+					errorMessage = `Recording error: ${error.message}`;
+				}
+			}
+
+			Alert.alert("Recording Error", errorMessage);
 		}
 	};
 
 	const stopRecording = async () => {
 		try {
 			if (!recorderState.isRecording) {
-				console.log("Not currently recording");
+				console.log("⚠️ Not currently recording");
 				return;
 			}
 
-			// console.log("Stopping recording...");
 			setJustStoppedRecording(true);
 			await audioRecorder.stop();
-			// console.log("Audio recording stopped.");
 		} catch (error) {
-			console.error("Error stopping recording:", error);
 			setJustStoppedRecording(false);
-			Alert.alert("Erreur", "Impossible d'arrêter l'enregistrement");
+
+			let errorMessage = "Unable to stop recording";
+			if (error instanceof Error) {
+				errorMessage = `Error: ${error.message}`;
+			}
+
+			Alert.alert("Stop Error", errorMessage);
 		}
 	};
 
@@ -713,5 +753,18 @@ const styles = StyleSheet.create({
 		backgroundColor: "rgba(231, 76, 60, 0.2)",
 		borderWidth: 1,
 		borderColor: "#e74c3c",
+	},
+	debugInfo: {
+		backgroundColor: "rgba(243, 156, 18, 0.1)",
+		padding: 8,
+		margin: 8,
+		borderRadius: 4,
+		borderWidth: 1,
+		borderColor: "#f39c12",
+	},
+	debugText: {
+		fontSize: 10,
+		color: "#f39c12",
+		fontFamily: "monospace",
 	},
 });
