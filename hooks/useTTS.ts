@@ -1,5 +1,5 @@
 import { useState, useRef, useCallback, useEffect } from "react";
-import { useAudioPlayer } from "expo-audio";
+import { useAudioPlayer, AudioModule } from "expo-audio";
 import { Alert } from "react-native";
 import TTSService, { TTSOptions } from "../services/ttsService";
 
@@ -31,6 +31,21 @@ export const useTTS = (): UseTTSReturn => {
 
 	const audioPlayer = useAudioPlayer();
 	const isProcessingQueue = useRef(false);
+
+	// Configure audio session for speaker output
+	useEffect(() => {
+		const configureAudioSession = async () => {
+			try {
+				await AudioModule.setAudioModeAsync({
+					playsInSilentMode: true,
+				});
+			} catch (error) {
+				console.warn("Failed to configure audio session:", error);
+			}
+		};
+
+		configureAudioSession();
+	}, []);
 
 	// Default TTS options
 	const defaultOptions: Partial<TTSOptions> = {
@@ -77,7 +92,17 @@ export const useTTS = (): UseTTSReturn => {
 			// Play the audio
 			setIsPlaying(true);
 
-			audioPlayer.replace(audioUri);
+			await audioPlayer.replace(audioUri);
+
+			// Configure for speaker output
+			try {
+				await AudioModule.setAudioModeAsync({
+					playsInSilentMode: true,
+				});
+			} catch (error) {
+				console.warn("Failed to set speaker mode:", error);
+			}
+
 			audioPlayer.play();
 		} catch (error) {
 			Alert.alert("TTS Error", "Failed to generate or play audio");
@@ -156,6 +181,16 @@ export const useTTS = (): UseTTSReturn => {
 					setIsPlaying(true);
 
 					await audioPlayer.replace(cachedAudioUri);
+
+					// Configure for speaker output
+					try {
+						await AudioModule.setAudioModeAsync({
+							playsInSilentMode: true,
+						});
+					} catch (error) {
+						console.warn("Failed to set speaker mode:", error);
+					}
+
 					audioPlayer.play();
 				} else if (text) {
 					// If not cached but we have text, generate and play
