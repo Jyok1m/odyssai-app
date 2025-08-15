@@ -5,6 +5,8 @@ import { SafeAreaView, View, Text, TextInput, Pressable } from "@/components/The
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import { useAppSelector, useAppDispatch, useChatActions, Message, formatTimestamp, resetStore } from "../store";
 import { ResetModal } from "../components/ResetModal";
+import { MenuModal } from "../components/MenuModal";
+import { GameDataModal } from "../components/GameDataModal";
 import { AIThinkingAdvanced } from "../components/AIThinkingAdvanced";
 import { useTTS } from "../hooks/useTTS";
 
@@ -52,6 +54,8 @@ export default function ChatScreen() {
 
 	const [message, setMessage] = useState("");
 	const [showResetModal, setShowResetModal] = useState(false);
+	const [showMenuModal, setShowMenuModal] = useState(false);
+	const [showGameDataModal, setShowGameDataModal] = useState(false);
 	const [isTranscribing, setIsTranscribing] = useState(false);
 	const [justStoppedRecording, setJustStoppedRecording] = useState(false);
 	const [typingDots, setTypingDots] = useState("");
@@ -391,6 +395,50 @@ export default function ChatScreen() {
 		resetChat();
 	};
 
+	/* ----------------------------- Menu/Game Data ------------------- */
+
+	// Extract game data from messages and store
+	const getGameData = () => {
+		const gameDataState = useAppSelector((state) => state.gameData);
+
+		// Extract data from store with correct property names
+		let characterName = gameDataState?.character_name;
+		let worldName = gameDataState?.world_name;
+
+		// If no data in store, try to extract from messages
+		if (!characterName || !worldName) {
+			for (const message of messages) {
+				if (message.isUser && !characterName) {
+					// Simple heuristic: if user message contains "name is" or similar
+					const nameMatch = message.text.match(/(?:name is|i'm|im|my name is)\s+([a-zA-Z]+)/i);
+					if (nameMatch) {
+						characterName = nameMatch[1];
+					}
+				}
+
+				if (message.text.includes("world") && !worldName) {
+					// Try to extract world name from AI responses
+					const worldMatch = message.text.match(/world\s+(?:of\s+|called\s+)?([A-Z][a-zA-Z\s]+)/i);
+					if (worldMatch) {
+						worldName = worldMatch[1].trim();
+					}
+				}
+			}
+		}
+
+		const result = {
+			characterName,
+			worldName,
+		};
+
+		return result;
+	};
+
+	// Handle menu modal actions
+	const handleViewGameData = () => {
+		setShowGameDataModal(true);
+	};
+
 	/* ---------------------------------------------------------------- */
 	/*                             Variables                            */
 	/* ---------------------------------------------------------------- */
@@ -447,8 +495,8 @@ export default function ChatScreen() {
 					<MaterialCommunityIcons name="robot" size={24} color="#9a8c98" />
 					<Text style={styles.headerTitle}>Odyssai Assistant</Text>
 				</View>
-				<Pressable style={({ pressed }) => [styles.resetButton, { opacity: pressed ? 0.6 : 1 }]} onPress={() => setShowResetModal(true)}>
-					<MaterialCommunityIcons name="delete-sweep" size={20} color="#e74c3c" />
+				<Pressable style={({ pressed }) => [styles.resetButton, { opacity: pressed ? 0.6 : 1 }]} onPress={() => setShowMenuModal(true)}>
+					<MaterialCommunityIcons name="menu" size={20} color="#9a8c98" />
 				</Pressable>
 			</View>
 
@@ -509,6 +557,20 @@ export default function ChatScreen() {
 
 			{/* Reset Modal */}
 			<ResetModal visible={showResetModal} onClose={() => setShowResetModal(false)} onConfirm={handleResetChat} />
+
+			{/* Menu Modal */}
+			<MenuModal
+				visible={showMenuModal}
+				onClose={() => setShowMenuModal(false)}
+				onResetConversation={() => {
+					setShowMenuModal(false);
+					setShowResetModal(true);
+				}}
+				onViewGameData={handleViewGameData}
+			/>
+
+			{/* Game Data Modal */}
+			<GameDataModal visible={showGameDataModal} onClose={() => setShowGameDataModal(false)} gameData={getGameData()} />
 		</SafeAreaView>
 	);
 }
@@ -543,7 +605,7 @@ const styles = StyleSheet.create({
 		justifyContent: "center",
 		backgroundColor: "transparent",
 		borderWidth: 1,
-		borderColor: "#e74c3c",
+		borderColor: "#9a8c98",
 	},
 	messagesPanel: {
 		flex: 1,
