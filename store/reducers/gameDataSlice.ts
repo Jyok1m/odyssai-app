@@ -24,10 +24,14 @@ const gameDataSlice = createSlice({
 	reducers: {
 		addData: (state, action: PayloadAction<GameData>) => {
 			const { key, value } = action.payload;
-			(state as any)[key] = value;
+			// Use proper typing instead of any
+			if (key in state) {
+				(state as Record<string, any>)[key] = value;
+			}
 		},
-		resetData: () => {
-			return initialState;
+		resetData: (state) => {
+			// Use proper reset instead of returning new state
+			Object.assign(state, initialState);
 		},
 	},
 });

@@ -18,7 +18,11 @@ export default function ChatScreen() {
 	const isLoading = messagesState?.isLoading || false;
 	const { sendMessage, resetChat } = useChatActions();
 
-	// TTS Hook
+	// TTS Hook - Initialize only after component mount
+	const [isTTSReady, setIsTTSReady] = useState(false);
+	const ttsHook = useTTS();
+
+	// Destructure TTS hook only when ready
 	const {
 		isLoading: isTTSLoading,
 		isPlaying: isTTSPlaying,
@@ -27,7 +31,17 @@ export default function ChatScreen() {
 		queueMessage: queueTTSMessage,
 		playMessage: playTTSMessage,
 		clearQueue: clearTTSQueue,
-	} = useTTS();
+	} = isTTSReady
+		? ttsHook
+		: {
+				isLoading: false,
+				isPlaying: false,
+				currentItem: null,
+				queue: [],
+				queueMessage: async () => {},
+				playMessage: async () => {},
+				clearQueue: () => {},
+		  };
 
 	const flatListRef = useRef<FlatList>(null);
 	const seenMessageIds = useRef<Set<string>>(new Set());
@@ -60,6 +74,9 @@ export default function ChatScreen() {
 					playsInSilentMode: true,
 					allowsRecording: true,
 				});
+
+				// Enable TTS after audio setup
+				setIsTTSReady(true);
 			} catch (error) {
 				console.error("Error setting up audio:", error);
 			}
@@ -101,7 +118,7 @@ export default function ChatScreen() {
 	// Gestion TTS pour les nouveaux messages de l'IA
 	useEffect(() => {
 		const handleNewAIMessages = () => {
-			if (messages.length > 0) {
+			if (messages.length > 0 && isTTSReady) {
 				// Traiter tous les messages IA non vus
 				messages.forEach((message) => {
 					// Si c'est un message de l'IA et qu'il n'est pas en cours de chargement
@@ -117,7 +134,7 @@ export default function ChatScreen() {
 		};
 
 		handleNewAIMessages();
-	}, [messages, isLoading, queueTTSMessage]);
+	}, [messages, isLoading, queueTTSMessage, isTTSReady]);
 
 	// Gestion de la transcription après arrêt de l'enregistrement
 	useEffect(() => {

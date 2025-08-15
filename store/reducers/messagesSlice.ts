@@ -34,10 +34,16 @@ const messagesSlice = createSlice({
 			state.messages.push(action.payload);
 		},
 		setMessages: (state, action: PayloadAction<Message[]>) => {
-			state.messages = action.payload;
+			// Ensure messages array exists and replace content
+			if (state.messages) {
+				state.messages.splice(0, state.messages.length, ...action.payload);
+			}
 		},
 		clearMessages: (state) => {
-			state.messages = [];
+			// Ensure messages array exists and clear it
+			if (state.messages) {
+				state.messages.splice(0, state.messages.length);
+			}
 		},
 		setLoading: (state, action: PayloadAction<boolean>) => {
 			state.isLoading = action.payload;
@@ -52,7 +58,15 @@ const messagesSlice = createSlice({
 			}
 		},
 		deleteMessage: (state, action: PayloadAction<string>) => {
-			state.messages = state.messages.filter((msg) => msg.id !== action.payload);
+			// Ensure messages array exists
+
+			if (state.messages) {
+				// Use findIndex and splice instead of filter assignment
+				const index = state.messages.findIndex((msg) => msg.id === action.payload);
+				if (index !== -1) {
+					state.messages.splice(index, 1);
+				}
+			}
 		},
 		resetStore: (state) => {
 			// Reset to initial state with welcome message and first question
@@ -70,9 +84,12 @@ const messagesSlice = createSlice({
 				isUser: false,
 				timestamp: getCurrentTimestamp(),
 			};
-			state.messages = [welcomeMessage, firstQuestion];
-			state.isLoading = false;
-			state.error = null;
+			// Ensure messages array exists and replace content
+			if (state.messages) {
+				state.messages.splice(0, state.messages.length, welcomeMessage, firstQuestion);
+				state.isLoading = false;
+				state.error = null;
+			}
 		},
 	},
 	extraReducers: (builder) => {
@@ -99,8 +116,11 @@ const messagesSlice = createSlice({
 					isUser: false,
 					timestamp: getCurrentTimestamp(),
 				};
-				state.messages = [action.payload, firstQuestion];
-				state.error = null;
+				// Ensure messages array exists and replace content
+				if (state.messages) {
+					state.messages.splice(0, state.messages.length, action.payload, firstQuestion);
+					state.error = null;
+				}
 			})
 			// Handle resetCompleteStore
 			.addCase(resetCompleteStore.fulfilled, (state, action) => {
@@ -111,9 +131,12 @@ const messagesSlice = createSlice({
 					isUser: false,
 					timestamp: getCurrentTimestamp(),
 				};
-				state.messages = [action.payload, firstQuestion];
-				state.isLoading = false;
-				state.error = null;
+				// Ensure messages array exists and replace content
+				if (state.messages) {
+					state.messages.splice(0, state.messages.length, action.payload, firstQuestion);
+					state.isLoading = false;
+					state.error = null;
+				}
 			});
 	},
 });
