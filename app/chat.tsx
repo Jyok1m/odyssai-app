@@ -105,7 +105,7 @@ export default function ChatScreen() {
 				// Traiter tous les messages IA non vus
 				messages.forEach((message) => {
 					// Si c'est un message de l'IA et qu'il n'est pas en cours de chargement
-					if (!message.isUser && !isLoading && message.text.trim() !== "") {
+					if (!message.isUser && !isLoading && message?.text?.trim() !== "") {
 						// Vérifier si ce message est vraiment nouveau (pas rechargé depuis le store)
 						if (!seenMessageIds.current.has(message.id)) {
 							seenMessageIds.current.add(message.id);
