@@ -74,7 +74,6 @@
 		"plugins": [
 			"expo-router",
 			"expo-secure-store",
-			"expo-speech-recognition",
 			[
 				"expo-dev-client",
 				{
