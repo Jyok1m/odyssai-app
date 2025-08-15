@@ -61,6 +61,11 @@ export default function ChatScreen() {
 	const [typingDots, setTypingDots] = useState("");
 	const [transcriptionController, setTranscriptionController] = useState<AbortController | null>(null);
 
+	// Pagination des messages
+	const [visibleMessagesCount, setVisibleMessagesCount] = useState(10); // Nombre de messages visibles initialement
+	const [showLoadMore, setShowLoadMore] = useState(false);
+	const MESSAGES_PER_LOAD = 5; // Nombre de messages à charger à chaque fois
+
 	/* ---------------------------------------------------------------- */
 	/*                           Effect hooks                           */
 	/* ---------------------------------------------------------------- */
@@ -110,6 +115,8 @@ export default function ChatScreen() {
 				dispatch(resetStore());
 				// Réinitialiser le set des messages vus quand on reset
 				seenMessageIds.current.clear();
+				setVisibleMessagesCount(10);
+				setShowLoadMore(false);
 			} else {
 				// Au premier chargement, marquer tous les messages existants comme "vus"
 				// pour éviter de jouer automatiquement les anciens messages
@@ -119,9 +126,12 @@ export default function ChatScreen() {
 							seenMessageIds.current.add(message.id);
 						}
 					});
-					// console.log(`Marked ${seenMessageIds.current.size} existing AI messages as seen`);
 				}
 
+				// Vérifier s'il y a plus de messages que ceux visibles
+				setShowLoadMore(messages.length > visibleMessagesCount);
+
+				// Auto-scroll pour les nouveaux messages
 				if (flatListRef.current) {
 					setTimeout(() => {
 						flatListRef.current?.scrollToEnd({ animated: true });
@@ -131,14 +141,15 @@ export default function ChatScreen() {
 		};
 
 		handleMessagesUpdate();
-	}, [messages.length, dispatch, isLoading]);
+	}, [messages.length, dispatch, isLoading, visibleMessagesCount]);
 
 	// Gestion TTS pour les nouveaux messages de l'IA
 	useEffect(() => {
 		const handleNewAIMessages = () => {
-			if (messages.length > 0 && isTTSReady) {
+			const visibleMessages = getVisibleMessages();
+			if (visibleMessages.length > 0 && isTTSReady) {
 				// Traiter tous les messages IA non vus
-				messages.forEach((message) => {
+				visibleMessages.forEach((message) => {
 					// Si c'est un message de l'IA et qu'il n'est pas en cours de chargement
 					if (!message.isUser && !isLoading && message?.text?.trim() !== "") {
 						// Vérifier si ce message est vraiment nouveau (pas rechargé depuis le store)
@@ -152,7 +163,7 @@ export default function ChatScreen() {
 		};
 
 		handleNewAIMessages();
-	}, [messages, isLoading, queueTTSMessage, isTTSReady]);
+	}, [messages, isLoading, queueTTSMessage, isTTSReady, visibleMessagesCount]);
 
 	// Gestion de la transcription après arrêt de l'enregistrement
 	useEffect(() => {
@@ -372,7 +383,8 @@ export default function ChatScreen() {
 	// Send text message
 	const handleSend = () => {
 		if (String(message).trim().length > 0) {
-			const { currentStep } = messages[messages.length - 1];
+			const visibleMessages = getVisibleMessages();
+			const { currentStep } = visibleMessages.length > 0 ? visibleMessages[visibleMessages.length - 1] : { currentStep: "ask_new_world" };
 
 			sendMessage(message, currentStep);
 			setMessage("");
@@ -439,13 +451,43 @@ export default function ChatScreen() {
 		setShowGameDataModal(true);
 	};
 
+	/* ----------------------------- Message Pagination -------------- */
+
+	// Charger plus de messages
+	const loadMoreMessages = () => {
+		const newCount = Math.min(visibleMessagesCount + MESSAGES_PER_LOAD, messages.length);
+		setVisibleMessagesCount(newCount);
+		console.log(`📄 Loading more messages: ${visibleMessagesCount} -> ${newCount} (total: ${messages.length})`);
+	};
+
+	// Calculer les messages visibles (les plus récents)
+	const getVisibleMessages = () => {
+		const totalMessages = messages.length;
+		if (totalMessages <= visibleMessagesCount) {
+			return messages;
+		}
+
+		// Prendre les derniers messages (les plus récents)
+		const startIndex = Math.max(0, totalMessages - visibleMessagesCount);
+		return messages.slice(startIndex);
+	};
+
+	// Gérer le scroll pour détecter le haut de la liste
+	const handleScroll = (event: any) => {
+		const { contentOffset, contentSize, layoutMeasurement } = event.nativeEvent;
+
+		// Si on scroll vers le haut et qu'on est proche du début
+		if (contentOffset.y <= 100 && showLoadMore) {
+			loadMoreMessages();
+		}
+	};
+
 	/* ---------------------------------------------------------------- */
 	/*                             Variables                            */
 	/* ---------------------------------------------------------------- */
 
 	const renderMessage = ({ item }: { item: Message }) => {
 		const isTTSActive = currentTTSItem?.id === item.id;
-		const hasTTSInQueue = ttsQueue.some((queueItem) => queueItem.id === item.id);
 
 		return (
 			<View style={[styles.messageContainer, item.isUser ? styles.userMessage : styles.botMessage]}>
@@ -502,14 +544,26 @@ export default function ChatScreen() {
 
 			{/* Messages Panel */}
 			<View style={styles.messagesPanel}>
+				{/* Load More Indicator */}
+				{showLoadMore && (
+					<View style={styles.loadMoreIndicator}>
+						<Pressable style={styles.loadMoreButton} onPress={loadMoreMessages}>
+							<MaterialCommunityIcons name="chevron-up" size={16} color="#9a8c98" />
+							<Text style={styles.loadMoreText}>Load more ({messages.length - visibleMessagesCount} older messages)</Text>
+						</Pressable>
+					</View>
+				)}
+
 				<FlatList
 					ref={flatListRef}
-					data={messages}
+					data={getVisibleMessages()}
 					renderItem={renderMessage}
 					keyExtractor={(item) => item.id}
 					style={styles.messagesList}
 					contentContainerStyle={styles.messagesContent}
 					showsVerticalScrollIndicator={false}
+					onScroll={handleScroll}
+					scrollEventThrottle={400}
 				/>
 				{/* Loading Indicator */}
 				{isLoading && (
@@ -828,5 +882,26 @@ const styles = StyleSheet.create({
 		fontSize: 10,
 		color: "#f39c12",
 		fontFamily: "monospace",
+	},
+	loadMoreIndicator: {
+		paddingHorizontal: 16,
+		paddingVertical: 8,
+		alignItems: "center",
+	},
+	loadMoreButton: {
+		flexDirection: "row",
+		alignItems: "center",
+		backgroundColor: "rgba(154, 140, 152, 0.1)",
+		paddingHorizontal: 12,
+		paddingVertical: 8,
+		borderRadius: 8,
+		borderWidth: 1,
+		borderColor: "rgba(154, 140, 152, 0.3)",
+		gap: 6,
+	},
+	loadMoreText: {
+		fontSize: 12,
+		color: "#9a8c98",
+		fontWeight: "500",
 	},
 });
