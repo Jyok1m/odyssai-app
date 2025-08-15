@@ -30,8 +30,8 @@ export const GameDataModal: React.FC<GameDataModalProps> = ({ visible, onClose, 
 						<View style={styles.infoItem}>
 							<MaterialCommunityIcons name="account" size={24} color="#9a8c98" />
 							<View style={styles.infoContent}>
-								<Text style={styles.infoLabel}>Playing As</Text>
-								<Text style={styles.infoValue}>{gameData?.characterName || "Not set"}</Text>
+								<Text style={styles.infoLabel}>Playing as :</Text>
+								<Text style={styles.infoValue}>{gameData?.characterName?.toUpperCase() || "Not set"}</Text>
 							</View>
 						</View>
 
@@ -39,8 +39,8 @@ export const GameDataModal: React.FC<GameDataModalProps> = ({ visible, onClose, 
 						<View style={styles.infoItem}>
 							<MaterialCommunityIcons name="earth" size={24} color="#9a8c98" />
 							<View style={styles.infoContent}>
-								<Text style={styles.infoLabel}>In the world</Text>
-								<Text style={styles.infoValue}>{gameData?.worldName || "Not set"}</Text>
+								<Text style={styles.infoLabel}>In the world :</Text>
+								<Text style={styles.infoValue}>{gameData?.worldName?.toUpperCase() || "Not set"}</Text>
 							</View>
 						</View>
 
@@ -120,6 +120,7 @@ const styles = StyleSheet.create({
 	infoContent: {
 		flex: 1,
 		marginLeft: 16,
+		backgroundColor: "transparent",
 	},
 	infoLabel: {
 		fontSize: 14,

@@ -168,6 +168,7 @@ const styles = StyleSheet.create({
 	},
 	optionContent: {
 		flex: 1,
+		backgroundColor: "transparent",
 	},
 	optionTitle: {
 		fontSize: 16,
