@@ -11,21 +11,8 @@ interface ResetModalProps {
 
 export const ResetModal: React.FC<ResetModalProps> = ({ visible, onClose, onConfirm }) => {
 	const handleConfirm = () => {
-		Alert.alert("Confirm Reset", "Are you sure you want to delete the entire conversation? This action cannot be undone.", [
-			{
-				text: "Cancel",
-				style: "cancel",
-				onPress: onClose,
-			},
-			{
-				text: "Reset",
-				style: "destructive",
-				onPress: () => {
-					onConfirm();
-					onClose();
-				},
-			},
-		]);
+		onConfirm();
+		onClose();
 	};
 
 	return (

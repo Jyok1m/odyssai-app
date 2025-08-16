@@ -12,20 +12,8 @@ interface MenuModalProps {
 
 export const MenuModal: React.FC<MenuModalProps> = ({ visible, onClose, onResetConversation, onViewGameData }) => {
 	const handleResetConversation = () => {
-		Alert.alert("Confirm Reset", "Are you sure you want to delete the entire conversation? This action cannot be undone.", [
-			{
-				text: "Cancel",
-				style: "cancel",
-			},
-			{
-				text: "Reset",
-				style: "destructive",
-				onPress: () => {
-					onResetConversation();
-					onClose();
-				},
-			},
-		]);
+		onResetConversation();
+		onClose();
 	};
 
 	const handleViewGameData = () => {
