@@ -65,6 +65,8 @@ export default function ChatScreen() {
 
 	const dispatch = useAppDispatch();
 	const router = useRouter();
+	const userState = useAppSelector((state) => state.user);
+	const { user_uuid } = userState;
 	const messagesState = useAppSelector((state) => state.messages);
 	const messages = messagesState?.messages || [];
 	const isLoading = messagesState?.isLoading || false;
@@ -208,7 +210,7 @@ export default function ChatScreen() {
 
 	// Gestion de l'initialisation et du scroll des messages
 	useEffect(() => {
-		const handleMessagesUpdate = () => {
+		const handleMessagesUpdate = async () => {
 			if (messages.length === 0) {
 				dispatch(resetStore());
 				// Réinitialiser le set des messages vus quand on reset
@@ -499,8 +501,20 @@ export default function ChatScreen() {
 	);
 
 	// Handle reset chat with TTS cleanup
-	const handleResetChat = () => {
-		// console.log("Resetting chat and clearing TTS queue");
+	const handleResetChat = async () => {
+		const response = await fetch(`${process.env.EXPO_PUBLIC_API_URL}/api/users/delete-interactions`, {
+			method: "DELETE",
+			headers: { "Content-Type": "application/json" },
+			body: JSON.stringify({ user_uuid }),
+		});
+
+		const data = await response.json();
+
+		if (response.status !== 200) {
+			Alert.alert("Error", data.error || "Failed to reset chat");
+			return;
+		}
+
 		clearTTSQueue();
 		seenMessageIds.current.clear();
 		resetChat();
