@@ -551,6 +551,7 @@ export default function ChatScreen() {
 	};
 
 	const handleLogout = () => {
+		resetChat();
 		dispatch(clearUser());
 		clearTTSQueue(); // Nettoyer la queue TTS
 		seenMessageIds.current.clear();
