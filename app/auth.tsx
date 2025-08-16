@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { StyleSheet, TextInput, Alert, KeyboardAvoidingView, Platform } from "react-native";
-import { Text, View, Button, Pressable } from "@/components/Themed";
+import { Text, View, Pressable } from "@/components/Themed";
 import { useRouter } from "expo-router";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import { useAppDispatch } from "@/store/hooks/typedHooks";
