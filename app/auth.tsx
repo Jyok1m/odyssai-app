@@ -23,23 +23,28 @@ export default function AuthScreen() {
 		setIsLoading(true);
 
 		try {
-			// TODO: Remplacer par les vraies requêtes d'authentification
-			const endpoint = isSignUp ? "/signup" : "/signin";
+			const endpoint = isSignUp ? "/create" : "/login";
 
-			// Simulation d'une réponse d'authentification réussie
-			// À remplacer par une vraie requête fetch
-			const mockResponse = {
-				username: username,
-				user_uuid: `uuid-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-			};
+			const response = await fetch(`${process.env.EXPO_PUBLIC_API_URL}/api/users${endpoint}`, {
+				method: "POST",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify({ username, password }),
+			});
 
-			// Stocker les données utilisateur dans le store
-			dispatch(
-				setUser({
-					username: mockResponse.username,
-					user_uuid: mockResponse.user_uuid,
-				})
-			);
+			const data = await response.json();
+
+			if (![200, 201].includes(response.status)) {
+				Alert.alert("Error", data.error || "Authentication failed");
+				return;
+			}
+
+			if (response.status === 201) {
+				const { username, user_uuid } = data;
+				dispatch(setUser({ username, user_uuid }));
+			} else if (response.status === 200) {
+				const { username, user_uuid } = data.user;
+				dispatch(setUser({ username, user_uuid }));
+			}
 
 			// Rediriger vers le chat
 			router.replace("/chat");
@@ -61,7 +66,6 @@ export default function AuthScreen() {
 			<View style={styles.headerSection}>
 				<MaterialCommunityIcons name="book-open-variant" size={60} color="#9a8c98" style={styles.icon} />
 				<Text style={styles.appTitle}>Odyssai</Text>
-				<Text style={styles.authTitle}>{isSignUp ? "Create Account" : "Sign In"}</Text>
 				<Text style={styles.subtitle}>{isSignUp ? "Join the adventure and create your account" : "Sign in to continue your adventure"}</Text>
 			</View>
 
