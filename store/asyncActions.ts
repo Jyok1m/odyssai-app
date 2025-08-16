@@ -36,8 +36,6 @@ const classifyUserMessage = async (message: string): Promise<string> => {
 			return "no";
 		}
 
-		console.log(response.output_text);
-
 		return response.output_text;
 	} catch (error) {
 		console.error("Error calling message classification API:", error);
