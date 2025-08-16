@@ -113,9 +113,9 @@ export default function ChatScreen() {
 	const [transcriptionController, setTranscriptionController] = useState<AbortController | null>(null);
 
 	// Pagination des messages
-	const [visibleMessagesCount, setVisibleMessagesCount] = useState(10); // Nombre de messages visibles initialement
+	const [visibleMessagesCount, setVisibleMessagesCount] = useState(50); // Nombre de messages visibles initialement
 	const [showLoadMore, setShowLoadMore] = useState(false);
-	const MESSAGES_PER_LOAD = 5; // Nombre de messages à charger à chaque fois
+	const MESSAGES_PER_LOAD = 25; // Nombre de messages à charger à chaque fois
 
 	// Keyboard management
 	const [isKeyboardVisible, setIsKeyboardVisible] = useState(false);
@@ -213,7 +213,7 @@ export default function ChatScreen() {
 				dispatch(resetStore());
 				// Réinitialiser le set des messages vus quand on reset
 				seenMessageIds.current.clear();
-				setVisibleMessagesCount(10);
+				setVisibleMessagesCount(50);
 				setShowLoadMore(false);
 			} else {
 				// Au premier chargement, marquer tous les messages existants comme "vus"
