@@ -17,7 +17,7 @@ const initialState: MessagesState = {
 		{
 			id: uuidv4(),
 			currentStep: "ask_new_world",
-			text: "Do you want to create a new world?",
+			text: "Do you wish to create a new world?",
 			isUser: false,
 			timestamp: getCurrentTimestamp(),
 		},
