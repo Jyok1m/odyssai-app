@@ -2,25 +2,43 @@ import "react-native-get-random-values";
 import { createAsyncThunk } from "@reduxjs/toolkit";
 import { getCurrentTimestamp } from "./utils/utils";
 import { addData } from "./reducers/gameDataSlice";
+import OpenAI from "openai";
 import { v4 as uuidv4 } from "uuid";
 
+const client = new OpenAI({ apiKey: process.env.EXPO_PUBLIC_OPENAI_API_KEY });
 const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || "http://localhost:8000";
 
 // Simple function to classify user messages (with optional API fallback)
-const classifyUserMessage = async (message: string): Promise<"yes" | "no"> => {
+const classifyUserMessage = async (message: string): Promise<string> => {
+	if (["yes", "no"].includes(message.toLowerCase())) {
+		return message.toLowerCase();
+	}
+
 	try {
-		const response = await fetch(`${API_BASE_URL}/api/classify-message`, {
-			method: "POST",
-			headers: {
-				"Content-Type": "application/json",
-			},
-			body: JSON.stringify({
-				message: message,
-			}),
+		const response = await client.responses.create({
+			model: "gpt-3.5-turbo",
+			temperature: 0,
+			max_output_tokens: 16,
+			input: `Classify the following user message as either 'yes' or 'no' based on whether the user wants to continue, proceed, or agrees with something.
+
+				User message: "${message}"
+
+				Rules:
+				- If the user expresses desire to continue, proceed, agree, or any positive intent: respond with "yes"
+				- If the user expresses desire to stop, disagree, or any negative intent: respond with "no"
+				- If unclear, default to "no"
+				
+				Respond with only "yes" or "no", nothing else.`,
 		});
 
-		const data = await response.json();
-		return data.classification;
+		if (!["yes", "no"].includes(response.output_text)) {
+			console.error("Unexpected response from message classification API:", response);
+			return "no";
+		}
+
+		console.log(response.output_text);
+
+		return response.output_text;
 	} catch (error) {
 		console.error("Error calling message classification API:", error);
 		return "no";
@@ -331,6 +349,8 @@ export const sendMessageToAI = createAsyncThunk("messages/sendMessageToAI", asyn
 	// Join existing game
 	else if (currentStep === "join_game") {
 		const classification = await classifyUserMessage(userAnswer);
+		console.log("User response classification:", classification);
+
 		if (classification === "yes") {
 			//console.log("gameData", gameData);
 			const aiResponse = await fetchAIResponse("POST", "/join-game", { world_name, character_name });
