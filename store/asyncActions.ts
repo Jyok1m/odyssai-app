@@ -119,7 +119,7 @@ export const sendMessageToAI = createAsyncThunk("messages/sendMessageToAI", asyn
 	else if (currentStep === "ask_world_name") {
 		//console.log("gameData", gameData);
 
-		const aiResponse = await fetchAIResponse("GET", `/check-world?world_name=${userAnswer}`);
+		const aiResponse = await fetchAIResponse("GET", `/worlds/check?world_name=${userAnswer}`);
 		const { exists, world_name, world_id } = aiResponse;
 		const { is_new_world } = gameData;
 
@@ -184,7 +184,7 @@ export const sendMessageToAI = createAsyncThunk("messages/sendMessageToAI", asyn
 		// If user is ready for world generation
 		if (classification === "yes") {
 			//console.log("gameData", gameData);
-			const aiResponse = await fetchAIResponse("POST", `/create-world`, { world_name, world_genre, story_directives });
+			const aiResponse = await fetchAIResponse("POST", `/worlds`, { world_name, world_genre, story_directives });
 			const { world_id, synopsis } = aiResponse;
 
 			// Show synopsis to the user
@@ -240,7 +240,7 @@ export const sendMessageToAI = createAsyncThunk("messages/sendMessageToAI", asyn
 	// Step when user asks for a character name
 	else if (currentStep === "ask_character_name") {
 		//console.log("gameData", gameData);
-		const aiResponse = await fetchAIResponse("GET", `/check-character?world_id=${world_id}&character_name=${userAnswer}`);
+		const aiResponse = await fetchAIResponse("GET", `/characters/check?world_id=${world_id}&character_name=${userAnswer}`);
 		const { exists, character_name, character_id } = aiResponse;
 		const { is_new_character } = gameData;
 
@@ -304,7 +304,7 @@ export const sendMessageToAI = createAsyncThunk("messages/sendMessageToAI", asyn
 		if (classification === "yes") {
 			const { character_gender, character_description } = gameData;
 			//console.log("gameData", gameData);
-			const aiResponse = await fetchAIResponse("POST", "/create-character", {
+			const aiResponse = await fetchAIResponse("POST", "/characters", {
 				world_id,
 				character_name,
 				character_gender,
@@ -351,7 +351,7 @@ export const sendMessageToAI = createAsyncThunk("messages/sendMessageToAI", asyn
 
 		if (classification === "yes") {
 			//console.log("gameData", gameData);
-			const aiResponse = await fetchAIResponse("POST", "/join-game", { world_name, character_name });
+			const aiResponse = await fetchAIResponse("POST", "/game/join", { world_name, character_name });
 
 			const { world_id, character_id, world_summary } = aiResponse;
 
@@ -390,7 +390,7 @@ export const sendMessageToAI = createAsyncThunk("messages/sendMessageToAI", asyn
 	else if (currentStep === "get_prompt") {
 		if (userAnswer === "yes") {
 			//console.log("gameData", gameData);
-			const aiResponse = await fetchAIResponse("GET", `/game-prompt?world_id=${world_id}&character_id=${character_id}`);
+			const aiResponse = await fetchAIResponse("GET", `/game/prompt?world_id=${world_id}&character_id=${character_id}`);
 			const { ai_prompt } = aiResponse;
 
 			nextQuestion = ai_prompt;
@@ -414,7 +414,7 @@ export const sendMessageToAI = createAsyncThunk("messages/sendMessageToAI", asyn
 	// Get answer from the player
 	else if (currentStep === "get_response") {
 		//console.log("gameData", gameData);
-		const aiResponse = await fetchAIResponse("POST", "/register-answer", { world_id, character_id, player_answer: userAnswer });
+		const aiResponse = await fetchAIResponse("POST", "/game/action", { world_id, character_id, player_answer: userAnswer });
 		const { immediate_events } = aiResponse;
 
 		response.push({
