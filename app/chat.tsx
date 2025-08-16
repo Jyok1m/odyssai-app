@@ -3,8 +3,11 @@ import { StyleSheet, FlatList, KeyboardAvoidingView, Platform, Alert, Keyboard }
 import { useAudioRecorder, AudioModule, RecordingPresets, setAudioModeAsync, useAudioRecorderState } from "expo-audio";
 import { SafeAreaView, View, Text, TextInput, Pressable } from "@/components/Themed";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
+import { useRouter } from "expo-router";
 import { useAppSelector, useAppDispatch, useChatActions, Message, formatTimestamp, resetStore } from "../store";
+import { clearUser } from "../store/reducers/userSlice";
 import { ResetModal } from "../components/ResetModal";
+import { LogoutConfModal } from "../components/LogoutConfModal";
 import { MenuModal } from "../components/MenuModal";
 import { GameDataModal } from "../components/GameDataModal";
 import { AIThinkingAdvanced } from "../components/AIThinkingAdvanced";
@@ -61,6 +64,7 @@ export default function ChatScreen() {
 	const recorderState = useAudioRecorderState(audioRecorder);
 
 	const dispatch = useAppDispatch();
+	const router = useRouter();
 	const messagesState = useAppSelector((state) => state.messages);
 	const messages = messagesState?.messages || [];
 	const isLoading = messagesState?.isLoading || false;
@@ -100,6 +104,7 @@ export default function ChatScreen() {
 
 	const [message, setMessage] = useState("");
 	const [showResetModal, setShowResetModal] = useState(false);
+	const [showLogoutConfModal, setShowLogoutConfModal] = useState(false);
 	const [showMenuModal, setShowMenuModal] = useState(false);
 	const [showGameDataModal, setShowGameDataModal] = useState(false);
 	const [isTranscribing, setIsTranscribing] = useState(false);
@@ -545,6 +550,13 @@ export default function ChatScreen() {
 		setShowGameDataModal(true);
 	};
 
+	const handleLogout = () => {
+		dispatch(clearUser());
+		clearTTSQueue(); // Nettoyer la queue TTS
+		seenMessageIds.current.clear();
+		router.replace("/"); // Rediriger vers l'écran d'accueil
+	};
+
 	/* ----------------------------- Message Pagination -------------- */
 
 	// Charger plus de messages
@@ -690,6 +702,8 @@ export default function ChatScreen() {
 			{/* Reset Modal */}
 			<ResetModal visible={showResetModal} onClose={() => setShowResetModal(false)} onConfirm={handleResetChat} />
 
+			<LogoutConfModal visible={showLogoutConfModal} onClose={() => setShowLogoutConfModal(false)} onConfirm={handleLogout} />
+
 			{/* Menu Modal */}
 			<MenuModal
 				visible={showMenuModal}
@@ -699,6 +713,7 @@ export default function ChatScreen() {
 					setShowResetModal(true);
 				}}
 				onViewGameData={handleViewGameData}
+				onLogout={() => setShowLogoutConfModal(true)}
 			/>
 
 			{/* Game Data Modal */}

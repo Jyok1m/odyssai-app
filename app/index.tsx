@@ -3,12 +3,18 @@ import { Text, View, Button } from "@/components/Themed";
 import { useRouter } from "expo-router";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import React from "react";
+import { useAppSelector } from "@/store/hooks/typedHooks";
 
 export default function LandingScreen() {
 	const router = useRouter();
+	const { isAuthenticated } = useAppSelector((state) => state.user);
 
 	const handleStartJourney = () => {
-		router.push("/chat");
+		if (isAuthenticated) {
+			router.push("/chat");
+		} else {
+			router.replace("/auth" as any);
+		}
 	};
 
 	return (

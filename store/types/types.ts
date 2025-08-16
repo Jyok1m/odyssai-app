@@ -33,3 +33,9 @@ export interface GameDataState {
 	character_gender: string;
 	character_description: string;
 }
+
+export interface UserState {
+	user_uuid: string | null;
+	username: string | null;
+	isAuthenticated: boolean;
+}

@@ -3,17 +3,19 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { persistStore, persistReducer, FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, REGISTER } from "redux-persist";
 import messagesReducer from "./reducers/messagesSlice";
 import gameDataReducer from "./reducers/gameDataSlice";
+import userReducer from "./reducers/userSlice";
 
 const persistConfig = {
 	key: "odyssai",
 	storage: AsyncStorage,
-	whitelist: ["messages", "gameData"], // Persister les deux stores
+	whitelist: ["messages", "gameData", "user"], // Persister les trois stores
 	version: 1, // Ajout d'une version pour gérer les migrations futures
 };
 
 const rootReducer = combineReducers({
 	messages: messagesReducer,
 	gameData: gameDataReducer,
+	user: userReducer,
 });
 
 const persistedReducer = persistReducer(persistConfig, rootReducer);

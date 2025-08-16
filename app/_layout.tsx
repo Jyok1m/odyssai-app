@@ -50,6 +50,7 @@ function RootLayoutNav() {
 			<ThemeProvider value={DarkTheme}>
 				<Stack>
 					<Stack.Screen name="index" options={{ headerShown: false }} />
+					<Stack.Screen name="auth" options={{ headerShown: false }} />
 					<Stack.Screen name="chat" options={{ headerShown: false }} />
 				</Stack>
 			</ThemeProvider>

@@ -8,9 +8,10 @@ interface MenuModalProps {
 	onClose: () => void;
 	onResetConversation: () => void;
 	onViewGameData: () => void;
+	onLogout: () => void;
 }
 
-export const MenuModal: React.FC<MenuModalProps> = ({ visible, onClose, onResetConversation, onViewGameData }) => {
+export const MenuModal: React.FC<MenuModalProps> = ({ visible, onClose, onResetConversation, onViewGameData, onLogout }) => {
 	const handleResetConversation = () => {
 		onResetConversation();
 		onClose();
@@ -18,6 +19,11 @@ export const MenuModal: React.FC<MenuModalProps> = ({ visible, onClose, onResetC
 
 	const handleViewGameData = () => {
 		onViewGameData();
+		onClose();
+	};
+
+	const handleLogout = () => {
+		onLogout();
 		onClose();
 	};
 
@@ -58,6 +64,18 @@ export const MenuModal: React.FC<MenuModalProps> = ({ visible, onClose, onResetC
 								<Text style={[styles.optionDescription, styles.resetDescription]}>Delete all messages and start over</Text>
 							</View>
 							<MaterialCommunityIcons name="chevron-right" size={20} color="#e74c3c" />
+						</Pressable>
+
+						{/* Logout Option */}
+						<Pressable style={[styles.menuOption, styles.logoutOption]} onPress={handleLogout}>
+							<View style={[styles.optionIcon, styles.logoutIcon]}>
+								<MaterialCommunityIcons name="logout" size={24} color="#f39c12" />
+							</View>
+							<View style={styles.optionContent}>
+								<Text style={[styles.optionTitle, styles.logoutTitle]}>Log out</Text>
+								<Text style={[styles.optionDescription, styles.logoutDescription]}>Log out and return to the home screen</Text>
+							</View>
+							<MaterialCommunityIcons name="chevron-right" size={20} color="#f39c12" />
 						</Pressable>
 					</View>
 
@@ -142,6 +160,10 @@ const styles = StyleSheet.create({
 		backgroundColor: "rgba(231, 76, 60, 0.1)",
 		borderColor: "rgba(231, 76, 60, 0.3)",
 	},
+	logoutOption: {
+		backgroundColor: "rgba(243, 156, 18, 0.1)",
+		borderColor: "rgba(243, 156, 18, 0.3)",
+	},
 	optionIcon: {
 		width: 48,
 		height: 48,
@@ -153,6 +175,9 @@ const styles = StyleSheet.create({
 	},
 	resetIcon: {
 		backgroundColor: "rgba(231, 76, 60, 0.1)",
+	},
+	logoutIcon: {
+		backgroundColor: "rgba(243, 156, 18, 0.1)",
 	},
 	optionContent: {
 		flex: 1,
@@ -167,6 +192,9 @@ const styles = StyleSheet.create({
 	resetTitle: {
 		color: "#e74c3c",
 	},
+	logoutTitle: {
+		color: "#f39c12",
+	},
 	optionDescription: {
 		fontSize: 14,
 		color: "#c9ada7",
@@ -174,6 +202,9 @@ const styles = StyleSheet.create({
 	},
 	resetDescription: {
 		color: "rgba(231, 76, 60, 0.8)",
+	},
+	logoutDescription: {
+		color: "rgba(243, 156, 18, 0.8)",
 	},
 	footer: {
 		paddingHorizontal: 20,
