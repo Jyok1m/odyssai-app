@@ -12,6 +12,8 @@ import { MenuModal } from "../components/MenuModal";
 import { GameDataModal } from "../components/GameDataModal";
 import { AIThinkingAdvanced } from "../components/AIThinkingAdvanced";
 import { useTTS } from "../hooks/useTTS";
+import { v4 as uuidv4 } from "uuid";
+import { getCurrentTimestamp } from "../store/utils/utils";
 
 // Composant MessageItem optimisé avec React.memo
 interface MessageItemProps {
@@ -305,6 +307,51 @@ export default function ChatScreen() {
 	/*                             Functions                            */
 	/* ---------------------------------------------------------------- */
 
+	/* ----------------------------- Database Utils ------------------ */
+
+	// Fonction pour envoyer les messages par défaut en base de données
+	const sendDefaultMessagesToDatabase = async (userUuid: string) => {
+		const timestamp1 = getCurrentTimestamp();
+		await new Promise((resolve) => setTimeout(resolve, 100 + Math.random() * 1000));
+		const timestamp2 = getCurrentTimestamp();
+		const defaultMessages = [
+			{
+				id: uuidv4(),
+				currentStep: "welcome",
+				text: "Welcome to Odyssai. Start by answering a few questions and let's get started!",
+				isUser: false,
+				timestamp: timestamp1,
+			},
+			{
+				id: uuidv4(),
+				currentStep: "ask_new_world",
+				text: "Do you wish to create a new world?",
+				isUser: false,
+				timestamp: timestamp2,
+			},
+		];
+
+		// Envoyer chaque message par défaut en base de données
+		for (const message of defaultMessages) {
+			try {
+				await fetch(`${process.env.EXPO_PUBLIC_API_URL}/api/users/interaction`, {
+					method: "POST",
+					headers: { "Content-Type": "application/json" },
+					body: JSON.stringify({
+						user_uuid: userUuid,
+						message,
+						world_id: null,
+						character_id: null,
+						interaction_source: "ai",
+					}),
+				});
+			} catch (error) {
+				console.error("Error saving default message to database:", error);
+				// Continue même en cas d'erreur pour ne pas bloquer l'utilisateur
+			}
+		}
+	};
+
 	/* ----------------------------- Voice ---------------------------- */
 
 	// Transcribe audio with whisper
@@ -502,6 +549,11 @@ export default function ChatScreen() {
 
 	// Handle reset chat with TTS cleanup
 	const handleResetChat = async () => {
+		if (!user_uuid) {
+			Alert.alert("Error", "User not authenticated");
+			return;
+		}
+
 		const response = await fetch(`${process.env.EXPO_PUBLIC_API_URL}/api/users/delete-interactions`, {
 			method: "DELETE",
 			headers: { "Content-Type": "application/json" },
@@ -515,9 +567,13 @@ export default function ChatScreen() {
 			return;
 		}
 
+		// Clear TTS and reset local state
 		clearTTSQueue();
 		seenMessageIds.current.clear();
 		resetChat();
+
+		// Renvoi des messages par défaut en base de données
+		await sendDefaultMessagesToDatabase(user_uuid);
 	};
 
 	/* ----------------------------- Menu/Game Data ------------------- */

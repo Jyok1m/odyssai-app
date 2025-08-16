@@ -44,15 +44,18 @@ export default function AuthScreen() {
 			if (response.status === 201) {
 				const { username, user_id } = data;
 
-				// Poster les 2 messages du store en BDD
-				for (const message of messages) {
-					await fetch(`${process.env.EXPO_PUBLIC_API_URL}/api/users/interaction`, {
-						method: "POST",
-						headers: { "Content-Type": "application/json" },
-						body: JSON.stringify({ user_uuid: user_id, message, interaction_source: "ai" }),
-					});
-				}
+				// Utiliser une fonction utilitaire pour envoyer les messages par défaut
+				const sendDefaultMessages = async () => {
+					for (const message of messages) {
+						await fetch(`${process.env.EXPO_PUBLIC_API_URL}/api/users/interaction`, {
+							method: "POST",
+							headers: { "Content-Type": "application/json" },
+							body: JSON.stringify({ user_uuid: user_id, message, interaction_source: "ai" }),
+						});
+					}
+				};
 
+				await sendDefaultMessages();
 				dispatch(setUser({ username, user_uuid: user_id }));
 			} else if (response.status === 200) {
 				const { username, uuid } = data.user;
