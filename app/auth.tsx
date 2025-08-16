@@ -3,8 +3,10 @@ import { StyleSheet, TextInput, Alert, KeyboardAvoidingView, Platform } from "re
 import { Text, View, Pressable } from "@/components/Themed";
 import { useRouter } from "expo-router";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
-import { useAppDispatch } from "@/store/hooks/typedHooks";
+import { useAppDispatch, useAppSelector } from "@/store/hooks/typedHooks";
+import { loadMessages } from "@/store/reducers/messagesSlice";
 import { setUser } from "@/store/reducers/userSlice";
+import moment from "moment";
 
 export default function AuthScreen() {
 	const [username, setUsername] = useState("");
@@ -13,6 +15,8 @@ export default function AuthScreen() {
 	const [isLoading, setIsLoading] = useState(false);
 	const router = useRouter();
 	const dispatch = useAppDispatch();
+	const messagesState = useAppSelector((state) => state.messages);
+	const messages = messagesState?.messages || [];
 
 	const handleAuth = async () => {
 		if (!username.trim() || !password.trim()) {
@@ -20,11 +24,10 @@ export default function AuthScreen() {
 			return;
 		}
 
+		const endpoint = isSignUp ? "/create" : "/login";
 		setIsLoading(true);
 
 		try {
-			const endpoint = isSignUp ? "/create" : "/login";
-
 			const response = await fetch(`${process.env.EXPO_PUBLIC_API_URL}/api/users${endpoint}`, {
 				method: "POST",
 				headers: { "Content-Type": "application/json" },
@@ -39,16 +42,46 @@ export default function AuthScreen() {
 			}
 
 			if (response.status === 201) {
-				const { username, user_uuid } = data;
-				dispatch(setUser({ username, user_uuid }));
+				const { username, user_id } = data;
+
+				// Poster les 2 messages du store en BDD
+				for (const message of messages) {
+					await fetch(`${process.env.EXPO_PUBLIC_API_URL}/api/users/interaction`, {
+						method: "POST",
+						headers: { "Content-Type": "application/json" },
+						body: JSON.stringify({ user_uuid: user_id, message, interaction_source: "ai" }),
+					});
+				}
+
+				dispatch(setUser({ username, user_uuid: user_id }));
 			} else if (response.status === 200) {
-				const { username, user_uuid } = data.user;
-				dispatch(setUser({ username, user_uuid }));
+				const { username, uuid } = data.user;
+
+				const res2 = await fetch(`${process.env.EXPO_PUBLIC_API_URL}/api/users/get-interactions?user_uuid=${uuid}`);
+				const interactionsData = await res2.json();
+
+				if (res2.status === 200) {
+					const { interactions } = interactionsData;
+					const messageList = interactions
+						.map((msg: any) => ({
+							id: msg.message.id,
+							currentStep: msg.message.currentStep,
+							text: msg.message.text,
+							isUser: msg.message.isUser,
+							timestamp: msg.message.timestamp,
+						}))
+						.sort((a: any, b: any) => moment(a.timestamp).diff(moment(b.timestamp)));
+
+					dispatch(loadMessages(messageList));
+					dispatch(setUser({ username, user_uuid: uuid }));
+				}
 			}
 
 			// Rediriger vers le chat
 			router.replace("/chat");
 		} catch (error) {
+			console.log(error);
+
 			Alert.alert("Error", "Authentication failed");
 		} finally {
 			setIsLoading(false);

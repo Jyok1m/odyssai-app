@@ -437,6 +437,37 @@ export const sendMessageToAI = createAsyncThunk("messages/sendMessageToAI", asyn
 		timestamp: getCurrentTimestamp(),
 	});
 
+	// Envoi en BDD
+	const prevUserAns = messages.filter((msg: any) => msg.isUser);
+	const lastUserMessage = prevUserAns[prevUserAns.length - 1];
+	const { user_uuid } = state.user;
+
+	await fetch(`${process.env.EXPO_PUBLIC_API_URL}/api/users/interaction`, {
+		method: "POST",
+		headers: { "Content-Type": "application/json" },
+		body: JSON.stringify({
+			user_uuid,
+			message: lastUserMessage,
+			world_id: world_id.length > 0 ? world_id : null,
+			character_id: character_id.length > 0 ? character_id : null,
+			interaction_source: "user",
+		}),
+	});
+
+	for (const message of response) {
+		await fetch(`${process.env.EXPO_PUBLIC_API_URL}/api/users/interaction`, {
+			method: "POST",
+			headers: { "Content-Type": "application/json" },
+			body: JSON.stringify({
+				user_uuid,
+				message,
+				world_id: world_id.length > 0 ? world_id : null,
+				character_id: character_id.length > 0 ? character_id : null,
+				interaction_source: "ai",
+			}),
+		});
+	}
+
 	return response;
 });
 

@@ -84,9 +84,10 @@ const styles = StyleSheet.create({
 		alignItems: "center",
 		justifyContent: "space-between",
 		paddingHorizontal: 20,
-		paddingVertical: 16,
+		paddingVertical: 20,
 		borderBottomWidth: 1,
 		borderBottomColor: "#4a4e69",
+		borderRadius: 20,
 	},
 	modalTitle: {
 		fontSize: 18,
@@ -153,8 +154,9 @@ const styles = StyleSheet.create({
 	},
 	footer: {
 		paddingHorizontal: 20,
-		paddingVertical: 16,
+		paddingVertical: 24,
 		borderTopWidth: 1,
+		borderRadius: 20,
 		borderTopColor: "#4a4e69",
 	},
 	closeFooterButton: {
