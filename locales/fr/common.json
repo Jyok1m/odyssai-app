@@ -17,6 +17,10 @@
 		"signUpSubtitle": "Rejoignez l'aventure et créez votre compte",
 		"alreadyHaveAccount": "Vous avez déjà un compte ?",
 		"dontHaveAccount": "Vous n'avez pas de compte ?",
+		"accountLanguage": "Choisissez la langue de votre compte",
+		"selectLanguage": "Sélectionner la langue",
+		"languageWarning": "Ce sera la langue de vos contenus de jeu, histoires, et interactions IA. Choisissez bien car cela ne pourra pas être modifié par la suite.",
+		"languageNotModifiable": "⚠️ Cette langue sera définitivement associée à votre compte",
 		"errors": {
 			"emptyFields": "Veuillez saisir un nom d'utilisateur et un mot de passe",
 			"authFailed": "Échec de l'authentification",

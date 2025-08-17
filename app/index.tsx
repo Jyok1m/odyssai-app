@@ -22,9 +22,9 @@ export default function LandingScreen() {
 
 	return (
 		<View style={styles.container}>
-			<View style={styles.languageContainer}>
+			{/* <View style={styles.languageContainer}>
 				<LanguageSelector />
-			</View>
+			</View> */}
 
 			<View style={styles.welcomeSection}>
 				<MaterialCommunityIcons name="book-open-variant" size={80} color="#9a8c98" style={styles.icon} />

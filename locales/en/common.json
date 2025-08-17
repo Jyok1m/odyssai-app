@@ -17,6 +17,10 @@
 		"signUpSubtitle": "Join the adventure and create your account",
 		"alreadyHaveAccount": "Already have an account?",
 		"dontHaveAccount": "Don't have an account?",
+		"accountLanguage": "Choose your account language",
+		"selectLanguage": "Select Language",
+		"languageWarning": "This will be the language for your game content, stories, and AI interactions. Choose carefully as this cannot be changed later.",
+		"languageNotModifiable": "⚠️ This language will be permanently associated with your account",
 		"errors": {
 			"emptyFields": "Please enter a username and password",
 			"authFailed": "Authentication failed",

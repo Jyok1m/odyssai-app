@@ -7,7 +7,7 @@ import { useAppDispatch, useAppSelector } from "@/store/hooks/typedHooks";
 import { loadMessages } from "@/store/reducers/messagesSlice";
 import { setUser } from "@/store/reducers/userSlice";
 import { useI18n } from "@/hooks/useI18n";
-import { LanguageSelector } from "@/components";
+import { LanguageSelector, LanguageSelectionModal } from "@/components";
 import moment from "moment";
 
 export default function AuthScreen() {
@@ -15,11 +15,13 @@ export default function AuthScreen() {
 	const [password, setPassword] = useState("");
 	const [isSignUp, setIsSignUp] = useState(false);
 	const [isLoading, setIsLoading] = useState(false);
+	const [showLanguageModal, setShowLanguageModal] = useState(false);
 	const router = useRouter();
 	const dispatch = useAppDispatch();
 	const messagesState = useAppSelector((state) => state.messages);
 	const messages = messagesState?.messages || [];
-	const { t } = useI18n();
+	const { t, currentLanguage, changeLanguage } = useI18n();
+	const [selectedLanguage, setSelectedLanguage] = useState(currentLanguage || "en");
 
 	const handleAuth = async () => {
 		if (!username.trim() || !password.trim()) {
@@ -28,10 +30,11 @@ export default function AuthScreen() {
 		}
 
 		const endpoint = isSignUp ? "/create" : "/login";
+		const languageParam = isSignUp ? `?lang=${selectedLanguage}` : `?lang=${selectedLanguage}`;
 		setIsLoading(true);
 
 		try {
-			const response = await fetch(`${process.env.EXPO_PUBLIC_API_URL}/api/users${endpoint}`, {
+			const response = await fetch(`${process.env.EXPO_PUBLIC_API_URL}/api/users${endpoint}${languageParam}`, {
 				method: "POST",
 				headers: { "Content-Type": "application/json" },
 				body: JSON.stringify({ username, password }),
@@ -59,7 +62,7 @@ export default function AuthScreen() {
 				};
 
 				await sendDefaultMessages();
-				dispatch(setUser({ username, user_uuid: user_id }));
+				dispatch(setUser({ username, user_uuid: user_id, language: selectedLanguage }));
 			} else if (response.status === 200) {
 				const { username, uuid } = data.user;
 
@@ -79,7 +82,7 @@ export default function AuthScreen() {
 						.sort((a: any, b: any) => moment(a.timestamp).diff(moment(b.timestamp)));
 
 					dispatch(loadMessages(messageList));
-					dispatch(setUser({ username, user_uuid: uuid }));
+					dispatch(setUser({ username, user_uuid: uuid, language: selectedLanguage }));
 				}
 			}
 
@@ -98,13 +101,32 @@ export default function AuthScreen() {
 		setIsSignUp(!isSignUp);
 		setUsername("");
 		setPassword("");
+		setSelectedLanguage(currentLanguage || "en"); // Reset to current interface language when switching modes
+	};
+
+	const languages = [
+		{ code: "en", name: "English", flag: "🇺🇸" },
+		{ code: "fr", name: "Français", flag: "🇫🇷" },
+	];
+
+	const selectedLang = languages.find((lang) => lang.code === selectedLanguage) || languages[0];
+
+	const handleLanguageSelect = () => {
+		setShowLanguageModal(true);
+	};
+
+	const handleLanguageModalSelect = (languageCode: string) => {
+		setSelectedLanguage(languageCode);
+		changeLanguage(languageCode);
 	};
 
 	return (
 		<KeyboardAvoidingView style={styles.container} behavior={Platform.OS === "ios" ? "padding" : "height"}>
-			<View style={styles.languageContainer}>
-				<LanguageSelector />
-			</View>
+			{/* {!isSignUp && (
+				<View style={styles.languageContainer}>
+					<LanguageSelector />
+				</View>
+			)} */}
 
 			<View style={styles.headerSection}>
 				<MaterialCommunityIcons name="book-open-variant" size={60} color="#9a8c98" style={styles.icon} />
@@ -113,6 +135,21 @@ export default function AuthScreen() {
 			</View>
 
 			<View style={styles.formSection}>
+				{isSignUp && (
+					<View style={styles.languageSelectionContainer}>
+						<Text style={styles.languageLabel}>{t("auth.accountLanguage")}</Text>
+						<Text style={styles.languageDescription}>{t("auth.languageWarning")}</Text>
+						<Pressable style={styles.languageSelector} onPress={handleLanguageSelect}>
+							<MaterialCommunityIcons name="translate" size={20} color="#9a8c98" />
+							<Text style={styles.languageSelectorText}>
+								{selectedLang.flag} {selectedLang.name}
+							</Text>
+							<MaterialCommunityIcons name="chevron-down" size={16} color="#9a8c98" />
+						</Pressable>
+						<Text style={styles.languageWarning}>{t("auth.languageNotModifiable")}</Text>
+					</View>
+				)}
+
 				<View style={styles.inputContainer}>
 					<MaterialCommunityIcons name="account" size={20} color="#9a8c98" style={styles.inputIcon} />
 					<TextInput
@@ -151,6 +188,14 @@ export default function AuthScreen() {
 					<Text style={styles.switchLink}>{isSignUp ? t("auth.signIn") : t("auth.signUp")}</Text>
 				</Pressable>
 			</View>
+
+			<LanguageSelectionModal
+				visible={showLanguageModal}
+				onClose={() => setShowLanguageModal(false)}
+				onSelect={handleLanguageModalSelect}
+				selectedLanguage={selectedLanguage}
+				languages={languages}
+			/>
 		</KeyboardAvoidingView>
 	);
 }
@@ -199,6 +244,48 @@ const styles = StyleSheet.create({
 	},
 	formSection: {
 		marginBottom: 40,
+	},
+	languageSelectionContainer: {
+		marginBottom: 20,
+		padding: 16,
+		backgroundColor: "#4a4e69",
+		borderRadius: 12,
+		borderWidth: 1,
+		borderColor: "#9a8c98",
+	},
+	languageLabel: {
+		fontSize: 16,
+		fontWeight: "600",
+		color: "#f2e9e4",
+		marginBottom: 8,
+	},
+	languageDescription: {
+		fontSize: 14,
+		color: "#c9ada7",
+		marginBottom: 12,
+		lineHeight: 20,
+	},
+	languageSelector: {
+		flexDirection: "row",
+		alignItems: "center",
+		backgroundColor: "#22223b",
+		borderRadius: 8,
+		paddingHorizontal: 12,
+		paddingVertical: 10,
+		marginBottom: 8,
+		gap: 8,
+	},
+	languageSelectorText: {
+		flex: 1,
+		fontSize: 16,
+		color: "#f2e9e4",
+	},
+	languageWarning: {
+		fontSize: 12,
+		color: "#c9ada7",
+		fontStyle: "italic",
+		opacity: 0.8,
+		textAlign: "center",
 	},
 	inputContainer: {
 		flexDirection: "row",
