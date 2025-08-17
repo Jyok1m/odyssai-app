@@ -2,6 +2,7 @@ import React from "react";
 import { Modal, StyleSheet, Alert } from "react-native";
 import { View, Text, Pressable } from "@/components/Themed";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
+import { useI18n } from "@/hooks/useI18n";
 
 interface MenuModalProps {
 	visible: boolean;
@@ -12,6 +13,8 @@ interface MenuModalProps {
 }
 
 export const MenuModal: React.FC<MenuModalProps> = ({ visible, onClose, onResetConversation, onViewGameData, onLogout }) => {
+	const { t } = useI18n();
+
 	const handleResetConversation = () => {
 		onResetConversation();
 		onClose();
@@ -33,13 +36,13 @@ export const MenuModal: React.FC<MenuModalProps> = ({ visible, onClose, onResetC
 				<View style={styles.modalContainer}>
 					<View style={styles.modalHeader}>
 						<MaterialCommunityIcons name="menu" size={24} color="#9a8c98" />
-						<Text style={styles.modalTitle}>Menu</Text>
+						<Text style={styles.modalTitle}>{t("menu.title")}</Text>
 						<Pressable style={styles.closeButton} onPress={onClose}>
 							<MaterialCommunityIcons name="close" size={20} color="#9a8c98" />
 						</Pressable>
 					</View>
 
-					<Text style={styles.modalSubtitle}>Choose an action</Text>
+					<Text style={styles.modalSubtitle}>{t("menu.chooseAction")}</Text>
 
 					<View style={styles.menuOptions}>
 						{/* View Game Data Option */}
@@ -48,8 +51,8 @@ export const MenuModal: React.FC<MenuModalProps> = ({ visible, onClose, onResetC
 								<MaterialCommunityIcons name="account-details" size={24} color="#4a4e69" />
 							</View>
 							<View style={styles.optionContent}>
-								<Text style={styles.optionTitle}>View Game Data</Text>
-								<Text style={styles.optionDescription}>See character and world information</Text>
+								<Text style={styles.optionTitle}>{t("menu.gameData")}</Text>
+								<Text style={styles.optionDescription}>{t("menu.gameDataDescription")}</Text>
 							</View>
 							<MaterialCommunityIcons name="chevron-right" size={20} color="#9a8c98" />
 						</Pressable>
@@ -60,8 +63,8 @@ export const MenuModal: React.FC<MenuModalProps> = ({ visible, onClose, onResetC
 								<MaterialCommunityIcons name="delete-sweep" size={24} color="#e74c3c" />
 							</View>
 							<View style={styles.optionContent}>
-								<Text style={[styles.optionTitle, styles.resetTitle]}>Reset Conversation</Text>
-								<Text style={[styles.optionDescription, styles.resetDescription]}>Delete all messages and start over</Text>
+								<Text style={[styles.optionTitle, styles.resetTitle]}>{t("menu.reset")}</Text>
+								<Text style={[styles.optionDescription, styles.resetDescription]}>{t("menu.resetDescription")}</Text>
 							</View>
 							<MaterialCommunityIcons name="chevron-right" size={20} color="#e74c3c" />
 						</Pressable>
@@ -72,8 +75,8 @@ export const MenuModal: React.FC<MenuModalProps> = ({ visible, onClose, onResetC
 								<MaterialCommunityIcons name="logout" size={24} color="#f39c12" />
 							</View>
 							<View style={styles.optionContent}>
-								<Text style={[styles.optionTitle, styles.logoutTitle]}>Log out</Text>
-								<Text style={[styles.optionDescription, styles.logoutDescription]}>Log out and return to the home screen</Text>
+								<Text style={[styles.optionTitle, styles.logoutTitle]}>{t("menu.logout")}</Text>
+								<Text style={[styles.optionDescription, styles.logoutDescription]}>{t("menu.logoutDescription")}</Text>
 							</View>
 							<MaterialCommunityIcons name="chevron-right" size={20} color="#f39c12" />
 						</Pressable>
@@ -81,7 +84,7 @@ export const MenuModal: React.FC<MenuModalProps> = ({ visible, onClose, onResetC
 
 					<View style={styles.footer}>
 						<Pressable style={styles.cancelButton} onPress={onClose}>
-							<Text style={styles.cancelButtonText}>Cancel</Text>
+							<Text style={styles.cancelButtonText}>{t("common.cancel")}</Text>
 						</Pressable>
 					</View>
 				</View>

@@ -2,6 +2,7 @@ import React from "react";
 import { Modal, StyleSheet } from "react-native";
 import { View, Text, Pressable } from "@/components/Themed";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
+import { useI18n } from "@/hooks/useI18n";
 
 interface GameDataModalProps {
 	visible: boolean;
@@ -13,13 +14,15 @@ interface GameDataModalProps {
 }
 
 export const GameDataModal: React.FC<GameDataModalProps> = ({ visible, onClose, gameData }) => {
+	const { t } = useI18n();
+
 	return (
 		<Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
 			<View style={styles.overlay}>
 				<View style={styles.modalContainer}>
 					<View style={styles.modalHeader}>
 						<MaterialCommunityIcons name="account-details" size={24} color="#9a8c98" />
-						<Text style={styles.modalTitle}>Game Info</Text>
+						<Text style={styles.modalTitle}>{t("modals.gameData.title")}</Text>
 						<Pressable style={styles.closeButton} onPress={onClose}>
 							<MaterialCommunityIcons name="close" size={20} color="#9a8c98" />
 						</Pressable>
@@ -30,8 +33,8 @@ export const GameDataModal: React.FC<GameDataModalProps> = ({ visible, onClose, 
 						<View style={styles.infoItem}>
 							<MaterialCommunityIcons name="account" size={24} color="#9a8c98" />
 							<View style={styles.infoContent}>
-								<Text style={styles.infoLabel}>Playing as :</Text>
-								<Text style={styles.infoValue}>{gameData?.characterName?.toUpperCase() || "Not set"}</Text>
+								<Text style={styles.infoLabel}>{t("modals.gameData.playingAs")} :</Text>
+								<Text style={styles.infoValue}>{gameData?.characterName?.toUpperCase() || t("modals.gameData.notSet")}</Text>
 							</View>
 						</View>
 
@@ -39,8 +42,8 @@ export const GameDataModal: React.FC<GameDataModalProps> = ({ visible, onClose, 
 						<View style={styles.infoItem}>
 							<MaterialCommunityIcons name="earth" size={24} color="#9a8c98" />
 							<View style={styles.infoContent}>
-								<Text style={styles.infoLabel}>In the world :</Text>
-								<Text style={styles.infoValue}>{gameData?.worldName?.toUpperCase() || "Not set"}</Text>
+								<Text style={styles.infoLabel}>{t("modals.gameData.inTheWorld")} :</Text>
+								<Text style={styles.infoValue}>{gameData?.worldName?.toUpperCase() || t("modals.gameData.notSet")}</Text>
 							</View>
 						</View>
 
@@ -48,15 +51,15 @@ export const GameDataModal: React.FC<GameDataModalProps> = ({ visible, onClose, 
 						{!gameData?.characterName && !gameData?.worldName && (
 							<View style={styles.emptyState}>
 								<MaterialCommunityIcons name="information-outline" size={48} color="#c9ada7" />
-								<Text style={styles.emptyTitle}>No Game Data</Text>
-								<Text style={styles.emptyDescription}>Start a conversation with Odyssai to create your character and world.</Text>
+								<Text style={styles.emptyTitle}>{t("modals.gameData.noGameData")}</Text>
+								<Text style={styles.emptyDescription}>{t("modals.gameData.startConversation")}</Text>
 							</View>
 						)}
 					</View>
 
 					<View style={styles.footer}>
 						<Pressable style={styles.closeFooterButton} onPress={onClose}>
-							<Text style={styles.closeButtonText}>Close</Text>
+							<Text style={styles.closeButtonText}>{t("modals.gameData.close")}</Text>
 						</Pressable>
 					</View>
 				</View>

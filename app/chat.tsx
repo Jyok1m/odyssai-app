@@ -12,6 +12,7 @@ import { MenuModal } from "../components/MenuModal";
 import { GameDataModal } from "../components/GameDataModal";
 import { AIThinkingAdvanced } from "../components/AIThinkingAdvanced";
 import { useTTS } from "../hooks/useTTS";
+import { useI18n } from "../hooks/useI18n";
 import { v4 as uuidv4 } from "uuid";
 import { getCurrentTimestamp } from "../store/utils/utils";
 
@@ -73,6 +74,7 @@ export default function ChatScreen() {
 	const messages = messagesState?.messages || [];
 	const isLoading = messagesState?.isLoading || false;
 	const { sendMessage, resetChat } = useChatActions();
+	const { t } = useI18n();
 
 	// TTS Hook - Initialize only after component mount
 	const [isTTSReady, setIsTTSReady] = useState(false);
@@ -135,10 +137,10 @@ export default function ChatScreen() {
 			try {
 				const recordingStatus = await AudioModule.requestRecordingPermissionsAsync();
 				if (!recordingStatus.granted) {
-					Alert.alert("Access denied", "Microphone access is required to record voice messages. Please enable the permission in the app settings.", [
-						{ text: "Cancel", style: "cancel" },
+					Alert.alert(t("common.error"), t("chat.errors.microphonePermission"), [
+						{ text: t("common.cancel"), style: "cancel" },
 						{
-							text: "Settings",
+							text: t("menu.settings"),
 							onPress: () => {
 								// On mobile, this would open app settings
 								console.log("User should go to app settings to enable microphone permission");
@@ -147,7 +149,6 @@ export default function ChatScreen() {
 					]);
 					return;
 				}
-
 				await setAudioModeAsync({
 					playsInSilentMode: true,
 					allowsRecording: true,
@@ -156,11 +157,9 @@ export default function ChatScreen() {
 				setIsTTSReady(true);
 			} catch (error) {
 				console.error("❌ Error setting up audio:", error);
-				Alert.alert(
-					"Audio setup error",
-					"Unable to set up audio. Voice recording will not be available.\n\nDDetails: " + (error instanceof Error ? error.message : String(error)),
-					[{ text: "OK" }]
-				);
+				Alert.alert(t("chat.errors.audioSetup"), t("chat.errors.audioSetupDetails") + (error instanceof Error ? error.message : String(error)), [
+					{ text: t("common.ok") },
+				]);
 			}
 		};
 
@@ -416,7 +415,7 @@ export default function ChatScreen() {
 					return newMessage.trim();
 				});
 			} else {
-				Alert.alert("Info", "No text detected in the audio");
+				Alert.alert(t("common.error"), t("chat.errors.noTextDetected"));
 			}
 		} catch (error: any) {
 			// Nettoyer le timeout en cas d'erreur
@@ -426,23 +425,23 @@ export default function ChatScreen() {
 			}
 
 			// Messages d'erreur plus spécifiques
-			let errorMessage = "Failed to transcribe audio";
+			let errorMessage = t("chat.errors.transcriptionFailed");
 
 			if (error.name === "AbortError") {
-				errorMessage = "Request was cancelled due to timeout. Try with text input for now.";
+				errorMessage = t("chat.errors.requestCancelled");
 			} else if (error.message.includes("timeout") || error.message.includes("Network request timed out")) {
-				errorMessage = "Request timed out. The audio might be too long or there's a network issue. Please try with text input for now.";
+				errorMessage = t("chat.errors.requestTimeout");
 			} else if (error.message.includes("Network")) {
-				errorMessage = "Network error. Please check your internet connection.";
+				errorMessage = t("chat.errors.networkError");
 			} else if (error.message.includes("401")) {
-				errorMessage = "API authentication failed. Please check your OpenAI API key.";
+				errorMessage = t("chat.errors.apiAuthFailed");
 			} else if (error.message.includes("429")) {
-				errorMessage = "Rate limit exceeded. Please wait a moment and try again.";
+				errorMessage = t("chat.errors.rateLimitExceeded");
 			} else if (error.message.includes("413")) {
-				errorMessage = "Audio file too large. Try recording a shorter message.";
+				errorMessage = t("chat.errors.audioTooLarge");
 			}
 
-			Alert.alert("Transcription Error", `${errorMessage}\n\nTechnical details: ${error.message}`);
+			Alert.alert(t("chat.errors.transcriptionError"), `${errorMessage}\n\n${t("chat.errors.technicalDetails")}: ${error.message}`);
 		} finally {
 			// Nettoyer le timeout dans tous les cas
 			if (timeoutId) {
@@ -474,7 +473,7 @@ export default function ChatScreen() {
 
 			const recordingStatus = await AudioModule.requestRecordingPermissionsAsync();
 			if (!recordingStatus.granted) {
-				Alert.alert("Permission required", "Microphone access is required to record. Please grant permission in settings.");
+				Alert.alert(t("common.error"), t("chat.errors.microphonePermissionDenied"));
 				return;
 			}
 
@@ -486,20 +485,20 @@ export default function ChatScreen() {
 		} catch (error) {
 			console.error("❌ Error starting recording:", error);
 
-			let errorMessage = "Unable to start recording";
+			let errorMessage = t("chat.errors.recordingStartFailed");
 			if (error instanceof Error) {
 				if (error.message.includes("permission")) {
-					errorMessage = "Microphone permission denied. Please enable it in settings.";
+					errorMessage = t("chat.errors.microphonePermissionDenied");
 				} else if (error.message.includes("busy") || error.message.includes("in use")) {
-					errorMessage = "Microphone is being used by another application.";
+					errorMessage = t("chat.errors.microphoneBusy");
 				} else if (error.message.includes("hardware")) {
-					errorMessage = "Hardware issue with the microphone.";
+					errorMessage = t("chat.errors.microphoneHardware");
 				} else {
-					errorMessage = `Recording error: ${error.message}`;
+					errorMessage = `${t("chat.errors.recordingError")}: ${error.message}`;
 				}
 			}
 
-			Alert.alert("Recording Error", errorMessage);
+			Alert.alert(t("chat.errors.recordingError"), errorMessage);
 		}
 	};
 
@@ -550,7 +549,7 @@ export default function ChatScreen() {
 	// Handle reset chat with TTS cleanup
 	const handleResetChat = async () => {
 		if (!user_uuid) {
-			Alert.alert("Error", "User not authenticated");
+			Alert.alert(t("common.error"), t("auth.errors.userNotAuthenticated"));
 			return;
 		}
 
@@ -563,7 +562,7 @@ export default function ChatScreen() {
 		const data = await response.json();
 
 		if (response.status !== 200) {
-			Alert.alert("Error", data.error || "Failed to reset chat");
+			Alert.alert(t("common.error"), data.error || t("chat.errors.resetChatFailed"));
 			return;
 		}
 
@@ -683,7 +682,9 @@ export default function ChatScreen() {
 			<View style={styles.header}>
 				<View style={styles.headerLeft}>
 					<MaterialCommunityIcons name="robot" size={24} color="#9a8c98" />
-					<Text style={styles.headerTitle}>Odyssai Assistant</Text>
+					<Text style={styles.headerTitle}>
+						{t("app.name")} {t("chat.assistant")}
+					</Text>
 				</View>
 				<Pressable style={({ pressed }) => [styles.resetButton, { opacity: pressed ? 0.6 : 1 }]} onPress={() => setShowMenuModal(true)}>
 					<MaterialCommunityIcons name="menu" size={20} color="#9a8c98" />
@@ -738,7 +739,7 @@ export default function ChatScreen() {
 					<View style={styles.inputContainer}>
 						<TextInput
 							style={styles.textInput}
-							placeholder="Type your message..."
+							placeholder={t("chat.placeholder")}
 							placeholderTextColor="#9a8c98"
 							value={isTranscribing ? typingDots : message}
 							onChangeText={setMessage}

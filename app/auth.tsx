@@ -6,6 +6,8 @@ import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import { useAppDispatch, useAppSelector } from "@/store/hooks/typedHooks";
 import { loadMessages } from "@/store/reducers/messagesSlice";
 import { setUser } from "@/store/reducers/userSlice";
+import { useI18n } from "@/hooks/useI18n";
+import { LanguageSelector } from "@/components";
 import moment from "moment";
 
 export default function AuthScreen() {
@@ -17,10 +19,11 @@ export default function AuthScreen() {
 	const dispatch = useAppDispatch();
 	const messagesState = useAppSelector((state) => state.messages);
 	const messages = messagesState?.messages || [];
+	const { t } = useI18n();
 
 	const handleAuth = async () => {
 		if (!username.trim() || !password.trim()) {
-			Alert.alert("Error", "Please enter a username and password");
+			Alert.alert(t("common.error"), t("auth.errors.emptyFields"));
 			return;
 		}
 
@@ -37,7 +40,7 @@ export default function AuthScreen() {
 			const data = await response.json();
 
 			if (![200, 201].includes(response.status)) {
-				Alert.alert("Error", data.error || "Authentication failed");
+				Alert.alert(t("common.error"), data.error || t("auth.errors.authFailed"));
 				return;
 			}
 
@@ -85,7 +88,7 @@ export default function AuthScreen() {
 		} catch (error) {
 			console.log(error);
 
-			Alert.alert("Error", "Authentication failed");
+			Alert.alert(t("common.error"), t("auth.errors.authFailed"));
 		} finally {
 			setIsLoading(false);
 		}
@@ -99,10 +102,14 @@ export default function AuthScreen() {
 
 	return (
 		<KeyboardAvoidingView style={styles.container} behavior={Platform.OS === "ios" ? "padding" : "height"}>
+			<View style={styles.languageContainer}>
+				<LanguageSelector />
+			</View>
+
 			<View style={styles.headerSection}>
 				<MaterialCommunityIcons name="book-open-variant" size={60} color="#9a8c98" style={styles.icon} />
-				<Text style={styles.appTitle}>Odyssai</Text>
-				<Text style={styles.subtitle}>{isSignUp ? "Join the adventure and create your account" : "Sign in to continue your adventure"}</Text>
+				<Text style={styles.appTitle}>{t("app.name")}</Text>
+				<Text style={styles.subtitle}>{isSignUp ? t("auth.signUpSubtitle") : t("auth.signInSubtitle")}</Text>
 			</View>
 
 			<View style={styles.formSection}>
@@ -110,7 +117,7 @@ export default function AuthScreen() {
 					<MaterialCommunityIcons name="account" size={20} color="#9a8c98" style={styles.inputIcon} />
 					<TextInput
 						style={styles.input}
-						placeholder="Username"
+						placeholder={t("auth.username")}
 						placeholderTextColor="#9a8c98"
 						value={username}
 						onChangeText={setUsername}
@@ -123,7 +130,7 @@ export default function AuthScreen() {
 					<MaterialCommunityIcons name="lock" size={20} color="#9a8c98" style={styles.inputIcon} />
 					<TextInput
 						style={styles.input}
-						placeholder="Password"
+						placeholder={t("auth.password")}
 						placeholderTextColor="#9a8c98"
 						value={password}
 						onChangeText={setPassword}
@@ -134,14 +141,14 @@ export default function AuthScreen() {
 				</View>
 
 				<Pressable style={[styles.authButton, isLoading && styles.disabledButton]} onPress={handleAuth} disabled={isLoading}>
-					<Text style={styles.authButtonText}>{isLoading ? "Loading..." : isSignUp ? "Sign Up" : "Sign In"}</Text>
+					<Text style={styles.authButtonText}>{isLoading ? t("auth.loading") : isSignUp ? t("auth.signUp") : t("auth.signIn")}</Text>
 				</Pressable>
 			</View>
 
 			<View style={styles.switchSection}>
-				<Text style={styles.switchText}>{isSignUp ? "Already have an account?" : "Don't have an account?"}</Text>
+				<Text style={styles.switchText}>{isSignUp ? t("auth.alreadyHaveAccount") : t("auth.dontHaveAccount")}</Text>
 				<Pressable onPress={toggleAuthMode} style={styles.switchLinkContainer}>
-					<Text style={styles.switchLink}>{isSignUp ? "Sign In" : "Sign Up"}</Text>
+					<Text style={styles.switchLink}>{isSignUp ? t("auth.signIn") : t("auth.signUp")}</Text>
 				</Pressable>
 			</View>
 		</KeyboardAvoidingView>
@@ -155,6 +162,12 @@ const styles = StyleSheet.create({
 		paddingVertical: 60,
 		justifyContent: "center",
 		backgroundColor: "#22223b",
+	},
+	languageContainer: {
+		position: "absolute",
+		top: 60,
+		right: 24,
+		zIndex: 1,
 	},
 	headerSection: {
 		alignItems: "center",

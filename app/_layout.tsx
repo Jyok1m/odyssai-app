@@ -5,7 +5,9 @@ import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { useEffect } from "react";
 import { ReduxProvider } from "../store";
+import { useLanguageSync } from "../hooks/useLanguageSync";
 import "react-native-reanimated";
+import "../i18n"; // Initialize i18n
 
 export {
 	// Catch any errors thrown by the Layout component.
@@ -47,13 +49,23 @@ export default function RootLayout() {
 function RootLayoutNav() {
 	return (
 		<ReduxProvider>
-			<ThemeProvider value={DarkTheme}>
-				<Stack>
-					<Stack.Screen name="index" options={{ headerShown: false }} />
-					<Stack.Screen name="auth" options={{ headerShown: false }} />
-					<Stack.Screen name="chat" options={{ headerShown: false }} />
-				</Stack>
-			</ThemeProvider>
+			<AppContent />
 		</ReduxProvider>
+	);
+}
+
+function AppContent() {
+	// Synchronise le store avec les changements de langue
+	// (maintenant à l'intérieur du ReduxProvider)
+	useLanguageSync();
+
+	return (
+		<ThemeProvider value={DarkTheme}>
+			<Stack>
+				<Stack.Screen name="index" options={{ headerShown: false }} />
+				<Stack.Screen name="auth" options={{ headerShown: false }} />
+				<Stack.Screen name="chat" options={{ headerShown: false }} />
+			</Stack>
+		</ThemeProvider>
 	);
 }

@@ -1,9 +1,11 @@
+import i18n from "../i18n";
+
 export interface TTSOptions {
 	text: string;
 	languageCode?: string;
 	voiceName?: string;
-	gender?: "MALE" | "FEMALE" | "NEUTRAL";
-	audioEncoding?: "LINEAR16" | "MP3" | "OGG_OPUS";
+	gender?: string;
+	audioEncoding?: string;
 	speakingRate?: number;
 	pitch?: number;
 }
@@ -40,22 +42,66 @@ class TTSService {
 		return TTSService.instance;
 	}
 
+	/**
+	 * Obtient le code de langue pour TTS basé sur la langue courante de l'app
+	 */
+	private getLanguageCode(): string {
+		const currentLanguage = i18n.language;
+
+		// Map les codes de langue i18n vers les codes TTS Google Cloud
+		const languageMap: { [key: string]: string } = {
+			en: "en-US",
+			fr: "fr-FR",
+			"en-US": "en-US",
+			"fr-FR": "fr-FR",
+		};
+
+		const mappedLanguage = languageMap[currentLanguage] || "en-US";
+
+		return mappedLanguage;
+	}
+
+	/**
+	 * Obtient la meilleure voix par défaut pour la langue courante
+	 */
+	private getDefaultVoice(): string | undefined {
+		const currentLanguage = i18n.language;
+
+		// Voix par défaut recommandées pour chaque langue
+		const voiceMap: { [key: string]: string } = {
+			en: "en-US-Wavenet-D", // Voix masculine naturelle
+			"en-US": "en-US-Wavenet-D",
+			fr: "fr-FR-Wavenet-B", // Voix masculine naturelle française
+			"fr-FR": "fr-FR-Wavenet-B",
+		};
+
+		const selectedVoice = voiceMap[currentLanguage];
+
+		return selectedVoice;
+	}
+
+	/**
+	 * Synthétise le texte avec Google Cloud TTS dans la langue courante de l'app
+	 */
 	async synthesizeSpeech(options: TTSOptions): Promise<string> {
 		try {
-			// Use the Google Cloud API key directly
 			const API_KEY = process.env.EXPO_PUBLIC_GOOGLE_CLOUD_API_KEY;
 
 			if (!API_KEY) {
 				throw new Error("Google Cloud API key not found. Please set EXPO_PUBLIC_GOOGLE_CLOUD_API_KEY in your .env file");
 			}
 
+			// Utilise automatiquement la langue courante de l'app
+			const languageCode = options.languageCode || this.getLanguageCode();
+			const defaultVoice = this.getDefaultVoice();
+
 			const request: GoogleTTSRequest = {
 				input: {
 					text: options.text,
 				},
 				voice: {
-					languageCode: options.languageCode || "en-US",
-					name: options.voiceName,
+					languageCode: languageCode,
+					name: options.voiceName || defaultVoice,
 					ssmlGender: options.gender || "NEUTRAL",
 				},
 				audioConfig: {
@@ -65,7 +111,6 @@ class TTSService {
 				},
 			};
 
-			// console.log("Sending TTS request to Google Cloud API");
 			const response = await fetch(`https://texttospeech.googleapis.com/v1/text:synthesize?key=${API_KEY}`, {
 				method: "POST",
 				headers: {
@@ -86,14 +131,19 @@ class TTSService {
 				throw new Error("No audio content received from Google Cloud TTS");
 			}
 
-			// Convert base64 audio to data URI
 			const audioDataUri = `data:audio/mp3;base64,${result.audioContent}`;
-			// console.log("TTS audio generated successfully");
 			return audioDataUri;
 		} catch (error) {
 			console.error("TTS synthesis error:", error);
 			throw error;
 		}
+	}
+
+	/**
+	 * Méthode de compatibilité pour speak (utilise Google Cloud TTS)
+	 */
+	async speak(options: TTSOptions): Promise<string> {
+		return this.synthesizeSpeech(options);
 	}
 }
 

@@ -2,6 +2,7 @@ import React from "react";
 import { Modal, StyleSheet } from "react-native";
 import { View, Text, Pressable } from "@/components/Themed";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
+import { useI18n } from "@/hooks/useI18n";
 
 interface LogoutConfModalProps {
 	visible: boolean;
@@ -10,6 +11,8 @@ interface LogoutConfModalProps {
 }
 
 export const LogoutConfModal: React.FC<LogoutConfModalProps> = ({ visible, onClose, onConfirm }) => {
+	const { t } = useI18n();
+
 	const handleConfirm = () => {
 		onConfirm();
 		onClose();
@@ -21,19 +24,19 @@ export const LogoutConfModal: React.FC<LogoutConfModalProps> = ({ visible, onClo
 				<View style={styles.modalContainer}>
 					<View style={styles.modalHeader}>
 						<MaterialCommunityIcons name="logout" size={24} color="#f39c12" />
-						<Text style={styles.modalTitle}>Log Out</Text>
+						<Text style={styles.modalTitle}>{t("modals.logout.title")}</Text>
 					</View>
 
-					<Text style={styles.modalText}>This action will log you out of your account and return you to the home screen.</Text>
+					<Text style={styles.modalText}>{t("modals.logout.message")}</Text>
 
 					<View style={styles.buttonContainer}>
 						<Pressable style={[styles.button, styles.cancelButton]} onPress={onClose}>
-							<Text style={styles.cancelButtonText}>Cancel</Text>
+							<Text style={styles.cancelButtonText}>{t("modals.logout.cancel")}</Text>
 						</Pressable>
 
 						<Pressable style={[styles.button, styles.confirmButton]} onPress={handleConfirm}>
 							<MaterialCommunityIcons name="logout" size={18} color="#f2e9e4" />
-							<Text style={styles.confirmButtonText}>Log Out</Text>
+							<Text style={styles.confirmButtonText}>{t("modals.logout.confirm")}</Text>
 						</Pressable>
 					</View>
 				</View>

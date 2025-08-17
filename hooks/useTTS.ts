@@ -47,13 +47,12 @@ export const useTTS = (): UseTTSReturn => {
 		configureAudioSession();
 	}, []);
 
-	// Default TTS options
+	// Default TTS options - laisse le service TTS détecter automatiquement la langue
 	const defaultOptions: Partial<TTSOptions> = {
-		languageCode: "en-US",
-		voiceName: "en-US-Wavenet-D",
 		audioEncoding: "MP3",
 		speakingRate: 1.0,
 		pitch: 0.0,
+		// Pas de languageCode ni voiceName - détection automatique par le service
 	};
 
 	// Process the queue

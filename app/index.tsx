@@ -4,10 +4,13 @@ import { useRouter } from "expo-router";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import React from "react";
 import { useAppSelector } from "@/store/hooks/typedHooks";
+import { useI18n } from "@/hooks/useI18n";
+import { LanguageSelector } from "@/components";
 
 export default function LandingScreen() {
 	const router = useRouter();
 	const { isAuthenticated } = useAppSelector((state) => state.user);
+	const { t } = useI18n();
 
 	const handleStartJourney = () => {
 		if (isAuthenticated) {
@@ -19,15 +22,19 @@ export default function LandingScreen() {
 
 	return (
 		<View style={styles.container}>
+			<View style={styles.languageContainer}>
+				<LanguageSelector />
+			</View>
+
 			<View style={styles.welcomeSection}>
 				<MaterialCommunityIcons name="book-open-variant" size={80} color="#9a8c98" style={styles.icon} />
-				<Text style={styles.welcomeTitle}>Welcome to</Text>
-				<Text style={styles.appTitle}>Odyssai</Text>
-				<Text style={styles.subtitle}>Your AI-powered RPG storyteller</Text>
+				<Text style={styles.welcomeTitle}>{t("home.welcomeTo")}</Text>
+				<Text style={styles.appTitle}>{t("app.name")}</Text>
+				<Text style={styles.subtitle}>{t("app.tagline")}</Text>
 			</View>
 
 			<View style={styles.buttonSection}>
-				<Button title="Start the Journey" onPress={handleStartJourney} style={styles.startButton} />
+				<Button title={t("home.startJourney")} onPress={handleStartJourney} style={styles.startButton} />
 			</View>
 		</View>
 	);
@@ -40,6 +47,12 @@ const styles = StyleSheet.create({
 		justifyContent: "space-between",
 		paddingVertical: 60,
 		paddingHorizontal: 24,
+	},
+	languageContainer: {
+		position: "absolute",
+		top: 60,
+		right: 24,
+		zIndex: 1,
 	},
 	welcomeSection: {
 		flex: 1,

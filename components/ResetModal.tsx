@@ -2,6 +2,7 @@ import React from "react";
 import { Modal, StyleSheet, Alert } from "react-native";
 import { View, Text, Pressable } from "@/components/Themed";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
+import { useI18n } from "@/hooks/useI18n";
 
 interface ResetModalProps {
 	visible: boolean;
@@ -10,6 +11,8 @@ interface ResetModalProps {
 }
 
 export const ResetModal: React.FC<ResetModalProps> = ({ visible, onClose, onConfirm }) => {
+	const { t } = useI18n();
+
 	const handleConfirm = () => {
 		onConfirm();
 		onClose();
@@ -21,26 +24,24 @@ export const ResetModal: React.FC<ResetModalProps> = ({ visible, onClose, onConf
 				<View style={styles.modalContainer}>
 					<View style={styles.modalHeader}>
 						<MaterialCommunityIcons name="delete-sweep" size={24} color="#e74c3c" />
-						<Text style={styles.modalTitle}>Reset Conversation</Text>
+						<Text style={styles.modalTitle}>{t("modals.reset.title")}</Text>
 					</View>
 
-					<Text style={styles.modalText}>
-						This action will permanently delete all messages from the current conversation and start a new session with Odyssai.
-					</Text>
+					<Text style={styles.modalText}>{t("modals.reset.message")}</Text>
 
 					<View style={styles.warningBox}>
 						<MaterialCommunityIcons name="alert" size={16} color="#f39c12" />
-						<Text style={styles.warningText}>This action cannot be undone</Text>
+						<Text style={styles.warningText}>{t("modals.reset.warning")}</Text>
 					</View>
 
 					<View style={styles.buttonContainer}>
 						<Pressable style={[styles.button, styles.cancelButton]} onPress={onClose}>
-							<Text style={styles.cancelButtonText}>Cancel</Text>
+							<Text style={styles.cancelButtonText}>{t("modals.reset.cancel")}</Text>
 						</Pressable>
 
 						<Pressable style={[styles.button, styles.confirmButton]} onPress={handleConfirm}>
 							<MaterialCommunityIcons name="delete" size={18} color="#f2e9e4" />
-							<Text style={styles.confirmButtonText}>Reset</Text>
+							<Text style={styles.confirmButtonText}>{t("modals.reset.confirm")}</Text>
 						</Pressable>
 					</View>
 				</View>

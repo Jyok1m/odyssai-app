@@ -4,24 +4,27 @@ import { Message, MessagesState } from "../types/types";
 import { sendMessageToAI, resetConversation, resetCompleteStore } from "../asyncActions";
 import { getCurrentTimestamp } from "../utils/utils";
 import { v4 as uuidv4 } from "uuid";
+import storeI18nService from "../services/storeI18nService";
+
+const getInitialMessages = (): Message[] => [
+	{
+		id: uuidv4(),
+		currentStep: "welcome",
+		text: storeI18nService.t("messages.welcome"),
+		isUser: false,
+		timestamp: getCurrentTimestamp(),
+	},
+	{
+		id: uuidv4(),
+		currentStep: "ask_new_world",
+		text: storeI18nService.t("messages.askNewWorld"),
+		isUser: false,
+		timestamp: getCurrentTimestamp(),
+	},
+];
 
 const initialState: MessagesState = {
-	messages: [
-		{
-			id: uuidv4(),
-			currentStep: "welcome",
-			text: "Welcome to Odyssai. Start by answering a few questions and let's get started!",
-			isUser: false,
-			timestamp: getCurrentTimestamp(),
-		},
-		{
-			id: uuidv4(),
-			currentStep: "ask_new_world",
-			text: "Do you wish to create a new world?",
-			isUser: false,
-			timestamp: getCurrentTimestamp(),
-		},
-	],
+	messages: [], // Initialisation vide, sera peuplé dynamiquement
 	isLoading: false,
 	error: null,
 };
@@ -32,6 +35,12 @@ const messagesSlice = createSlice({
 	reducers: {
 		loadMessages: (state, action: PayloadAction<Message[]>) => {
 			state.messages = action.payload;
+		},
+		initializeMessages: (state) => {
+			// Initialise les messages avec la langue courante
+			if (state.messages.length === 0) {
+				state.messages = getInitialMessages();
+			}
 		},
 		addMessage: (state, action: PayloadAction<Message>) => {
 			state.messages.push(action.payload);
@@ -76,14 +85,14 @@ const messagesSlice = createSlice({
 			const welcomeMessage: Message = {
 				id: uuidv4(),
 				currentStep: "welcome",
-				text: "Welcome to Odyssai. Start by answering a few questions and let's get started!",
+				text: storeI18nService.t("messages.welcome"),
 				isUser: false,
 				timestamp: getCurrentTimestamp(),
 			};
 			const firstQuestion: Message = {
 				id: uuidv4(),
 				currentStep: "ask_new_world",
-				text: "Do you wish to create a new world?",
+				text: storeI18nService.t("messages.askNewWorld"),
 				isUser: false,
 				timestamp: getCurrentTimestamp(),
 			};
@@ -115,7 +124,7 @@ const messagesSlice = createSlice({
 				const firstQuestion: Message = {
 					id: uuidv4(),
 					currentStep: "ask_new_world",
-					text: "Do you want to create a new world?",
+					text: storeI18nService.t("messages.askNewWorld"),
 					isUser: false,
 					timestamp: getCurrentTimestamp(),
 				};
@@ -130,7 +139,7 @@ const messagesSlice = createSlice({
 				const firstQuestion: Message = {
 					id: uuidv4(),
 					currentStep: "ask_new_world",
-					text: "Do you want to create a new world?",
+					text: storeI18nService.t("messages.askNewWorld"),
 					isUser: false,
 					timestamp: getCurrentTimestamp(),
 				};
@@ -144,7 +153,17 @@ const messagesSlice = createSlice({
 	},
 });
 
-export const { addMessage, setMessages, clearMessages, setLoading, setError, updateMessage, deleteMessage, resetStore, loadMessages } =
-	messagesSlice.actions;
+export const {
+	addMessage,
+	setMessages,
+	clearMessages,
+	setLoading,
+	setError,
+	updateMessage,
+	deleteMessage,
+	resetStore,
+	loadMessages,
+	initializeMessages,
+} = messagesSlice.actions;
 
 export default messagesSlice.reducer;

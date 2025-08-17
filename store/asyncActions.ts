@@ -4,6 +4,7 @@ import { getCurrentTimestamp } from "./utils/utils";
 import { addData } from "./reducers/gameDataSlice";
 import OpenAI from "openai";
 import { v4 as uuidv4 } from "uuid";
+import storeI18nService from "./services/storeI18nService";
 
 const client = new OpenAI({ apiKey: process.env.EXPO_PUBLIC_OPENAI_API_KEY });
 const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || "http://localhost:8000";
@@ -106,10 +107,10 @@ export const sendMessageToAI = createAsyncThunk("messages/sendMessageToAI", asyn
 		const classification = await classifyUserMessage(userAnswer);
 		if (classification === "yes") {
 			dispatch(addData({ key: "is_new_world", value: true }));
-			nextQuestion = "Great! Let's create a new world. How would you like to name your new world?";
+			nextQuestion = storeI18nService.t("messages.createWorldName");
 		} else if (classification === "no") {
 			dispatch(addData({ key: "is_new_world", value: false }));
-			nextQuestion = "Alright! What is the name of the world you would like to join?";
+			nextQuestion = storeI18nService.t("messages.joinWorldName");
 		} else {
 			comprehensionError();
 		}
@@ -145,12 +146,12 @@ export const sendMessageToAI = createAsyncThunk("messages/sendMessageToAI", asyn
 			response.push({
 				id: uuidv4(),
 				currentStep: "filler",
-				text: `Perfect, I found your world!`,
+				text: storeI18nService.t("messages.worldFound"),
 				isUser: false,
 				timestamp: getCurrentTimestamp(),
 			});
 
-			nextQuestion = `So now, do you wish to play as a new character?`;
+			nextQuestion = storeI18nService.t("messages.playNewCharacter");
 			nextStep = "ask_create_new_character";
 		}
 
@@ -200,7 +201,7 @@ export const sendMessageToAI = createAsyncThunk("messages/sendMessageToAI", asyn
 			dispatch(addData({ key: "synopsis", value: synopsis }));
 
 			// Send user to character creation QA
-			nextQuestion = "Now, how would you like to name your character?";
+			nextQuestion = storeI18nService.t("messages.nameCharacter");
 			nextStep = "ask_character_name";
 		} else if (classification === "no") {
 			response.push({
@@ -228,7 +229,7 @@ export const sendMessageToAI = createAsyncThunk("messages/sendMessageToAI", asyn
 		const classification = await classifyUserMessage(userAnswer);
 		if (classification === "yes") {
 			dispatch(addData({ key: "is_new_character", value: true }));
-			nextQuestion = "Great! Let's create a new character. What would you like to name your character?";
+			nextQuestion = storeI18nService.t("messages.createNewCharacter");
 		} else if (classification === "no") {
 			dispatch(addData({ key: "is_new_character", value: false }));
 			nextQuestion = "Alright! Which character would you like to play as?";
@@ -257,7 +258,7 @@ export const sendMessageToAI = createAsyncThunk("messages/sendMessageToAI", asyn
 			response.push({
 				id: uuidv4(),
 				currentStep: "filler",
-				text: `Great! Let's start creating your new character!`,
+				text: storeI18nService.t("messages.startCreatingCharacter"),
 				isUser: false,
 				timestamp: getCurrentTimestamp(),
 			});
@@ -316,7 +317,7 @@ export const sendMessageToAI = createAsyncThunk("messages/sendMessageToAI", asyn
 			response.push({
 				id: uuidv4(),
 				currentStep: "filler",
-				text: "I have successfully generated your character!",
+				text: storeI18nService.t("messages.characterGenerated"),
 				isUser: false,
 				timestamp: getCurrentTimestamp(),
 			});
@@ -475,7 +476,7 @@ export const sendMessageToAI = createAsyncThunk("messages/sendMessageToAI", asyn
 export const resetConversation = createAsyncThunk("messages/resetConversation", async () => ({
 	id: uuidv4(),
 	currentStep: "welcome",
-	text: "Welcome to Odyssai. Start by answering a few questions and let's get started!",
+	text: storeI18nService.t("messages.welcome"),
 	isUser: false,
 	timestamp: getCurrentTimestamp(),
 }));
@@ -483,7 +484,7 @@ export const resetConversation = createAsyncThunk("messages/resetConversation", 
 export const resetCompleteStore = createAsyncThunk("messages/resetCompleteStore", async () => ({
 	id: uuidv4(),
 	currentStep: "welcome",
-	text: "Welcome to Odyssai. Start by answering a few questions and let's get started!",
+	text: storeI18nService.t("messages.welcome"),
 	isUser: false,
 	timestamp: getCurrentTimestamp(),
 }));

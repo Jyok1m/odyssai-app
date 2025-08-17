@@ -1,0 +1,138 @@
+{
+	"app": {
+		"name": "Odyssai",
+		"tagline": "Votre conteur de jeu de rôle alimenté par l'IA"
+	},
+	"home": {
+		"welcomeTo": "Bienvenue dans",
+		"startJourney": "Commencer l'aventure"
+	},
+	"auth": {
+		"signIn": "Se connecter",
+		"signUp": "S'inscrire",
+		"username": "Nom d'utilisateur",
+		"password": "Mot de passe",
+		"loading": "Chargement...",
+		"signInSubtitle": "Connectez-vous pour continuer votre aventure",
+		"signUpSubtitle": "Rejoignez l'aventure et créez votre compte",
+		"alreadyHaveAccount": "Vous avez déjà un compte ?",
+		"dontHaveAccount": "Vous n'avez pas de compte ?",
+		"errors": {
+			"emptyFields": "Veuillez saisir un nom d'utilisateur et un mot de passe",
+			"authFailed": "Échec de l'authentification",
+			"userNotAuthenticated": "Utilisateur non authentifié"
+		}
+	},
+	"chat": {
+		"placeholder": "Tapez votre message...",
+		"send": "Envoyer",
+		"thinking": "L'IA réfléchit...",
+		"newConversation": "Nouvelle conversation",
+		"clearHistory": "Effacer l'historique",
+		"assistant": "Assistant",
+		"loadMore": "Charger plus ({{count}} messages plus anciens)",
+		"errors": {
+			"microphonePermission": "L'accès au microphone est requis pour enregistrer des messages vocaux. Veuillez activer l'autorisation dans les paramètres de l'application.",
+			"microphonePermissionDenied": "L'accès au microphone est requis pour enregistrer. Veuillez accorder l'autorisation dans les paramètres.",
+			"audioSetup": "Erreur de configuration audio",
+			"audioSetupDetails": "Impossible de configurer l'audio. L'enregistrement vocal ne sera pas disponible.\n\nDétails : ",
+			"noTextDetected": "Aucun texte détecté dans l'audio",
+			"transcriptionFailed": "Échec de la transcription audio",
+			"requestCancelled": "Demande annulée en raison d'un délai d'expiration. Essayez avec la saisie de texte pour l'instant.",
+			"requestTimeout": "Délai d'expiration de la demande. L'audio pourrait être trop long ou il y a un problème de réseau. Veuillez essayer avec la saisie de texte pour l'instant.",
+			"networkError": "Erreur réseau. Veuillez vérifier votre connexion Internet.",
+			"apiAuthFailed": "Échec de l'authentification API. Veuillez vérifier votre clé API OpenAI.",
+			"rateLimitExceeded": "Limite de taux dépassée. Veuillez attendre un moment et réessayer.",
+			"audioTooLarge": "Fichier audio trop volumineux. Essayez d'enregistrer un message plus court.",
+			"transcriptionError": "Erreur de transcription",
+			"technicalDetails": "Détails techniques",
+			"recordingStartFailed": "Impossible de démarrer l'enregistrement",
+			"microphoneBusy": "Le microphone est utilisé par une autre application.",
+			"microphoneHardware": "Problème matériel avec le microphone.",
+			"recordingError": "Erreur d'enregistrement",
+			"resetChatFailed": "Échec de la réinitialisation du chat"
+		}
+	},
+	"menu": {
+		"title": "Menu",
+		"chooseAction": "Choisissez une action",
+		"profile": "Profil",
+		"settings": "Paramètres",
+		"language": "Langue",
+		"logout": "Se déconnecter",
+		"logoutDescription": "Se déconnecter et retourner à l'écran d'accueil",
+		"reset": "Réinitialiser la conversation",
+		"resetDescription": "Supprimer tous les messages et recommencer",
+		"gameData": "Voir les données du jeu",
+		"gameDataDescription": "Voir les informations du personnage et du monde"
+	},
+	"modals": {
+		"logout": {
+			"title": "Se déconnecter",
+			"message": "Cette action vous déconnectera de votre compte et vous ramènera à l'écran d'accueil.",
+			"confirm": "Se déconnecter",
+			"cancel": "Annuler"
+		},
+		"reset": {
+			"title": "Réinitialiser la conversation",
+			"message": "Cette action supprimera définitivement tous les messages de la conversation actuelle et démarrera une nouvelle session avec Odyssai.",
+			"warning": "Cette action ne peut pas être annulée",
+			"confirm": "Réinitialiser",
+			"cancel": "Annuler"
+		},
+		"gameData": {
+			"title": "Infos du jeu",
+			"close": "Fermer",
+			"playingAs": "Jouer en tant que",
+			"inTheWorld": "Dans le monde",
+			"notSet": "Non défini",
+			"noGameData": "Aucune donnée de jeu",
+			"startConversation": "Commencez une conversation avec Odyssai pour créer votre personnage et votre monde."
+		}
+	},
+	"common": {
+		"ok": "OK",
+		"cancel": "Annuler",
+		"confirm": "Confirmer",
+		"close": "Fermer",
+		"save": "Sauvegarder",
+		"edit": "Modifier",
+		"delete": "Supprimer",
+		"error": "Erreur",
+		"success": "Succès",
+		"loading": "Chargement...",
+		"retry": "Réessayer"
+	},
+	"messages": {
+		"welcome": "Bienvenue dans Odyssai. Commencez par répondre à quelques questions et c'est parti !",
+		"askNewWorld": "Souhaitez-vous créer un nouveau monde ?",
+		"createNewWorld": "Parfait ! Créons un nouveau monde. Comment aimeriez-vous nommer votre nouveau monde ?",
+		"worldNameReceived": "Excellent ! Votre monde {{worldName}} est en cours de création.",
+		"selectCharacter": "Maintenant, créons votre personnage. Quel type de personnage aimeriez-vous être ?",
+		"characterSelected": "Excellent choix ! Vous jouerez en tant que {{characterType}}.",
+		"characterNamePrompt": "Comment aimeriez-vous nommer votre personnage ?",
+		"characterNameReceived": "Bienvenue, {{characterName}} le {{characterType}} ! Votre aventure dans {{worldName}} va commencer !",
+		"gameStart": "Votre histoire commence maintenant...",
+		"error": "Désolé, il y a eu une erreur lors du traitement de votre demande. Veuillez réessayer.",
+		"networkError": "Erreur réseau. Veuillez vérifier votre connexion et réessayer.",
+		"invalidResponse": "Réponse invalide reçue. Veuillez réessayer.",
+		"createWorldName": "Parfait ! Créons un nouveau monde. Comment aimeriez-vous nommer votre nouveau monde ?",
+		"createWorldDescription": "Parfait ! Créons votre nouveau monde ! Décrivez le genre principal du monde. Donnez autant de détails que vous le souhaitez.",
+		"worldFound": "Parfait, j'ai trouvé votre monde !",
+		"playNewCharacter": "Alors maintenant, souhaitez-vous jouer avec un nouveau personnage ?",
+		"nameCharacter": "Maintenant, comment aimeriez-vous nommer votre personnage ?",
+		"changeMind": "D'accord ! Faites-moi savoir si vous changez d'avis.",
+		"createNewCharacter": "Parfait ! Créons un nouveau personnage. Comment aimeriez-vous nommer votre personnage ?",
+		"startCreatingCharacter": "Parfait ! Commençons à créer votre nouveau personnage !",
+		"joinWorldName": "D'accord ! Quel est le nom du monde que vous aimeriez rejoindre ?",
+		"characterGenerated": "J'ai généré votre personnage avec succès !"
+	},
+	"gameFlow": {
+		"welcome": "Bienvenue dans votre nouvelle aventure !",
+		"chooseAction": "Que souhaitez-vous faire ensuite ?",
+		"continueStory": "Continuer votre histoire",
+		"exploreWorld": "Explorer le monde",
+		"checkInventory": "Vérifier l'inventaire",
+		"saveGame": "Sauvegarder le jeu"
+	}
+}
