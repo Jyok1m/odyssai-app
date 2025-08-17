@@ -488,7 +488,7 @@ export const sendMessageToAI = createAsyncThunk("messages/sendMessageToAI", asyn
 	});
 
 	for (const message of response) {
-		await fetch(`${process.env.EXPO_PUBLIC_API_URL}/api/users/interaction?lang=${language}`, {
+		const res = await fetch(`${process.env.EXPO_PUBLIC_API_URL}/api/users/interaction?lang=${language}`, {
 			method: "POST",
 			headers: { "Content-Type": "application/json" },
 			body: JSON.stringify({
@@ -499,6 +499,8 @@ export const sendMessageToAI = createAsyncThunk("messages/sendMessageToAI", asyn
 				interaction_source: "ai",
 			}),
 		});
+		const data = await res.json();
+		console.log(data);
 	}
 
 	return response;
