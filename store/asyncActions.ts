@@ -11,16 +11,41 @@ const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || "http://localhost:8000";
 
 // Simple function to classify user messages (with optional API fallback)
 const classifyUserMessage = async (message: string): Promise<string> => {
-	if (["yes", "no"].includes(message.toLowerCase())) {
-		return message.toLowerCase();
+	const currentLanguage = storeI18nService.getCurrentLanguage();
+
+	// Mots de validation multilingues
+	const positiveWords =
+		currentLanguage === "fr"
+			? ["oui", "yes", "d'accord", "ok", "okay", "bien", "parfait", "vas-y", "allons-y", "continue"]
+			: ["yes", "ok", "okay", "sure", "fine", "good", "perfect", "go", "continue", "proceed"];
+
+	const negativeWords =
+		currentLanguage === "fr" ? ["non", "no", "pas", "arrête", "stop", "refuse", "jamais"] : ["no", "not", "stop", "refuse", "never", "nope"];
+
+	const lowerMessage = message.toLowerCase().trim();
+
+	// Vérification directe des mots-clés
+	if (positiveWords.some((word) => lowerMessage.includes(word))) {
+		return "yes";
+	}
+	if (negativeWords.some((word) => lowerMessage.includes(word))) {
+		return "no";
 	}
 
 	try {
-		const response = await client.responses.create({
-			model: "gpt-3.5-turbo",
-			temperature: 0,
-			max_output_tokens: 16,
-			input: `Classify the following user message as either 'yes' or 'no' based on whether the user wants to continue, proceed, or agrees with something.
+		// Prompts multilingues pour l'API
+		const prompts = {
+			fr: `Classe le message utilisateur suivant comme 'yes' ou 'no' selon que l'utilisateur veut continuer, procéder, ou est d'accord avec quelque chose.
+
+				Message utilisateur: "${message}"
+
+				Règles:
+				- Si l'utilisateur exprime le désir de continuer, procéder, être d'accord, ou toute intention positive: réponds "yes"
+				- Si l'utilisateur exprime le désir d'arrêter, être en désaccord, ou toute intention négative: réponds "no"
+				- En cas de doute, par défaut "no"
+				
+				Réponds uniquement "yes" ou "no", rien d'autre.`,
+			en: `Classify the following user message as either 'yes' or 'no' based on whether the user wants to continue, proceed, or agrees with something.
 
 				User message: "${message}"
 
@@ -30,6 +55,13 @@ const classifyUserMessage = async (message: string): Promise<string> => {
 				- If unclear, default to "no"
 				
 				Respond with only "yes" or "no", nothing else.`,
+		};
+
+		const response = await client.responses.create({
+			model: "gpt-3.5-turbo",
+			temperature: 0,
+			max_output_tokens: 16,
+			input: prompts[currentLanguage as keyof typeof prompts] || prompts.en,
 		});
 
 		if (!["yes", "no"].includes(response.output_text)) {
