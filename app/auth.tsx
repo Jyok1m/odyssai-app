@@ -43,7 +43,7 @@ export default function AuthScreen() {
 			const data = await response.json();
 
 			if (![200, 201].includes(response.status)) {
-				Alert.alert(t("common.error"), data.error || t("auth.errors.authFailed"));
+				Alert.alert(t("common.error"), `${data.error || t("auth.errors.authFailed")} : ${"fetch error"}`);
 				return;
 			}
 
@@ -88,10 +88,10 @@ export default function AuthScreen() {
 
 			// Rediriger vers le chat
 			router.replace("/chat");
-		} catch (error) {
+		} catch (error: any) {
 			console.log(error);
 
-			Alert.alert(t("common.error"), t("auth.errors.authFailed"));
+			Alert.alert(t("common.error"), `${t("auth.errors.authFailed")} : ${error.message}`);
 		} finally {
 			setIsLoading(false);
 		}
