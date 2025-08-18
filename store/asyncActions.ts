@@ -485,6 +485,7 @@ export const sendMessageToAI = createAsyncThunk("messages/sendMessageToAI", asyn
 	});
 
 	for (const message of response) {
+		message["timestamp"] = getCurrentTimestamp();
 		await fetch(`${process.env.EXPO_PUBLIC_API_URL}/api/users/interaction?lang=${language}`, {
 			method: "POST",
 			headers: { "Content-Type": "application/json" },
@@ -496,6 +497,7 @@ export const sendMessageToAI = createAsyncThunk("messages/sendMessageToAI", asyn
 				interaction_source: "ai",
 			}),
 		});
+		await new Promise((resolve) => setTimeout(resolve, 200));
 	}
 
 	return response;
