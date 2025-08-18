@@ -806,7 +806,7 @@ export default function ChatScreen() {
 	useEffect(() => {
 		(async () => {
 			if (username) {
-				const response = await fetch(`/api/users/check-username?username=${username}`);
+				const response = await fetch(`${process.env.EXPO_PUBLIC_API_URL}/api/users/check-username?username=${username}`);
 				const data = await response.json();
 				if (!data.exists) {
 					resetChat();
