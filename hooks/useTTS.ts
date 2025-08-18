@@ -2,6 +2,7 @@ import { useState, useRef, useCallback, useEffect } from "react";
 import { useAudioPlayer, AudioModule } from "expo-audio";
 import { Alert } from "react-native";
 import TTSService, { TTSOptions } from "../services/ttsService";
+import { useToast } from "@/hooks/useToast";
 
 interface TTSQueueItem {
 	id: string;
@@ -30,6 +31,7 @@ export const useTTS = (): UseTTSReturn => {
 	const [audioCache, setAudioCache] = useState<Map<string, string>>(new Map());
 
 	const audioPlayer = useAudioPlayer();
+	const toast = useToast();
 	const isProcessingQueue = useRef(false);
 
 	// Configure audio session for speaker output
@@ -104,7 +106,7 @@ export const useTTS = (): UseTTSReturn => {
 
 			audioPlayer.play();
 		} catch (error) {
-			Alert.alert("TTS Error", "Failed to generate or play audio");
+			toast.error("Failed to generate or play audio");
 			setIsLoading(false);
 			setIsPlaying(false);
 
@@ -195,10 +197,10 @@ export const useTTS = (): UseTTSReturn => {
 					// If not cached but we have text, generate and play
 					await queueMessage(id, text);
 				} else {
-					Alert.alert("Replay Error", "Audio not available for replay");
+					toast.error("Audio not available for replay");
 				}
 			} catch (error) {
-				Alert.alert("Replay Error", "Failed to replay audio");
+				toast.error("Failed to replay audio");
 			}
 		},
 		[audioCache, audioPlayer, queueMessage, isPlaying]

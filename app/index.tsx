@@ -5,7 +5,6 @@ import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import React from "react";
 import { useAppSelector } from "@/store/hooks/typedHooks";
 import { useI18n } from "@/hooks/useI18n";
-import { LanguageSelector } from "@/components";
 
 export default function LandingScreen() {
 	const router = useRouter();
@@ -22,10 +21,6 @@ export default function LandingScreen() {
 
 	return (
 		<View style={styles.container}>
-			{/* <View style={styles.languageContainer}>
-				<LanguageSelector />
-			</View> */}
-
 			<View style={styles.welcomeSection}>
 				<MaterialCommunityIcons name="book-open-variant" size={80} color="#9a8c98" style={styles.icon} />
 				<Text style={styles.welcomeTitle}>{t("home.welcomeTo")}</Text>

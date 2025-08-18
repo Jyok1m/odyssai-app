@@ -15,6 +15,7 @@ import { useTTS } from "../hooks/useTTS";
 import { useI18n } from "../hooks/useI18n";
 import { v4 as uuidv4 } from "uuid";
 import { getCurrentTimestamp } from "../store/utils/utils";
+import { useToast } from "@/hooks/useToast";
 
 // Composant MessageItem optimisé avec React.memo
 interface MessageItemProps {
@@ -66,6 +67,7 @@ export default function ChatScreen() {
 	const audioRecorder = useAudioRecorder(RecordingPresets.HIGH_QUALITY);
 	const recorderState = useAudioRecorderState(audioRecorder);
 
+	const toast = useToast();
 	const dispatch = useAppDispatch();
 	const router = useRouter();
 	const userState = useAppSelector((state) => state.user);
@@ -137,18 +139,10 @@ export default function ChatScreen() {
 			try {
 				const recordingStatus = await AudioModule.requestRecordingPermissionsAsync();
 				if (!recordingStatus.granted) {
-					Alert.alert(t("common.error"), t("chat.errors.microphonePermission"), [
-						{ text: t("common.cancel"), style: "cancel" },
-						{
-							text: t("menu.settings"),
-							onPress: () => {
-								// On mobile, this would open app settings
-								console.log("User should go to app settings to enable microphone permission");
-							},
-						},
-					]);
+					toast.error(t("chat.errors.microphonePermission"));
 					return;
 				}
+
 				await setAudioModeAsync({
 					playsInSilentMode: true,
 					allowsRecording: true,
@@ -156,10 +150,7 @@ export default function ChatScreen() {
 
 				setIsTTSReady(true);
 			} catch (error) {
-				console.error("❌ Error setting up audio:", error);
-				Alert.alert(t("chat.errors.audioSetup"), t("chat.errors.audioSetupDetails") + (error instanceof Error ? error.message : String(error)), [
-					{ text: t("common.ok") },
-				]);
+				toast.error(t("chat.errors.audioSetup") + (error instanceof Error ? error.message : String(error)));
 			}
 		};
 
@@ -415,7 +406,7 @@ export default function ChatScreen() {
 					return newMessage.trim();
 				});
 			} else {
-				Alert.alert(t("common.error"), t("chat.errors.noTextDetected"));
+				toast.error(t("chat.errors.noTextDetected"));
 			}
 		} catch (error: any) {
 			// Nettoyer le timeout en cas d'erreur
@@ -441,7 +432,7 @@ export default function ChatScreen() {
 				errorMessage = t("chat.errors.audioTooLarge");
 			}
 
-			Alert.alert(t("chat.errors.transcriptionError"), `${errorMessage}\n\n${t("chat.errors.technicalDetails")}: ${error.message}`);
+			toast.error(`${errorMessage}\n\n${t("chat.errors.technicalDetails")}: ${error.message}`);
 		} finally {
 			// Nettoyer le timeout dans tous les cas
 			if (timeoutId) {
@@ -473,7 +464,7 @@ export default function ChatScreen() {
 
 			const recordingStatus = await AudioModule.requestRecordingPermissionsAsync();
 			if (!recordingStatus.granted) {
-				Alert.alert(t("common.error"), t("chat.errors.microphonePermissionDenied"));
+				toast.error(t("chat.errors.microphonePermissionDenied"));
 				return;
 			}
 
@@ -498,7 +489,7 @@ export default function ChatScreen() {
 				}
 			}
 
-			Alert.alert(t("chat.errors.recordingError"), errorMessage);
+			toast.error(errorMessage);
 		}
 	};
 
@@ -519,7 +510,7 @@ export default function ChatScreen() {
 				errorMessage = `Error: ${error.message}`;
 			}
 
-			Alert.alert("Stop Error", errorMessage);
+			toast.error(errorMessage);
 		}
 	};
 
@@ -549,7 +540,7 @@ export default function ChatScreen() {
 	// Handle reset chat with TTS cleanup
 	const handleResetChat = async () => {
 		if (!user_uuid) {
-			Alert.alert(t("common.error"), t("auth.errors.userNotAuthenticated"));
+			toast.error(t("auth.errors.userNotAuthenticated"));
 			return;
 		}
 
@@ -565,7 +556,7 @@ export default function ChatScreen() {
 		const data = await response.json();
 
 		if (response.status !== 200) {
-			Alert.alert(t("common.error"), data.error || t("chat.errors.resetChatFailed"));
+			toast.error(data.error || t("chat.errors.resetChatFailed"));
 			return;
 		}
 

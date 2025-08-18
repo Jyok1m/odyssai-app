@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { StyleSheet, TextInput, Alert, KeyboardAvoidingView, Platform } from "react-native";
+import { StyleSheet, TextInput, KeyboardAvoidingView, Platform } from "react-native";
 import { Text, View, Pressable } from "@/components/Themed";
 import { useRouter } from "expo-router";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
@@ -7,7 +7,7 @@ import { useAppDispatch, useAppSelector } from "@/store/hooks/typedHooks";
 import { loadMessages } from "@/store/reducers/messagesSlice";
 import { setUser } from "@/store/reducers/userSlice";
 import { useI18n } from "@/hooks/useI18n";
-import { LanguageSelector, LanguageSelectionModal } from "@/components";
+import { LanguageSelectionModal } from "@/components";
 import { useToast } from "@/hooks/useToast";
 import moment from "moment";
 
@@ -111,12 +111,6 @@ export default function AuthScreen() {
 
 	return (
 		<KeyboardAvoidingView style={styles.container} behavior={Platform.OS === "ios" ? "padding" : "height"}>
-			{/* {!isSignUp && (
-				<View style={styles.languageContainer}>
-					<LanguageSelector />
-				</View>
-			)} */}
-
 			<View style={styles.headerSection}>
 				<MaterialCommunityIcons name="book-open-variant" size={60} color="#9a8c98" style={styles.icon} />
 				<Text style={styles.appTitle}>{t("app.name")}</Text>
