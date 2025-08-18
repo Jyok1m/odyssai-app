@@ -432,7 +432,7 @@ export default function ChatScreen() {
 				errorMessage = t("chat.errors.audioTooLarge");
 			}
 
-			toast.error(`${errorMessage}\n\n${t("chat.errors.technicalDetails")}: ${error.message}`);
+			toast.error(errorMessage);
 		} finally {
 			// Nettoyer le timeout dans tous les cas
 			if (timeoutId) {
@@ -695,7 +695,7 @@ export default function ChatScreen() {
 						<View style={styles.loadMoreIndicator}>
 							<Pressable style={styles.loadMoreButton} onPress={loadMoreMessages}>
 								<MaterialCommunityIcons name="chevron-up" size={16} color="#9a8c98" />
-								<Text style={styles.loadMoreText}>Load more ({messages.length - visibleMessagesCount} older messages)</Text>
+								<Text style={styles.loadMoreText}>{t("chat.loadMore", { count: messages.length - visibleMessagesCount })}</Text>
 							</Pressable>
 						</View>
 					)}
@@ -727,6 +727,11 @@ export default function ChatScreen() {
 
 				{/* Input Section */}
 				<View style={styles.inputSection}>
+					{recorderState.isRecording && (
+						<View style={styles.recordingIndicator}>
+							<Text style={styles.recordingText}>{t("common.recording")}</Text>
+						</View>
+					)}
 					<View style={styles.inputContainer}>
 						<TextInput
 							style={styles.textInput}
@@ -1009,6 +1014,17 @@ const styles = StyleSheet.create({
 		paddingHorizontal: 16,
 		paddingVertical: 8,
 		alignItems: "center",
+	},
+	recordingIndicator: {
+		paddingHorizontal: 16,
+		paddingVertical: 4,
+		alignItems: "center",
+		backgroundColor: "rgba(231,76,60,0.2)",
+	},
+	recordingText: {
+		fontSize: 12,
+		color: "#e74c3c",
+		fontStyle: "italic",
 	},
 	transcribingIndicator: {
 		paddingHorizontal: 16,
