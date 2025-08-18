@@ -748,8 +748,26 @@ export default function ChatScreen() {
 							</Pressable>
 							<Pressable
 								style={({ pressed }) => [styles.actionButton, styles.recordButton, { opacity: pressed ? 0.6 : 1 }]}
-								onPress={() => (recorderState.isRecording ? stopRecording() : isTranscribing ? cancelTranscription() : handleRecord())}
-								disabled={isTranscribing}
+								onPressIn={() => {
+									if (!recorderState.isRecording && !isTranscribing) {
+										handleRecord();
+									}
+								}}
+								onPressOut={() => {
+									if (recorderState.isRecording) {
+										stopRecording();
+									} else if (isTranscribing) {
+										cancelTranscription();
+									}
+								}}
+								// onPress remains for cancel transcription when tapping
+								onPress={() => {
+									if (isTranscribing && !recorderState.isRecording) {
+										cancelTranscription();
+									}
+								}}
+								// Toujours actif pour gérer start/stop via pressIn/Out
+								disabled={false}
 							>
 								<MaterialCommunityIcons
 									name={recorderState.isRecording ? "stop" : isTranscribing ? "close" : "microphone"}
