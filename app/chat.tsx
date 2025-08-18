@@ -119,6 +119,10 @@ export default function ChatScreen() {
 	const [justStoppedRecording, setJustStoppedRecording] = useState(false);
 	const [typingDots, setTypingDots] = useState("");
 	const [transcriptionController, setTranscriptionController] = useState<AbortController | null>(null);
+	const [isStartingRecord, setIsStartingRecord] = useState(false);
+	const [isRecordingManually, setIsRecordingManually] = useState(false);
+	const [pendingTranscriptionUri, setPendingTranscriptionUri] = useState<string | null>(null);
+	const [recordingStartTime, setRecordingStartTime] = useState<number | null>(null);
 
 	// Pagination des messages
 	const [visibleMessagesCount, setVisibleMessagesCount] = useState(50); // Nombre de messages visibles initialement
@@ -259,14 +263,15 @@ export default function ChatScreen() {
 	// Gestion de la transcription après arrêt de l'enregistrement
 	useEffect(() => {
 		const handleTranscription = async () => {
-			if (justStoppedRecording && !recorderState.isRecording && audioRecorder.uri) {
-				setJustStoppedRecording(false); // Réinitialiser immédiatement
-				await transcribeAudio(audioRecorder.uri);
+			if (pendingTranscriptionUri) {
+				const uriToTranscribe = pendingTranscriptionUri;
+				setPendingTranscriptionUri(null); // Nettoyer immédiatement
+				await transcribeAudio(uriToTranscribe);
 			}
 		};
 
 		handleTranscription();
-	}, [recorderState.isRecording, audioRecorder.uri, justStoppedRecording]);
+	}, [pendingTranscriptionUri]);
 
 	// Animation des points pendant la transcription
 	useEffect(() => {
@@ -356,6 +361,22 @@ export default function ChatScreen() {
 				throw new Error("Empty audio URI");
 			}
 
+			// Vérifier si le fichier existe (React Native)
+			try {
+				const FileSystem = require("expo-file-system");
+				const fileInfo = await FileSystem.getInfoAsync(audioUri);
+
+				if (!fileInfo.exists) {
+					throw new Error("Audio file does not exist");
+				}
+
+				if (fileInfo.size === 0) {
+					throw new Error("Audio file is empty (0 bytes)");
+				}
+			} catch (fsError) {
+				console.warn("⚠️ Could not check file info:", fsError);
+			}
+
 			// Create FormData for sending the audio file
 			const formData = new FormData();
 			formData.append("file", {
@@ -416,6 +437,7 @@ export default function ChatScreen() {
 			}
 
 			// Messages d'erreur plus spécifiques
+
 			let errorMessage = t("chat.errors.transcriptionFailed");
 
 			if (error.name === "AbortError") {
@@ -430,6 +452,12 @@ export default function ChatScreen() {
 				errorMessage = t("chat.errors.rateLimitExceeded");
 			} else if (error.message.includes("413")) {
 				errorMessage = t("chat.errors.audioTooLarge");
+			} else if (error.message.includes("could not be decoded")) {
+				errorMessage = "Audio file format not supported or corrupted";
+			} else if (error.message.includes("Audio file does not exist")) {
+				errorMessage = "Audio file not found";
+			} else if (error.message.includes("Audio file is empty")) {
+				errorMessage = "Audio file is empty - try recording again";
 			}
 
 			toast.error(errorMessage);
@@ -440,7 +468,6 @@ export default function ChatScreen() {
 			}
 
 			setTranscriptionController(null);
-			// console.log("🏁 Transcription process completed");
 			setIsTranscribing(false);
 		}
 	};
@@ -448,7 +475,6 @@ export default function ChatScreen() {
 	// Cancel transcription
 	const cancelTranscription = () => {
 		if (transcriptionController) {
-			console.log("🚫 Cancelling transcription");
 			transcriptionController.abort();
 			setTranscriptionController(null);
 		}
@@ -457,27 +483,54 @@ export default function ChatScreen() {
 	// Record message
 	const handleRecord = async () => {
 		try {
-			if (recorderState.isRecording) {
-				console.log("⚠️ Already recording");
+			if (recorderState.isRecording || isStartingRecord || isRecordingManually) {
 				return;
 			}
 
+			setIsStartingRecord(true);
+			setIsRecordingManually(true);
 			// Réinitialiser l'état avant de commencer un nouvel enregistrement
 			setJustStoppedRecording(false);
+			setPendingTranscriptionUri(null);
 
 			const recordingStatus = await AudioModule.requestRecordingPermissionsAsync();
 			if (!recordingStatus.granted) {
 				toast.error(t("chat.errors.microphonePermissionDenied"));
+				setIsStartingRecord(false);
+				setIsRecordingManually(false);
 				return;
 			}
 
-			// Prepare the recorder
-			await audioRecorder.prepareToRecordAsync();
+			// Forcer l'arrêt complet et le nettoyage de l'enregistreur
+			try {
+				await audioRecorder.stop();
+			} catch (e) {
+				console.log("📝 No active recording to stop");
+			}
+
+			// Attendre plus longtemps pour s'assurer du nettoyage complet
+			await new Promise((resolve) => setTimeout(resolve, 300));
+
+			// Forcer la réinitialisation de l'audio mode
+			await setAudioModeAsync({
+				playsInSilentMode: true,
+				allowsRecording: true,
+				// Forcer le reset
+			});
+
+			// Prepare the recorder avec les options par défaut
+			await audioRecorder.prepareToRecordAsync(RecordingPresets.HIGH_QUALITY);
 
 			// Start recording
 			audioRecorder.record();
+
+			// Marquer le temps de début d'enregistrement
+			setRecordingStartTime(Date.now());
+			setIsStartingRecord(false);
 		} catch (error) {
 			console.error("❌ Error starting recording:", error);
+			setIsStartingRecord(false);
+			setIsRecordingManually(false);
 
 			let errorMessage = t("chat.errors.recordingStartFailed");
 			if (error instanceof Error) {
@@ -498,15 +551,48 @@ export default function ChatScreen() {
 
 	const stopRecording = async () => {
 		try {
-			if (!recorderState.isRecording) {
-				console.log("⚠️ Not currently recording");
+			if (!recorderState.isRecording && !isRecordingManually) {
 				return;
 			}
 
-			setJustStoppedRecording(true);
+			// Protection : ne pas arrêter si on est encore en train de démarrer
+			if (isStartingRecord) {
+				return;
+			}
+
+			setIsRecordingManually(false);
+
+			// Vérifier la durée pour éviter les fichiers trop petits
+			const recordingDuration = recordingStartTime ? Date.now() - recordingStartTime : 0;
+
+			setRecordingStartTime(null);
+
+			// Arrêter l'enregistrement d'abord
 			await audioRecorder.stop();
+
+			// Attendre un délai pour s'assurer que le fichier est complètement écrit
+			await new Promise((resolve) => setTimeout(resolve, 200));
+
+			// Capturer l'URI après l'arrêt et le délai
+			const currentUri = audioRecorder.uri;
+
+			// Ne transcrire que si l'enregistrement est assez long
+			if (recordingDuration >= 300) {
+				// 300ms minimum
+				// Utiliser l'URI capturée pour la transcription
+				if (currentUri) {
+					setPendingTranscriptionUri(currentUri);
+				} else {
+					console.warn("⚠️ No URI available after recording stop");
+				}
+			} else {
+				toast.error("Recording too short - hold the button longer");
+			}
 		} catch (error) {
+			console.error("❌ Error stopping recording:", error);
 			setJustStoppedRecording(false);
+			setIsRecordingManually(false);
+			setRecordingStartTime(null);
 
 			let errorMessage = "Unable to stop recording";
 			if (error instanceof Error) {
@@ -534,7 +620,6 @@ export default function ChatScreen() {
 	// Handle TTS replay for a specific message
 	const handleTTSReplay = useCallback(
 		async (messageId: string, messageText: string) => {
-			// console.log(`Replaying TTS for message: ${messageId}`);
 			await playTTSMessage(messageId, messageText);
 		},
 		[playTTSMessage]
@@ -730,7 +815,7 @@ export default function ChatScreen() {
 
 				{/* Input Section */}
 				<View style={styles.inputSection}>
-					{recorderState.isRecording && (
+					{(recorderState.isRecording || isRecordingManually) && (
 						<View style={styles.recordingIndicator}>
 							<Text style={styles.recordingText}>{t("common.recording")}</Text>
 						</View>
@@ -757,30 +842,25 @@ export default function ChatScreen() {
 							<Pressable
 								style={({ pressed }) => [styles.actionButton, styles.recordButton, { opacity: pressed ? 0.6 : 1 }]}
 								onPressIn={() => {
-									if (!recorderState.isRecording && !isTranscribing) {
+									// Commencer l'enregistrement uniquement si pas déjà en cours
+									if (!recorderState.isRecording && !isTranscribing && !isStartingRecord && !isRecordingManually) {
 										handleRecord();
 									}
 								}}
 								onPressOut={() => {
-									if (recorderState.isRecording) {
+									// Toujours arrêter l'enregistrement quand on relâche le doigt
+									if (recorderState.isRecording || isRecordingManually) {
 										stopRecording();
 									} else if (isTranscribing) {
 										cancelTranscription();
 									}
 								}}
-								// onPress remains for cancel transcription when tapping
-								onPress={() => {
-									if (isTranscribing && !recorderState.isRecording) {
-										cancelTranscription();
-									}
-								}}
-								// Toujours actif pour gérer start/stop via pressIn/Out
 								disabled={false}
 							>
 								<MaterialCommunityIcons
-									name={recorderState.isRecording ? "stop" : isTranscribing ? "close" : "microphone"}
+									name={recorderState.isRecording || isRecordingManually ? "stop" : isTranscribing ? "close" : "microphone"}
 									size={20}
-									color={recorderState.isRecording ? "#e74c3c" : isTranscribing ? "#e74c3c" : "#f2e9e4"}
+									color={recorderState.isRecording || isRecordingManually ? "#e74c3c" : isTranscribing ? "#e74c3c" : "#f2e9e4"}
 								/>
 							</Pressable>
 						</View>
