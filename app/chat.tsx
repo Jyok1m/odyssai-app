@@ -71,7 +71,7 @@ export default function ChatScreen() {
 	const dispatch = useAppDispatch();
 	const router = useRouter();
 	const userState = useAppSelector((state) => state.user);
-	const { user_uuid } = userState;
+	const { user_uuid, username } = userState;
 	const messagesState = useAppSelector((state) => state.messages);
 	const gameDataState = useAppSelector((state) => state.gameData);
 	const messages = messagesState?.messages || [];
@@ -802,6 +802,22 @@ export default function ChatScreen() {
 			loadMoreMessages();
 		}
 	};
+
+	useEffect(() => {
+		(async () => {
+			if (username) {
+				const response = await fetch(`/api/users/check-username?username=${username}`);
+				const data = await response.json();
+				if (!data.exists) {
+					resetChat();
+					dispatch(clearUser());
+					clearTTSQueue(); // Nettoyer la queue TTS
+					seenMessageIds.current.clear();
+					router.replace("/"); // Rediriger vers l'écran d'accueil
+				}
+			}
+		})();
+	}, [username]);
 
 	/* ---------------------------------------------------------------- */
 	/*                             Variables                            */
