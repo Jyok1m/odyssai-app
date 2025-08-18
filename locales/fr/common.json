@@ -28,7 +28,7 @@
 		}
 	},
 	"chat": {
-		"placeholder": "Tapez votre message...",
+		"placeholder": "Tapez votre message ici...",
 		"send": "Envoyer",
 		"thinking": "L'IA réfléchit...",
 		"newConversation": "Nouvelle conversation",

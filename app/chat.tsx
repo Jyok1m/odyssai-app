@@ -324,7 +324,7 @@ export default function ChatScreen() {
 		// Envoyer chaque message par défaut en base de données
 		for (const message of defaultMessages) {
 			try {
-				await fetch(`${process.env.EXPO_DEV_API_URL ?? process.env.EXPO_PUBLIC_API_URL}/api/users/interaction?lang=${currentLanguage}`, {
+				await fetch(`${process.env.EXPO_PUBLIC_API_URL}/api/users/interaction?lang=${currentLanguage}`, {
 					method: "POST",
 					headers: { "Content-Type": "application/json" },
 					body: JSON.stringify({
@@ -544,14 +544,11 @@ export default function ChatScreen() {
 			return;
 		}
 
-		const response = await fetch(
-			`${process.env.EXPO_DEV_API_URL ?? process.env.EXPO_PUBLIC_API_URL}/api/users/delete-interactions?lang=${currentLanguage}`,
-			{
-				method: "DELETE",
-				headers: { "Content-Type": "application/json" },
-				body: JSON.stringify({ user_uuid }),
-			}
-		);
+		const response = await fetch(`${process.env.EXPO_PUBLIC_API_URL}/api/users/delete-interactions?lang=${currentLanguage}`, {
+			method: "DELETE",
+			headers: { "Content-Type": "application/json" },
+			body: JSON.stringify({ user_uuid }),
+		});
 
 		const data = await response.json();
 

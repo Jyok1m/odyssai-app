@@ -34,7 +34,7 @@ export default function AuthScreen() {
 		const languageParam = isSignUp ? `?lang=${selectedLanguage}` : `?lang=${selectedLanguage}`;
 		setIsLoading(true);
 		try {
-			const response = await fetch(`${process.env.EXPO_DEV_API_URL ?? process.env.EXPO_PUBLIC_API_URL}/api/users${endpoint}${languageParam}`, {
+			const response = await fetch(`${process.env.EXPO_PUBLIC_API_URL}/api/users${endpoint}${languageParam}`, {
 				method: "POST",
 				headers: { "Content-Type": "application/json" },
 				body: JSON.stringify({ username, password }),
@@ -49,7 +49,7 @@ export default function AuthScreen() {
 				// Utiliser une fonction utilitaire pour envoyer les messages par défaut
 				const sendDefaultMessages = async () => {
 					for (const message of messages) {
-						await fetch(`${process.env.EXPO_DEV_API_URL ?? process.env.EXPO_PUBLIC_API_URL}/api/users/interaction`, {
+						await fetch(`${process.env.EXPO_PUBLIC_API_URL}/api/users/interaction`, {
 							method: "POST",
 							headers: { "Content-Type": "application/json" },
 							body: JSON.stringify({ user_uuid: user_id, message, interaction_source: "ai" }),
@@ -60,7 +60,7 @@ export default function AuthScreen() {
 				dispatch(setUser({ username, user_uuid: user_id, language: selectedLanguage }));
 			} else if (response.status === 200) {
 				const { username, uuid } = data.user;
-				const res2 = await fetch(`${process.env.EXPO_DEV_API_URL ?? process.env.EXPO_PUBLIC_API_URL}/api/users/get-interactions?user_uuid=${uuid}`);
+				const res2 = await fetch(`${process.env.EXPO_PUBLIC_API_URL}/api/users/get-interactions?user_uuid=${uuid}`);
 				const interactionsData = await res2.json();
 				if (res2.status === 200) {
 					const { interactions } = interactionsData;
