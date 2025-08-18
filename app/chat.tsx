@@ -258,10 +258,10 @@ export default function ChatScreen() {
 
 	// Gestion de la transcription après arrêt de l'enregistrement
 	useEffect(() => {
-		const handleTranscription = () => {
+		const handleTranscription = async () => {
 			if (justStoppedRecording && !recorderState.isRecording && audioRecorder.uri) {
-				setJustStoppedRecording(false);
-				transcribeAudio(audioRecorder.uri);
+				setJustStoppedRecording(false); // Réinitialiser immédiatement
+				await transcribeAudio(audioRecorder.uri);
 			}
 		};
 
@@ -364,7 +364,7 @@ export default function ChatScreen() {
 				name: "audio.m4a",
 			} as any);
 			formData.append("model", "whisper-1");
-			formData.append("language", "en");
+			formData.append("language", currentLanguage);
 
 			// Créer un AbortController pour annuler la requête
 			const controller = new AbortController();
@@ -462,6 +462,9 @@ export default function ChatScreen() {
 				return;
 			}
 
+			// Réinitialiser l'état avant de commencer un nouvel enregistrement
+			setJustStoppedRecording(false);
+
 			const recordingStatus = await AudioModule.requestRecordingPermissionsAsync();
 			if (!recordingStatus.granted) {
 				toast.error(t("chat.errors.microphonePermissionDenied"));
@@ -472,7 +475,7 @@ export default function ChatScreen() {
 			await audioRecorder.prepareToRecordAsync();
 
 			// Start recording
-			await audioRecorder.record();
+			audioRecorder.record();
 		} catch (error) {
 			console.error("❌ Error starting recording:", error);
 
