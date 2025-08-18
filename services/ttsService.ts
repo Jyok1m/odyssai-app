@@ -71,8 +71,8 @@ class TTSService {
 		const voiceMap: { [key: string]: string } = {
 			en: "en-US-Wavenet-D", // Voix masculine naturelle
 			"en-US": "en-US-Wavenet-D",
-			fr: "fr-FR-Wavenet-B", // Voix masculine naturelle française
-			"fr-FR": "fr-FR-Wavenet-B",
+			fr: "fr-FR-Wavenet-D",
+			"fr-FR": "fr-FR-Wavenet-D",
 		};
 
 		const selectedVoice = voiceMap[currentLanguage];

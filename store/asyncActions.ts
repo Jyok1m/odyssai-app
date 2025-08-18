@@ -419,7 +419,6 @@ export const sendMessageToAI = createAsyncThunk("messages/sendMessageToAI", asyn
 	// Request prompt from the backend
 	else if (currentStep === "get_prompt") {
 		const classification = await classifyUserMessage(userAnswer);
-
 		if (classification === "yes") {
 			const aiResponse = await fetchAIResponse("GET", `/game/prompt?world_id=${world_id}&character_id=${character_id}&lang=${language}`);
 			const { ai_prompt } = aiResponse;

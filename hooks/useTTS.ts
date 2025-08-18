@@ -1,6 +1,5 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import { useAudioPlayer, AudioModule } from "expo-audio";
-import { Alert } from "react-native";
 import TTSService, { TTSOptions } from "../services/ttsService";
 import { useToast } from "@/hooks/useToast";
 

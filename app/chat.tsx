@@ -240,6 +240,28 @@ export default function ChatScreen() {
 		handleMessagesUpdate();
 	}, [messages.length, dispatch, isLoading, visibleMessagesCount]);
 
+	// Scroll initial quand le composant se monte avec des messages
+	useEffect(() => {
+		if (messages.length > 0 && flatListRef.current) {
+			// Délai plus long pour s'assurer que la FlatList est entièrement rendue
+			setTimeout(() => {
+				flatListRef.current?.scrollToEnd({ animated: false });
+			}, 300);
+		}
+	}, []);
+
+	// Scroll supplémentaire pour s'assurer qu'on voit le dernier message
+	useEffect(() => {
+		if (messages.length > 2 && flatListRef.current) {
+			// Scroll après le rendu initial
+			const timer = setTimeout(() => {
+				flatListRef.current?.scrollToEnd({ animated: true });
+			}, 500);
+
+			return () => clearTimeout(timer);
+		}
+	}, [messages.length > 2]);
+
 	// Gestion TTS pour les nouveaux messages de l'IA
 	useEffect(() => {
 		const handleNewAIMessages = () => {

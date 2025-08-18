@@ -40,6 +40,7 @@ export default function AuthScreen() {
 				headers: { "Content-Type": "application/json" },
 				body: JSON.stringify({ username, password }),
 			});
+
 			const data = await response.json();
 			if (![200, 201].includes(response.status)) {
 				toast.error(data.error || t("auth.errors.authFailed"));
@@ -63,7 +64,7 @@ export default function AuthScreen() {
 				const {
 					username,
 					uuid,
-					current_is_new_world,
+					language,
 					current_world_id,
 					current_world_name,
 					current_world_genre,
@@ -88,6 +89,10 @@ export default function AuthScreen() {
 						}))
 						.sort((a: any, b: any) => moment(a.timestamp).diff(moment(b.timestamp)));
 
+					// Dispatch les messages en premier
+					dispatch(loadMessages(messageList));
+
+					// Dispatcher les données du jeu
 					dispatch(
 						loadGameData({
 							// @ts-ignore - We know the keys match the state structure
@@ -102,8 +107,14 @@ export default function AuthScreen() {
 							character_description: current_character_description,
 						})
 					);
-					dispatch(loadMessages(messageList));
-					dispatch(setUser({ username, user_uuid: uuid, language: selectedLanguage }));
+
+					// Dispatcher l'utilisateur en dernier
+					dispatch(setUser({ username, user_uuid: uuid, language }));
+
+					// Attendre que le state soit mis à jour avant de changer la langue
+					setTimeout(() => {
+						changeLanguage(language);
+					}, 100);
 				}
 			}
 			// Rediriger vers le chat
