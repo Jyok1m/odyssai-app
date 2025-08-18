@@ -124,8 +124,8 @@ export const sendMessageToAI = createAsyncThunk("messages/sendMessageToAI", asyn
 	let nextStep = ""; // Defaults
 
 	const comprehensionError = () => {
-		const filteredText = aiText.replaceAll("Sorry, I didn't quite catch that. ", "").trim();
-		nextQuestion = "Sorry, I didn't quite catch that. " + filteredText;
+		const filteredText = aiText.replaceAll(storeI18nService.t("messages.comprehensionError") + " ", "").trim();
+		nextQuestion = storeI18nService.t("messages.comprehensionError") + " " + filteredText;
 		nextStep = currentStep;
 	};
 
@@ -158,7 +158,7 @@ export const sendMessageToAI = createAsyncThunk("messages/sendMessageToAI", asyn
 
 		// If the user wants a new world and the name already exists, we ask for name again
 		if (is_new_world && exists) {
-			nextQuestion = `The world '${world_name}' already exists. Please choose a different name.`;
+			nextQuestion = storeI18nService.t("messages.worldDoesNotExistCreateNew");
 			nextStep = currentStep; // Reset
 		}
 
@@ -166,7 +166,7 @@ export const sendMessageToAI = createAsyncThunk("messages/sendMessageToAI", asyn
 		else if (is_new_world && !exists) {
 			dispatch(addData({ key: "world_name", value: world_name }));
 
-			nextQuestion = `Great! Let's create your new world! Describe the world’s main genre. Give as much detail as you would like.`;
+			nextQuestion = storeI18nService.t("messages.createWorldDescription");
 			nextStep = "ask_world_genre";
 		}
 
@@ -189,7 +189,7 @@ export const sendMessageToAI = createAsyncThunk("messages/sendMessageToAI", asyn
 
 		// If the user doesn't want a new world and the name doesn't exist, we ask if the player wants to create a new world
 		else if (!is_new_world && !exists) {
-			nextQuestion = `The world '${world_name}' does not exist. Do you want to create a new world?`;
+			nextQuestion = storeI18nService.t("messages.worldDoesNotExistCreateNew");
 			nextStep = "ask_new_world";
 		}
 	}
@@ -198,7 +198,7 @@ export const sendMessageToAI = createAsyncThunk("messages/sendMessageToAI", asyn
 	else if (currentStep === "ask_world_genre") {
 		dispatch(addData({ key: "world_genre", value: userAnswer }));
 
-		nextQuestion = "Are there particular themes or narrative threads you’d like to explore? Let your imagination guide the story’s soul.";
+		nextQuestion = storeI18nService.t("messages.askStoryDirectives");
 		nextStep = "ask_story_directives";
 	}
 
@@ -206,7 +206,7 @@ export const sendMessageToAI = createAsyncThunk("messages/sendMessageToAI", asyn
 	else if (currentStep === "ask_story_directives") {
 		dispatch(addData({ key: "story_directives", value: userAnswer }));
 
-		nextQuestion = "Thank you. I'm ready to weave the threads of your world’s story. Are you ready?";
+		nextQuestion = storeI18nService.t("messages.readyToWeaveStory");
 		nextStep = "create_world";
 	}
 
@@ -239,12 +239,12 @@ export const sendMessageToAI = createAsyncThunk("messages/sendMessageToAI", asyn
 			response.push({
 				id: `ai_${getCurrentTimestamp()}`,
 				currentStep: "filler",
-				text: "Alright! Let me know if you change your mind.",
+				text: storeI18nService.t("messages.changeMindGeneric"),
 				isUser: false,
 				timestamp: getCurrentTimestamp(),
 			});
 
-			nextQuestion = "Are you ready to move on with the creation of your world?";
+			nextQuestion = storeI18nService.t("messages.readyToMoveOnWorldCreation");
 			nextStep = currentStep;
 		} else {
 			comprehensionError();
@@ -264,7 +264,7 @@ export const sendMessageToAI = createAsyncThunk("messages/sendMessageToAI", asyn
 			nextQuestion = storeI18nService.t("messages.createNewCharacter");
 		} else if (classification === "no") {
 			dispatch(addData({ key: "is_new_character", value: false }));
-			nextQuestion = "Alright! Which character would you like to play as?";
+			nextQuestion = storeI18nService.t("messages.whichCharacterToPlay");
 		} else {
 			comprehensionError();
 		}
@@ -279,7 +279,7 @@ export const sendMessageToAI = createAsyncThunk("messages/sendMessageToAI", asyn
 
 		// If the user wants a new character and the name already exists, we ask for name again
 		if (is_new_character && exists) {
-			nextQuestion = `The character '${character_name}' already exists. Please choose a different name.`;
+			nextQuestion = storeI18nService.t("messages.characterAlreadyExists", { characterName: character_name });
 			nextStep = currentStep; // Reset
 		}
 
@@ -295,7 +295,7 @@ export const sendMessageToAI = createAsyncThunk("messages/sendMessageToAI", asyn
 				timestamp: getCurrentTimestamp(),
 			});
 
-			nextQuestion = `Will your character be male or female?`;
+			nextQuestion = storeI18nService.t("messages.characterGenderQuestion");
 			nextStep = "ask_character_gender";
 		}
 
@@ -304,13 +304,13 @@ export const sendMessageToAI = createAsyncThunk("messages/sendMessageToAI", asyn
 			dispatch(addData({ key: "character_name", value: character_name }));
 			dispatch(addData({ key: "character_id", value: character_id }));
 
-			nextQuestion = `Thank you. Are you ready to join back ${world_name}?`;
+			nextQuestion = storeI18nService.t("messages.readyToRejoinWorld", { worldName: world_name });
 			nextStep = "join_game";
 		}
 
 		// If the user doesn't want a new character and the name doesn't exist, we ask if the player wants to create a new character
 		else if (!is_new_character && !exists) {
-			nextQuestion = `The character '${character_name}' does not exist. Do you want to create a new character?`;
+			nextQuestion = storeI18nService.t("messages.characterDoesNotExistCreateNew", { characterName: character_name });
 			nextStep = "ask_create_new_character";
 		}
 	}
@@ -319,7 +319,7 @@ export const sendMessageToAI = createAsyncThunk("messages/sendMessageToAI", asyn
 	else if (currentStep === "ask_character_gender") {
 		dispatch(addData({ key: "character_gender", value: userAnswer }));
 
-		nextQuestion = "What is your character's backstory or description?";
+		nextQuestion = storeI18nService.t("messages.characterBackstoryQuestion");
 		nextStep = "ask_character_description";
 	}
 
@@ -327,7 +327,7 @@ export const sendMessageToAI = createAsyncThunk("messages/sendMessageToAI", asyn
 	else if (currentStep === "ask_character_description") {
 		dispatch(addData({ key: "character_description", value: userAnswer }));
 
-		nextQuestion = "Thank you. I'm ready to craft your character's profile. Are you ready?";
+		nextQuestion = storeI18nService.t("messages.readyToCraftCharacterProfile");
 		nextStep = "create_character";
 	}
 
@@ -355,18 +355,18 @@ export const sendMessageToAI = createAsyncThunk("messages/sendMessageToAI", asyn
 			});
 
 			dispatch(addData({ key: "character_id", value: character_id }));
-			nextQuestion = `Are you ready to join the world of ${world_name}?`;
+			nextQuestion = storeI18nService.t("messages.readyToJoinWorld", { worldName: world_name });
 			nextStep = "join_game";
 		} else if (classification === "no") {
 			response.push({
 				id: uuidv4(),
 				currentStep: "filler",
-				text: "Alright! Let me know if you change your mind.",
+				text: storeI18nService.t("messages.changeMindGeneric"),
 				isUser: false,
 				timestamp: getCurrentTimestamp(),
 			});
 
-			nextQuestion = "Are you ready to move on with your character creation?";
+			nextQuestion = storeI18nService.t("messages.readyToMoveOnCharacterCreation");
 			nextStep = currentStep;
 		} else {
 			comprehensionError();
@@ -395,24 +395,24 @@ export const sendMessageToAI = createAsyncThunk("messages/sendMessageToAI", asyn
 				response.push({
 					id: uuidv4(),
 					currentStep: "filler",
-					text: `Here is the story so far: ${world_summary}`,
+					text: storeI18nService.t("messages.storySoFar", { worldSummary: world_summary }),
 					isUser: false,
 					timestamp: getCurrentTimestamp(),
 				});
 			}
 
-			nextQuestion = `Shall we begin?`;
+			nextQuestion = storeI18nService.t("messages.shallWeBegin");
 			nextStep = "get_prompt";
 		} else if (classification === "no") {
 			response.push({
 				id: uuidv4(),
 				currentStep: "filler",
-				text: "Alright! Let me know if you change your mind.",
+				text: storeI18nService.t("messages.changeMindGeneric"),
 				isUser: false,
 				timestamp: getCurrentTimestamp(),
 			});
 
-			nextQuestion = "Are you ready to start your adventure?";
+			nextQuestion = storeI18nService.t("messages.readyToStartAdventure");
 			nextStep = currentStep;
 		} else {
 			comprehensionError();
@@ -432,12 +432,12 @@ export const sendMessageToAI = createAsyncThunk("messages/sendMessageToAI", asyn
 			response.push({
 				id: uuidv4(),
 				currentStep: "filler",
-				text: "Alright! Let me know if you change your mind.",
+				text: storeI18nService.t("messages.changeMindGeneric"),
 				isUser: false,
 				timestamp: getCurrentTimestamp(),
 			});
 
-			nextQuestion = "Are you ready to continue your story?";
+			nextQuestion = storeI18nService.t("messages.readyToContinueStory");
 			nextStep = currentStep;
 		} else {
 			comprehensionError();
@@ -458,7 +458,7 @@ export const sendMessageToAI = createAsyncThunk("messages/sendMessageToAI", asyn
 			timestamp: getCurrentTimestamp(),
 		});
 
-		nextQuestion = "Shall we continue with your story?";
+		nextQuestion = storeI18nService.t("messages.continueWithStory");
 		nextStep = "get_prompt";
 	}
 
