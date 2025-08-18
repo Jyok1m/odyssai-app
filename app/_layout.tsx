@@ -9,6 +9,9 @@ import { useLanguageSync } from "../hooks/useLanguageSync";
 import "react-native-reanimated";
 import "../i18n"; // Initialize i18n
 
+import { GestureHandlerRootView } from "react-native-gesture-handler";
+import { toast, Toasts } from "@backpackapp-io/react-native-toast";
+
 export {
 	// Catch any errors thrown by the Layout component.
 	ErrorBoundary,
@@ -60,12 +63,20 @@ function AppContent() {
 	useLanguageSync();
 
 	return (
-		<ThemeProvider value={DarkTheme}>
-			<Stack>
-				<Stack.Screen name="index" options={{ headerShown: false }} />
-				<Stack.Screen name="auth" options={{ headerShown: false }} />
-				<Stack.Screen name="chat" options={{ headerShown: false }} />
-			</Stack>
-		</ThemeProvider>
+		<GestureHandlerRootView>
+			<ThemeProvider value={DarkTheme}>
+				<Stack>
+					<Stack.Screen name="index" options={{ headerShown: false }} />
+					<Stack.Screen name="auth" options={{ headerShown: false }} />
+					<Stack.Screen name="chat" options={{ headerShown: false }} />
+				</Stack>
+				<Toasts
+					defaultStyle={{
+						view: { padding: 12, borderRadius: 8, backgroundColor: "#4a4e69" },
+						text: { color: "#f2e9e4", fontSize: 14, fontWeight: "400" },
+					}}
+				/>
+			</ThemeProvider>
+		</GestureHandlerRootView>
 	);
 }

@@ -8,6 +8,7 @@ import { loadMessages } from "@/store/reducers/messagesSlice";
 import { setUser } from "@/store/reducers/userSlice";
 import { useI18n } from "@/hooks/useI18n";
 import { LanguageSelector, LanguageSelectionModal } from "@/components";
+import { useToast } from "@/hooks/useToast";
 import moment from "moment";
 
 export default function AuthScreen() {
@@ -16,6 +17,7 @@ export default function AuthScreen() {
 	const [isSignUp, setIsSignUp] = useState(false);
 	const [isLoading, setIsLoading] = useState(false);
 	const [showLanguageModal, setShowLanguageModal] = useState(false);
+	const toast = useToast();
 	const router = useRouter();
 	const dispatch = useAppDispatch();
 	const messagesState = useAppSelector((state) => state.messages);
@@ -25,31 +27,25 @@ export default function AuthScreen() {
 
 	const handleAuth = async () => {
 		if (!username.trim() || !password.trim()) {
-			Alert.alert(t("common.error"), t("auth.errors.emptyFields"));
+			toast.error(t("auth.errors.emptyFields"));
 			return;
 		}
-
 		const endpoint = isSignUp ? "/create" : "/login";
 		const languageParam = isSignUp ? `?lang=${selectedLanguage}` : `?lang=${selectedLanguage}`;
 		setIsLoading(true);
-
 		try {
 			const response = await fetch(`${process.env.EXPO_DEV_API_URL ?? process.env.EXPO_PUBLIC_API_URL}/api/users${endpoint}${languageParam}`, {
 				method: "POST",
 				headers: { "Content-Type": "application/json" },
 				body: JSON.stringify({ username, password }),
 			});
-
 			const data = await response.json();
-
 			if (![200, 201].includes(response.status)) {
-				Alert.alert(t("common.error"), `${data.error || t("auth.errors.authFailed")} : ${"fetch error"}`);
+				toast.error(data.error || t("auth.errors.authFailed"));
 				return;
 			}
-
 			if (response.status === 201) {
 				const { username, user_id } = data;
-
 				// Utiliser une fonction utilitaire pour envoyer les messages par défaut
 				const sendDefaultMessages = async () => {
 					for (const message of messages) {
@@ -60,15 +56,12 @@ export default function AuthScreen() {
 						});
 					}
 				};
-
 				await sendDefaultMessages();
 				dispatch(setUser({ username, user_uuid: user_id, language: selectedLanguage }));
 			} else if (response.status === 200) {
 				const { username, uuid } = data.user;
-
 				const res2 = await fetch(`${process.env.EXPO_DEV_API_URL ?? process.env.EXPO_PUBLIC_API_URL}/api/users/get-interactions?user_uuid=${uuid}`);
 				const interactionsData = await res2.json();
-
 				if (res2.status === 200) {
 					const { interactions } = interactionsData;
 					const messageList = interactions
@@ -80,18 +73,14 @@ export default function AuthScreen() {
 							timestamp: msg.message.timestamp,
 						}))
 						.sort((a: any, b: any) => moment(a.timestamp).diff(moment(b.timestamp)));
-
 					dispatch(loadMessages(messageList));
 					dispatch(setUser({ username, user_uuid: uuid, language: selectedLanguage }));
 				}
 			}
-
 			// Rediriger vers le chat
 			router.replace("/chat");
 		} catch (error: any) {
-			console.log(error);
-
-			Alert.alert(t("common.error"), `${t("auth.errors.authFailed")} : ${error.message}`);
+			toast.error(t("auth.errors.authFailed"));
 		} finally {
 			setIsLoading(false);
 		}
@@ -337,7 +326,7 @@ const styles = StyleSheet.create({
 	},
 	switchLink: {
 		fontSize: 14,
-		color: "#9a8c98",
+		color: "#c9ada7",
 		fontWeight: "600",
 		textDecorationLine: "underline",
 	},
