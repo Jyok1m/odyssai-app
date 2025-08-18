@@ -73,6 +73,7 @@ export default function ChatScreen() {
 	const userState = useAppSelector((state) => state.user);
 	const { user_uuid } = userState;
 	const messagesState = useAppSelector((state) => state.messages);
+	const gameDataState = useAppSelector((state) => state.gameData);
 	const messages = messagesState?.messages || [];
 	const isLoading = messagesState?.isLoading || false;
 	const { sendMessage, resetChat } = useChatActions();
@@ -309,7 +310,7 @@ export default function ChatScreen() {
 		const timestamp1 = getCurrentTimestamp();
 		await new Promise((resolve) => setTimeout(resolve, 100 + Math.random() * 1000));
 		const timestamp2 = getCurrentTimestamp();
-		const defaultMessages = [
+		const defaultMessagesEn = [
 			{
 				id: uuidv4(),
 				currentStep: "welcome",
@@ -325,6 +326,25 @@ export default function ChatScreen() {
 				timestamp: timestamp2,
 			},
 		];
+
+		const defaultMessagesFr = [
+			{
+				id: uuidv4(),
+				currentStep: "welcome",
+				text: "Bienvenue dans Odyssai. Commencez par répondre à quelques questions et nous allons commencer !",
+				isUser: false,
+				timestamp: timestamp1,
+			},
+			{
+				id: uuidv4(),
+				currentStep: "ask_new_world",
+				text: "Souhaitez-vous créer un nouveau monde ?",
+				isUser: false,
+				timestamp: timestamp2,
+			},
+		];
+
+		const defaultMessages = currentLanguage === "fr" ? defaultMessagesFr : defaultMessagesEn;
 
 		// Envoyer chaque message par défaut en base de données
 		for (const message of defaultMessages) {
@@ -632,6 +652,14 @@ export default function ChatScreen() {
 			return;
 		}
 
+		const response1 = await fetch(`${process.env.EXPO_PUBLIC_API_URL}/api/users/clear-data?lang=${currentLanguage}`, {
+			method: "DELETE",
+			headers: { "Content-Type": "application/json" },
+			body: JSON.stringify({ user_uuid }),
+		});
+
+		const data1 = await response1.json();
+
 		const response = await fetch(`${process.env.EXPO_PUBLIC_API_URL}/api/users/delete-interactions?lang=${currentLanguage}`, {
 			method: "DELETE",
 			headers: { "Content-Type": "application/json" },
@@ -642,6 +670,9 @@ export default function ChatScreen() {
 
 		if (response.status !== 200) {
 			toast.error(data.error || t("chat.errors.resetChatFailed"));
+			return;
+		} else if (response1.status !== 200) {
+			toast.error(data1.error || t("chat.errors.resetChatFailed"));
 			return;
 		}
 
@@ -675,7 +706,7 @@ export default function ChatScreen() {
 					}
 				}
 
-				if (message.text.includes("world") && !worldName) {
+				if (message.text?.includes("world") && !worldName) {
 					// Try to extract world name from AI responses
 					const worldMatch = message.text.match(/world\s+(?:of\s+|called\s+)?([A-Z][a-zA-Z\s]+)/i);
 					if (worldMatch) {
@@ -698,7 +729,21 @@ export default function ChatScreen() {
 		setShowGameDataModal(true);
 	};
 
-	const handleLogout = () => {
+	const handleLogout = async () => {
+		// Save current game data
+		const response = await fetch(`${process.env.EXPO_PUBLIC_API_URL}/api/users/add-data?lang=${currentLanguage}`, {
+			method: "POST",
+			headers: { "Content-Type": "application/json" },
+			body: JSON.stringify({ user_uuid, ...gameDataState }),
+		});
+
+		const data = await response.json();
+
+		if (response.status !== 200) {
+			toast.error(data.error || t("chat.errors.saveGameDataFailed"));
+			return;
+		}
+
 		resetChat();
 		dispatch(clearUser());
 		clearTTSQueue(); // Nettoyer la queue TTS
@@ -938,9 +983,9 @@ const styles = StyleSheet.create({
 	},
 	messageContainer: {
 		marginVertical: 8,
-		maxWidth: "80%",
+		maxWidth: "100%",
 		borderRadius: 16,
-		paddingHorizontal: 16,
+		paddingHorizontal: 12,
 		paddingVertical: 12,
 	},
 	messageContent: {
@@ -948,11 +993,12 @@ const styles = StyleSheet.create({
 		backgroundColor: "transparent",
 	},
 	messageText: {
-		fontSize: 16,
+		fontSize: 14,
 		lineHeight: 22,
 		flexWrap: "wrap",
 		flexShrink: 1,
 		marginBottom: 8,
+		marginHorizontal: 5,
 	},
 	messageFooter: {
 		flexDirection: "row",

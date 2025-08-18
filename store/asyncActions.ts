@@ -106,8 +106,10 @@ export const sendMessageToAI = createAsyncThunk("messages/sendMessageToAI", asyn
 	const state = getState() as any;
 	const messagesState = state.messages;
 	const gameData = state.gameData;
+	const userData = state.user;
 	const messages = messagesState?.messages || [];
-	const { is_new_world, world_id, world_name, world_genre, story_directives, character_name, character_id, language } = gameData;
+	const { world_id, world_name, world_genre, story_directives, character_name, character_id } = gameData;
+	const { language, user_uuid } = userData;
 
 	const prevAIQuestions = messages.filter((msg: any) => !msg.isUser);
 	const lastAIQuestion = prevAIQuestions[prevAIQuestions.length - 1];
@@ -217,14 +219,13 @@ export const sendMessageToAI = createAsyncThunk("messages/sendMessageToAI", asyn
 		// If user is ready for world generation
 		if (classification === "yes") {
 			//console.log("gameData", gameData);
-			const aiResponse = await fetchAIResponse("POST", `/worlds?lang=${language}`, { world_name, world_genre, story_directives });
+			const aiResponse = await fetchAIResponse("POST", `/worlds/?lang=${language}`, { world_name, world_genre, story_directives });
 			const { world_id, synopsis } = aiResponse;
 
-			// Show synopsis to the user
 			response.push({
 				id: uuidv4(),
 				currentStep: "filler",
-				text: synopsis,
+				text: synopsis ?? aiResponse,
 				isUser: false,
 				timestamp: getCurrentTimestamp(),
 			});
@@ -337,7 +338,7 @@ export const sendMessageToAI = createAsyncThunk("messages/sendMessageToAI", asyn
 		if (classification === "yes") {
 			const { character_gender, character_description } = gameData;
 			//console.log("gameData", gameData);
-			const aiResponse = await fetchAIResponse("POST", `/characters?lang=${language}`, {
+			const aiResponse = await fetchAIResponse("POST", `/characters/?lang=${language}`, {
 				world_id,
 				character_name,
 				character_gender,
@@ -380,10 +381,8 @@ export const sendMessageToAI = createAsyncThunk("messages/sendMessageToAI", asyn
 	// Join existing game
 	else if (currentStep === "join_game") {
 		const classification = await classifyUserMessage(userAnswer);
-		console.log("User response classification:", classification);
 
 		if (classification === "yes") {
-			//console.log("gameData", gameData);
 			const aiResponse = await fetchAIResponse("POST", `/game/join?lang=${language}`, { world_name, character_name });
 
 			const { world_id, character_id, world_summary } = aiResponse;
@@ -391,15 +390,13 @@ export const sendMessageToAI = createAsyncThunk("messages/sendMessageToAI", asyn
 			dispatch(addData({ key: "world_id", value: world_id }));
 			dispatch(addData({ key: "character_id", value: character_id }));
 
-			if (!is_new_world) {
-				response.push({
-					id: uuidv4(),
-					currentStep: "filler",
-					text: storeI18nService.t("messages.storySoFar", { worldSummary: world_summary }),
-					isUser: false,
-					timestamp: getCurrentTimestamp(),
-				});
-			}
+			response.push({
+				id: uuidv4(),
+				currentStep: "filler",
+				text: storeI18nService.t("messages.storySoFar", { worldSummary: world_summary }),
+				isUser: false,
+				timestamp: getCurrentTimestamp(),
+			});
 
 			nextQuestion = storeI18nService.t("messages.shallWeBegin");
 			nextStep = "get_prompt";
@@ -421,14 +418,15 @@ export const sendMessageToAI = createAsyncThunk("messages/sendMessageToAI", asyn
 
 	// Request prompt from the backend
 	else if (currentStep === "get_prompt") {
-		if (userAnswer === "yes") {
-			//console.log("gameData", gameData);
+		const classification = await classifyUserMessage(userAnswer);
+
+		if (classification === "yes") {
 			const aiResponse = await fetchAIResponse("GET", `/game/prompt?world_id=${world_id}&character_id=${character_id}&lang=${language}`);
 			const { ai_prompt } = aiResponse;
 
 			nextQuestion = ai_prompt;
 			nextStep = "get_response";
-		} else if (userAnswer === "no") {
+		} else if (classification === "no") {
 			response.push({
 				id: uuidv4(),
 				currentStep: "filler",
@@ -473,7 +471,6 @@ export const sendMessageToAI = createAsyncThunk("messages/sendMessageToAI", asyn
 	// Envoi en BDD
 	const prevUserAns = messages.filter((msg: any) => msg.isUser);
 	const lastUserMessage = prevUserAns[prevUserAns.length - 1];
-	const { user_uuid } = state.user;
 
 	await fetch(`${process.env.EXPO_PUBLIC_API_URL}/api/users/interaction?lang=${language}`, {
 		method: "POST",
@@ -488,7 +485,7 @@ export const sendMessageToAI = createAsyncThunk("messages/sendMessageToAI", asyn
 	});
 
 	for (const message of response) {
-		const res = await fetch(`${process.env.EXPO_PUBLIC_API_URL}/api/users/interaction?lang=${language}`, {
+		await fetch(`${process.env.EXPO_PUBLIC_API_URL}/api/users/interaction?lang=${language}`, {
 			method: "POST",
 			headers: { "Content-Type": "application/json" },
 			body: JSON.stringify({
@@ -499,8 +496,6 @@ export const sendMessageToAI = createAsyncThunk("messages/sendMessageToAI", asyn
 				interaction_source: "ai",
 			}),
 		});
-		const data = await res.json();
-		console.log(data);
 	}
 
 	return response;

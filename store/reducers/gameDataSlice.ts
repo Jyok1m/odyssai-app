@@ -22,6 +22,14 @@ const gameDataSlice = createSlice({
 	name: "gameData",
 	initialState,
 	reducers: {
+		loadGameData: (state, action: PayloadAction<GameData>) => {
+			for (const key in action.payload) {
+				if (Object.prototype.hasOwnProperty.call(state, key)) {
+					// @ts-ignore - We know the keys match the state structure
+					state[key] = action.payload[key];
+				}
+			}
+		},
 		addData: (state, action: PayloadAction<GameData>) => {
 			const { key, value } = action.payload;
 			// Use proper typing instead of any
@@ -36,6 +44,6 @@ const gameDataSlice = createSlice({
 	},
 });
 
-export const { addData, resetData } = gameDataSlice.actions;
+export const { addData, resetData, loadGameData } = gameDataSlice.actions;
 
 export default gameDataSlice.reducer;

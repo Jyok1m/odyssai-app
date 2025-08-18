@@ -9,6 +9,7 @@ import { setUser } from "@/store/reducers/userSlice";
 import { useI18n } from "@/hooks/useI18n";
 import { LanguageSelectionModal } from "@/components";
 import { useToast } from "@/hooks/useToast";
+import { loadGameData } from "@/store";
 import moment from "moment";
 
 export default function AuthScreen() {
@@ -59,7 +60,20 @@ export default function AuthScreen() {
 				await sendDefaultMessages();
 				dispatch(setUser({ username, user_uuid: user_id, language: selectedLanguage }));
 			} else if (response.status === 200) {
-				const { username, uuid } = data.user;
+				const {
+					username,
+					uuid,
+					current_is_new_world,
+					current_world_id,
+					current_world_name,
+					current_world_genre,
+					current_story_directives,
+					current_is_new_character,
+					current_character_id,
+					current_character_name,
+					current_character_genre,
+					current_character_description,
+				} = data.user;
 				const res2 = await fetch(`${process.env.EXPO_PUBLIC_API_URL}/api/users/get-interactions?user_uuid=${uuid}`);
 				const interactionsData = await res2.json();
 				if (res2.status === 200) {
@@ -73,6 +87,21 @@ export default function AuthScreen() {
 							timestamp: msg.message.timestamp,
 						}))
 						.sort((a: any, b: any) => moment(a.timestamp).diff(moment(b.timestamp)));
+
+					dispatch(
+						loadGameData({
+							// @ts-ignore - We know the keys match the state structure
+							world_id: current_world_id,
+							world_name: current_world_name,
+							world_genre: current_world_genre,
+							story_directives: current_story_directives,
+							is_new_character: current_is_new_character,
+							character_id: current_character_id,
+							character_name: current_character_name,
+							character_genre: current_character_genre,
+							character_description: current_character_description,
+						})
+					);
 					dispatch(loadMessages(messageList));
 					dispatch(setUser({ username, user_uuid: uuid, language: selectedLanguage }));
 				}
