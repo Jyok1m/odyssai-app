@@ -7,7 +7,7 @@ import { v4 as uuidv4 } from "uuid";
 import storeI18nService from "./services/storeI18nService";
 
 const client = new OpenAI({ apiKey: process.env.EXPO_PUBLIC_OPENAI_API_KEY });
-const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || "http://localhost:8000";
+const API_BASE_URL = process.env.EXPO_DEV_API_URL ?? (process.env.EXPO_PUBLIC_API_URL || "http://localhost:8000");
 
 // Simple function to classify user messages (with optional API fallback)
 const classifyUserMessage = async (message: string): Promise<string> => {
@@ -475,7 +475,7 @@ export const sendMessageToAI = createAsyncThunk("messages/sendMessageToAI", asyn
 	const lastUserMessage = prevUserAns[prevUserAns.length - 1];
 	const { user_uuid } = state.user;
 
-	await fetch(`${process.env.EXPO_PUBLIC_API_URL}/api/users/interaction?lang=${language}`, {
+	await fetch(`${process.env.EXPO_DEV_API_URL ?? process.env.EXPO_PUBLIC_API_URL}/api/users/interaction?lang=${language}`, {
 		method: "POST",
 		headers: { "Content-Type": "application/json" },
 		body: JSON.stringify({
@@ -488,7 +488,7 @@ export const sendMessageToAI = createAsyncThunk("messages/sendMessageToAI", asyn
 	});
 
 	for (const message of response) {
-		const res = await fetch(`${process.env.EXPO_PUBLIC_API_URL}/api/users/interaction?lang=${language}`, {
+		const res = await fetch(`${process.env.EXPO_DEV_API_URL ?? process.env.EXPO_PUBLIC_API_URL}/api/users/interaction?lang=${language}`, {
 			method: "POST",
 			headers: { "Content-Type": "application/json" },
 			body: JSON.stringify({
