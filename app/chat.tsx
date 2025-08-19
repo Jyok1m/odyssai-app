@@ -752,25 +752,22 @@ export default function ChatScreen() {
 	};
 
 	const handleLogout = async () => {
-		// Save current game data
-		const response = await fetch(`${process.env.EXPO_PUBLIC_API_URL}/api/users/add-data?lang=${currentLanguage}`, {
-			method: "POST",
-			headers: { "Content-Type": "application/json" },
-			body: JSON.stringify({ user_uuid, ...gameDataState }),
-		});
+		try {
+			// Save current game data
+			await fetch(`${process.env.EXPO_PUBLIC_API_URL}/api/users/add-data?lang=${currentLanguage}`, {
+				method: "POST",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify({ user_uuid, ...gameDataState }),
+			});
 
-		const data = await response.json();
-
-		if (response.status !== 200) {
-			toast.error(data.error || t("chat.errors.saveGameDataFailed"));
-			return;
+			resetChat();
+			dispatch(clearUser());
+			clearTTSQueue(); // Nettoyer la queue TTS
+			seenMessageIds.current.clear();
+			router.replace("/"); // Rediriger vers l'écran d'accueil
+		} catch (error: any) {
+			toast.error(error.message || t("chat.errors.saveGameDataFailed"));
 		}
-
-		resetChat();
-		dispatch(clearUser());
-		clearTTSQueue(); // Nettoyer la queue TTS
-		seenMessageIds.current.clear();
-		router.replace("/"); // Rediriger vers l'écran d'accueil
 	};
 
 	/* ----------------------------- Message Pagination -------------- */
