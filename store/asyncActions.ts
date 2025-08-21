@@ -9,7 +9,7 @@ import storeI18nService from "./services/storeI18nService";
 const client = new OpenAI({ apiKey: process.env.EXPO_PUBLIC_OPENAI_API_KEY });
 const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || "http://localhost:8000";
 
-// Simple function to classify user messages (with optional API fallback)
+// Function to classify user messages (with optional API fallback)
 const classifyUserMessage = async (message: string): Promise<string> => {
 	const currentLanguage = storeI18nService.getCurrentLanguage();
 
