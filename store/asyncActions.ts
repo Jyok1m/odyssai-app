@@ -91,6 +91,10 @@ export const sendMessageToAI = createAsyncThunk(
 
 							nextQuestion = storeI18nService.t("messages.world_dilemma");
 							nextStep = "cta_ask_world";
+						} else {
+							dispatch(addData({ key: "is_new_world", value: true }));
+							nextQuestion = storeI18nService.t("messages.no_world_found");
+							nextStep = "ask_world_name";
 						}
 
 						break;

@@ -142,6 +142,8 @@
 		"world_shell": "{{worldName}} : {{worldDescription}}",
 		"world_dilemma": "Que veux-tu faire, maintenant ?",
 
+		"no_world_found": "Malheureusement, je n'ai trouvé aucun monde. Tu vas devoir en créer un nouveau. Comment veux-tu l'appeler ?",
+
 		"createWorldName": "Super. Quel nom veux-tu donner à ton nouveau monde ?",
 		"joinWorldName": "OK. Comment s'appelle le monde que tu veux rejoindre ?",
 

@@ -23,17 +23,9 @@ export const useLanguageSync = () => {
 	}, [dispatch, isAuthenticated, messages.length]);
 
 	useEffect(() => {
-		const handleLanguageChange = (lng: string) => {
-			console.log("Language changed to:", lng, "isAuthenticated:", isAuthenticated, "messages.length:", messages.length);
-
-			// Réinitialise le store pour mettre à jour les messages par défaut
-			// avec la nouvelle langue SEULEMENT si l'utilisateur n'est pas authentifié
-			// ou s'il n'y a que les messages par défaut
+		const handleLanguageChange = () => {
 			if (!isAuthenticated || messages.length <= 2) {
-				console.log("Resetting store due to language change");
 				dispatch(resetStore());
-			} else {
-				console.log("Skipping store reset - user authenticated with messages");
 			}
 		};
 
