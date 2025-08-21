@@ -76,10 +76,10 @@ export const MenuModal: React.FC<MenuModalProps> = ({ visible, onClose, onResetC
 							</View>
 							<View style={styles.optionContent}>
 								<Text style={[styles.optionTitle, userState.ttsEnabled ? styles.ttsEnabledTitle : styles.ttsDisabledTitle]}>
-									{userState.ttsEnabled ? "Lecture vocale activée" : "Lecture vocale désactivée"}
+									{userState.ttsEnabled ? t("menu.voiceActivated") : t("menu.voiceDeactivated")}
 								</Text>
 								<Text style={[styles.optionDescription, userState.ttsEnabled ? styles.ttsEnabledDescription : styles.ttsDisabledDescription]}>
-									{userState.ttsEnabled ? "Les messages seront lus à voix haute" : "Touche pour activer la synthèse vocale"}
+									{userState.ttsEnabled ? t("menu.voiceToDeactivate") : t("menu.voiceToActivate")}
 								</Text>
 							</View>
 							<MaterialCommunityIcons name="chevron-right" size={16} color={userState.ttsEnabled ? "#2ecc71" : "#95a5a6"} />
