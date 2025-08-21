@@ -2,82 +2,13 @@ import "react-native-get-random-values";
 import { createAsyncThunk } from "@reduxjs/toolkit";
 import { getCurrentTimestamp } from "./utils/utils";
 import { addData } from "./reducers/gameDataSlice";
-import OpenAI from "openai";
 import { v4 as uuidv4 } from "uuid";
 import storeI18nService from "./services/storeI18nService";
 
-const client = new OpenAI({ apiKey: process.env.EXPO_PUBLIC_OPENAI_API_KEY });
 const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || "http://localhost:8000";
 
-// Function to classify user messages (with optional API fallback)
-const classifyUserMessage = async (message: string): Promise<string> => {
-	const currentLanguage = storeI18nService.getCurrentLanguage();
-
-	// Mots de validation multilingues
-	const positiveWords =
-		currentLanguage === "fr"
-			? ["oui", "yes", "d'accord", "ok", "okay", "bien", "parfait", "vas-y", "allons-y", "continue"]
-			: ["yes", "ok", "okay", "sure", "fine", "good", "perfect", "go", "continue", "proceed"];
-
-	const negativeWords =
-		currentLanguage === "fr" ? ["non", "no", "pas", "arrête", "stop", "refuse", "jamais"] : ["no", "not", "stop", "refuse", "never", "nope"];
-
-	const lowerMessage = message.toLowerCase().trim();
-
-	// Vérification directe des mots-clés
-	if (positiveWords.some((word) => lowerMessage.includes(word))) {
-		return "yes";
-	}
-	if (negativeWords.some((word) => lowerMessage.includes(word))) {
-		return "no";
-	}
-
-	try {
-		// Prompts multilingues pour l'API
-		const prompts = {
-			fr: `Classe le message utilisateur suivant comme 'yes' ou 'no' selon que l'utilisateur veut continuer, procéder, ou est d'accord avec quelque chose.
-
-				Message utilisateur: "${message}"
-
-				Règles:
-				- Si l'utilisateur exprime le désir de continuer, procéder, être d'accord, ou toute intention positive: réponds "yes"
-				- Si l'utilisateur exprime le désir d'arrêter, être en désaccord, ou toute intention négative: réponds "no"
-				- En cas de doute, par défaut "no"
-				
-				Réponds uniquement "yes" ou "no", rien d'autre.`,
-			en: `Classify the following user message as either 'yes' or 'no' based on whether the user wants to continue, proceed, or agrees with something.
-
-				User message: "${message}"
-
-				Rules:
-				- If the user expresses desire to continue, proceed, agree, or any positive intent: respond with "yes"
-				- If the user expresses desire to stop, disagree, or any negative intent: respond with "no"
-				- If unclear, default to "no"
-				
-				Respond with only "yes" or "no", nothing else.`,
-		};
-
-		const response = await client.responses.create({
-			model: "gpt-3.5-turbo",
-			temperature: 0,
-			max_output_tokens: 16,
-			input: prompts[currentLanguage as keyof typeof prompts] || prompts.en,
-		});
-
-		if (!["yes", "no"].includes(response.output_text)) {
-			console.error("Unexpected response from message classification API:", response);
-			return "no";
-		}
-
-		return response.output_text;
-	} catch (error) {
-		console.error("Error calling message classification API:", error);
-		return "no";
-	}
-};
-
 // Appel API
-const fetchAIResponse = async (method: string, endpoint: string, body?: any): Promise<any> => {
+export const fetchAIResponse = async (method: string, endpoint: string, body?: any): Promise<any> => {
 	let options: RequestInit = { method: method };
 
 	if (method === "POST") {
@@ -102,405 +33,490 @@ const fetchAIResponse = async (method: string, endpoint: string, body?: any): Pr
 };
 
 // Action principale pour envoyer un message
-export const sendMessageToAI = createAsyncThunk("messages/sendMessageToAI", async (text: string, { getState, dispatch }) => {
-	const state = getState() as any;
-	const messagesState = state.messages;
-	const gameData = state.gameData;
-	const userData = state.user;
-	const messages = messagesState?.messages || [];
-	const { world_id, world_name, world_genre, story_directives, character_name, character_id } = gameData;
-	const { language, user_uuid } = userData;
+export const sendMessageToAI = createAsyncThunk(
+	"messages/sendMessageToAI",
+	async ({ text, ctaValue }: { text: string; ctaValue?: string }, { getState, dispatch }) => {
+		const state = getState() as any;
+		const messagesState = state.messages;
+		const gameData = state.gameData;
+		const userData = state.user;
+		const messages = messagesState?.messages || [];
+		const { world_id, world_name, world_genre, story_directives, character_name, character_id, character_gender, character_description } = gameData;
+		const { language, user_uuid } = userData;
 
-	const prevAIQuestions = messages.filter((msg: any) => !msg.isUser);
-	const lastAIQuestion = prevAIQuestions[prevAIQuestions.length - 1];
-	const { currentStep, text: aiText } = lastAIQuestion;
-	const userAnswer = text.toString().toLowerCase().trim();
+		const prevAIQuestions = messages.filter((msg: any) => !msg.isUser);
+		const lastAIQuestion = prevAIQuestions[prevAIQuestions.length - 1];
+		const { currentStep } = lastAIQuestion;
+		const userAnswer = ctaValue ?? text.toString().toLowerCase().trim();
 
-	// Délai simulé
-	await new Promise((resolve) => setTimeout(resolve, 3000 + Math.random() * 1000));
+		let response = [];
 
-	let response = [];
+		// Réponse simple basée sur le message
+		let nextQuestion = ""; // Defaults
+		let nextStep = ""; // Defaults
 
-	// Réponse simple basée sur le message
-	let nextQuestion = ""; // Defaults
-	let nextStep = ""; // Defaults
+		/* ---------------------------------------------------------------- */
+		/*                               WORLD                              */
+		/* ---------------------------------------------------------------- */
 
-	const comprehensionError = () => {
-		const filteredText = aiText.replaceAll(storeI18nService.t("messages.comprehensionError") + " ", "").trim();
-		nextQuestion = storeI18nService.t("messages.comprehensionError") + " " + filteredText;
-		nextStep = currentStep;
-	};
+		switch (currentStep) {
+			/* ----------------------- Création du monde ---------------------- */
 
-	/* ---------------------------------------------------------------- */
-	/*                               WORLD                              */
-	/* ---------------------------------------------------------------- */
+			case "cta_ask_new_world": {
+				switch (userAnswer) {
+					case "see_world_list": {
+						const res = await fetchAIResponse("GET", `/worlds/?lang=${language}`);
+						if (res.count > 0 && res.worlds?.length > 0) {
+							// Push le filler
+							response.push({
+								id: uuidv4(),
+								currentStep: "filler",
+								text: storeI18nService.t("messages.world_presentation"),
+								isUser: false,
+								timestamp: getCurrentTimestamp(),
+							});
 
-	// Step - If user is at step create new world, ask for world name
-	if (currentStep === "ask_new_world") {
-		nextStep = "ask_world_name";
-		const classification = await classifyUserMessage(userAnswer);
-		if (classification === "yes") {
-			dispatch(addData({ key: "is_new_world", value: true }));
-			nextQuestion = storeI18nService.t("messages.createWorldName");
-		} else if (classification === "no") {
-			dispatch(addData({ key: "is_new_world", value: false }));
-			nextQuestion = storeI18nService.t("messages.joinWorldName");
-		} else {
-			comprehensionError();
+							for (const world of res.worlds) {
+								response.push({
+									id: uuidv4(),
+									currentStep: "filler",
+									text: storeI18nService.t("messages.world_shell", {
+										worldName: world.world_name,
+										worldDescription: world.world_description,
+									}),
+									isUser: false,
+									timestamp: getCurrentTimestamp(),
+								});
+							}
+
+							nextQuestion = storeI18nService.t("messages.world_dilemma");
+							nextStep = "cta_ask_world";
+						}
+
+						break;
+					}
+
+					case "create_new_world": {
+						dispatch(addData({ key: "is_new_world", value: true }));
+						nextQuestion = storeI18nService.t("messages.createWorldName");
+						nextStep = "ask_world_name";
+						break;
+					}
+
+					case "join_existing_world": {
+						dispatch(addData({ key: "is_new_world", value: false }));
+						nextQuestion = storeI18nService.t("messages.joinWorldName");
+						nextStep = "ask_world_name";
+						break;
+					}
+				}
+				break;
+			}
+
+			case "cta_ask_world": {
+				switch (userAnswer) {
+					case "join_created_world": {
+						dispatch(addData({ key: "is_new_world", value: false }));
+						nextQuestion = storeI18nService.t("messages.joinWorldName");
+						nextStep = "ask_world_name";
+						break;
+					}
+
+					case "create_new_world_instead": {
+						dispatch(addData({ key: "is_new_world", value: true }));
+						nextQuestion = storeI18nService.t("messages.createWorldName");
+						nextStep = "ask_world_name";
+						break;
+					}
+				}
+				break;
+			}
+
+			case "ask_world_name": {
+				const aiResponse = await fetchAIResponse("GET", `/worlds/check?world_name=${userAnswer}&lang=${language}`);
+				const { exists, world_name, world_id } = aiResponse;
+				const { is_new_world } = gameData;
+
+				// Si on veut créer un nouveau monde
+				if (is_new_world) {
+					if (exists) {
+						response.push({
+							id: uuidv4(),
+							currentStep: "filler",
+							text: storeI18nService.t("messages.worldAlreadyExists", { worldName: world_name }),
+							isUser: false,
+							timestamp: getCurrentTimestamp(),
+						});
+
+						nextQuestion = storeI18nService.t("messages.worldRestartProcess");
+						nextStep = "cta_ask_new_world";
+					} else {
+						dispatch(addData({ key: "world_name", value: world_name }));
+						nextQuestion = storeI18nService.t("messages.createWorldDescription");
+						nextStep = "ask_world_genre";
+					}
+				} else {
+					if (exists) {
+						dispatch(addData({ key: "world_name", value: world_name }));
+						dispatch(addData({ key: "world_id", value: world_id }));
+
+						response.push({
+							id: uuidv4(),
+							currentStep: "filler",
+							text: storeI18nService.t("messages.worldFound"),
+							isUser: false,
+							timestamp: getCurrentTimestamp(),
+						});
+
+						nextQuestion = storeI18nService.t("messages.playNewCharacter");
+						nextStep = "cta_ask_new_character";
+					} else {
+						dispatch(addData({ key: "world_name", value: userAnswer }));
+						nextQuestion = storeI18nService.t("messages.worldDoesNotExistCreateNew");
+						nextStep = "cta_ask_new_world_bis";
+					}
+				}
+				break;
+			}
+
+			case "cta_ask_new_world_bis": {
+				switch (userAnswer) {
+					case "create_bis": {
+						dispatch(addData({ key: "is_new_world", value: true }));
+						nextQuestion = storeI18nService.t("messages.createWorldDescription");
+						nextStep = "ask_world_genre";
+						break;
+					}
+					case "restart": {
+						dispatch(addData({ key: "world_name", value: "" }));
+						nextQuestion = storeI18nService.t("messages.worldRestartProcess");
+						nextStep = "cta_ask_new_world";
+						break;
+					}
+				}
+				break;
+			}
+
+			case "ask_world_genre": {
+				dispatch(addData({ key: "world_genre", value: userAnswer }));
+				nextQuestion = storeI18nService.t("messages.askStoryDirectives");
+				nextStep = "ask_story_directives";
+				break;
+			}
+
+			case "ask_story_directives": {
+				dispatch(addData({ key: "story_directives", value: userAnswer }));
+				nextQuestion = storeI18nService.t("messages.readyToWeaveStory");
+				nextStep = "cta_ask_create_world";
+				break;
+			}
+
+			case "cta_ask_create_world": {
+				switch (userAnswer) {
+					case "start_world_creation": {
+						const aiResponse = await fetchAIResponse("POST", `/worlds/?lang=${language}`, { world_name, world_genre, story_directives });
+						const { world_id, synopsis } = aiResponse;
+
+						response.push({
+							id: uuidv4(),
+							currentStep: "filler",
+							text: synopsis ?? aiResponse,
+							isUser: false,
+							timestamp: getCurrentTimestamp(),
+						});
+
+						dispatch(addData({ key: "world_id", value: world_id }));
+						dispatch(addData({ key: "synopsis", value: synopsis }));
+
+						// Send user to character creation QA
+						nextQuestion = storeI18nService.t("messages.nameCharacter");
+						nextStep = "ask_character_name";
+						break;
+					}
+					case "pause_world_creation": {
+						response.push({
+							id: uuidv4(),
+							currentStep: "filler",
+							text: storeI18nService.t("messages.changeMindGeneric"),
+							isUser: false,
+							timestamp: getCurrentTimestamp(),
+						});
+
+						nextQuestion = storeI18nService.t("messages.readyToMoveOnWorldCreation");
+						nextStep = currentStep;
+						break;
+					}
+				}
+				break;
+			}
+
+			/* --------------------------- Character -------------------------- */
+
+			case "cta_ask_new_character": {
+				switch (userAnswer) {
+					case "play_new_character": {
+						dispatch(addData({ key: "is_new_character", value: true }));
+						nextQuestion = storeI18nService.t("messages.createNewCharacter");
+						nextStep = "ask_character_name";
+						break;
+					}
+					case "play_existing_character": {
+						dispatch(addData({ key: "is_new_character", value: false }));
+						nextQuestion = storeI18nService.t("messages.whichCharacterToPlay");
+						nextStep = "ask_character_name";
+						break;
+					}
+				}
+				break;
+			}
+
+			case "ask_character_name": {
+				const aiResponse = await fetchAIResponse("GET", `/characters/check?world_id=${world_id}&character_name=${userAnswer}&lang=${language}`);
+				const { exists, character_name, character_id } = aiResponse;
+				const { is_new_character } = gameData;
+
+				if (is_new_character) {
+					if (exists) {
+						response.push({
+							id: uuidv4(),
+							currentStep: "filler",
+							text: storeI18nService.t("messages.characterAlreadyExists", { characterName: character_name }),
+							isUser: false,
+							timestamp: getCurrentTimestamp(),
+						});
+
+						nextQuestion = storeI18nService.t("messages.characterRestartProcess");
+						nextStep = "cta_ask_new_character";
+					} else {
+						dispatch(addData({ key: "character_name", value: character_name }));
+						response.push({
+							id: uuidv4(),
+							currentStep: "filler",
+							text: storeI18nService.t("messages.startCreatingCharacter"),
+							isUser: false,
+							timestamp: getCurrentTimestamp(),
+						});
+						nextQuestion = storeI18nService.t("messages.characterGenderQuestion");
+						nextStep = "ask_character_gender";
+					}
+				} else {
+					if (exists) {
+						dispatch(addData({ key: "character_name", value: character_name }));
+						dispatch(addData({ key: "character_id", value: character_id }));
+
+						nextQuestion = storeI18nService.t("messages.readyToRejoinWorld", { worldName: world_name });
+						nextStep = "cta_ask_join_game";
+					} else {
+						dispatch(addData({ key: "character_name", value: userAnswer }));
+						nextQuestion = storeI18nService.t("messages.characterDoesNotExistCreateNew", { characterName: userAnswer });
+						nextStep = "cta_ask_new_character_bis";
+					}
+				}
+				break;
+			}
+
+			case "cta_ask_new_character_bis": {
+				switch (userAnswer) {
+					case "create_bis": {
+						dispatch(addData({ key: "is_new_character", value: true }));
+						nextQuestion = storeI18nService.t("messages.characterGenderQuestion");
+						nextStep = "ask_character_genre";
+						break;
+					}
+					case "restart": {
+						dispatch(addData({ key: "character_name", value: "" }));
+						nextQuestion = storeI18nService.t("messages.characterRestartProcess");
+						nextStep = "cta_ask_new_character";
+						break;
+					}
+				}
+				break;
+			}
+
+			case "ask_character_gender": {
+				dispatch(addData({ key: "character_gender", value: userAnswer }));
+
+				nextQuestion = storeI18nService.t("messages.characterBackstoryQuestion");
+				nextStep = "ask_character_description";
+				break;
+			}
+
+			case "ask_character_description": {
+				dispatch(addData({ key: "character_description", value: userAnswer }));
+
+				nextQuestion = storeI18nService.t("messages.readyToCraftCharacterProfile");
+				nextStep = "create_character";
+				break;
+			}
+
+			case "cta_ask_create_character": {
+				switch (userAnswer) {
+					case "start_character_creation": {
+						const aiResponse = await fetchAIResponse("POST", `/characters/?lang=${language}`, {
+							world_id,
+							character_name,
+							character_gender,
+							character_description,
+						});
+						const { character_id } = aiResponse;
+
+						response.push({
+							id: uuidv4(),
+							currentStep: "filler",
+							text: storeI18nService.t("messages.characterGenerated"),
+							isUser: false,
+							timestamp: getCurrentTimestamp(),
+						});
+
+						dispatch(addData({ key: "character_id", value: character_id }));
+						nextQuestion = storeI18nService.t("messages.readyToJoinWorld", { worldName: world_name });
+						nextStep = "cta_ask_join_game";
+						break;
+					}
+
+					case "pause_character_creation": {
+						response.push({
+							id: uuidv4(),
+							currentStep: "filler",
+							text: storeI18nService.t("messages.changeMindGeneric"),
+							isUser: false,
+							timestamp: getCurrentTimestamp(),
+						});
+
+						nextQuestion = storeI18nService.t("messages.readyToMoveOnCharacterCreation");
+						nextStep = currentStep;
+						break;
+					}
+				}
+				break;
+			}
+
+			/* --------------------------- Gameplay --------------------------- */
+
+			case "cta_ask_join_game": {
+				switch (userAnswer) {
+					case "rejoin_world": {
+						const aiResponse = await fetchAIResponse("POST", `/game/join?lang=${language}`, { world_name, character_name });
+						const { world_id, character_id, world_summary } = aiResponse;
+						dispatch(addData({ key: "world_id", value: world_id }));
+						dispatch(addData({ key: "character_id", value: character_id }));
+
+						response.push({
+							id: uuidv4(),
+							currentStep: "filler",
+							text: storeI18nService.t("messages.storySoFar", { worldSummary: world_summary }),
+							isUser: false,
+							timestamp: getCurrentTimestamp(),
+						});
+
+						nextQuestion = storeI18nService.t("messages.shallWeBegin");
+						nextStep = "cta_get_prompt";
+						break;
+					}
+					case "pause_rejoin_world": {
+						response.push({
+							id: uuidv4(),
+							currentStep: "filler",
+							text: storeI18nService.t("messages.changeMindGeneric"),
+							isUser: false,
+							timestamp: getCurrentTimestamp(),
+						});
+
+						nextQuestion = storeI18nService.t("messages.readyToStartAdventure");
+						nextStep = currentStep;
+						break;
+					}
+				}
+				break;
+			}
+
+			case "cta_get_prompt": {
+				switch (userAnswer) {
+					case "continue_story": {
+						const aiResponse = await fetchAIResponse("GET", `/game/prompt?world_id=${world_id}&character_id=${character_id}&lang=${language}`);
+						const { ai_prompt } = aiResponse;
+
+						nextQuestion = ai_prompt;
+						nextStep = "get_response";
+						break;
+					}
+
+					case "pause_story": {
+						response.push({
+							id: uuidv4(),
+							currentStep: "filler",
+							text: storeI18nService.t("messages.changeMindGeneric"),
+							isUser: false,
+							timestamp: getCurrentTimestamp(),
+						});
+
+						nextQuestion = storeI18nService.t("messages.readyToContinueStory");
+						nextStep = currentStep;
+					}
+				}
+				break;
+			}
+
+			case "get_response": {
+				const aiResponse = await fetchAIResponse("POST", `/game/action?lang=${language}`, { world_id, character_id, player_answer: userAnswer });
+				const { immediate_events } = aiResponse;
+
+				response.push({
+					id: uuidv4(),
+					currentStep: "filler",
+					text: immediate_events,
+					isUser: false,
+					timestamp: getCurrentTimestamp(),
+				});
+
+				nextQuestion = storeI18nService.t("messages.continueWithStory");
+				nextStep = "cta_get_prompt";
+			}
 		}
-	}
-
-	// Step - When user inputs world name, check if it exists
-	else if (currentStep === "ask_world_name") {
-		//console.log("gameData", gameData);
-
-		const aiResponse = await fetchAIResponse("GET", `/worlds/check?world_name=${userAnswer}&lang=${language}`);
-		const { exists, world_name, world_id } = aiResponse;
-		const { is_new_world } = gameData;
-
-		// If the user wants a new world and the name already exists, we ask for name again
-		if (is_new_world && exists) {
-			nextQuestion = storeI18nService.t("messages.worldDoesNotExistCreateNew");
-			nextStep = currentStep; // Reset
-		}
-
-		// If the user wants a new world and the name doesn't exist, we go to the world genre QA
-		else if (is_new_world && !exists) {
-			dispatch(addData({ key: "world_name", value: world_name }));
-
-			nextQuestion = storeI18nService.t("messages.createWorldDescription");
-			nextStep = "ask_world_genre";
-		}
-
-		// If the user doesn't want a new world and the name exists, we ask if player wants to create a new character
-		else if (!is_new_world && exists) {
-			dispatch(addData({ key: "world_name", value: world_name }));
-			dispatch(addData({ key: "world_id", value: world_id }));
-
-			response.push({
-				id: uuidv4(),
-				currentStep: "filler",
-				text: storeI18nService.t("messages.worldFound"),
-				isUser: false,
-				timestamp: getCurrentTimestamp(),
-			});
-
-			nextQuestion = storeI18nService.t("messages.playNewCharacter");
-			nextStep = "ask_create_new_character";
-		}
-
-		// If the user doesn't want a new world and the name doesn't exist, we ask if the player wants to create a new world
-		else if (!is_new_world && !exists) {
-			nextQuestion = storeI18nService.t("messages.worldDoesNotExistCreateNew");
-			nextStep = "ask_new_world";
-		}
-	}
-
-	// Step - When user inputs world genre, we simply add it to Redux
-	else if (currentStep === "ask_world_genre") {
-		dispatch(addData({ key: "world_genre", value: userAnswer }));
-
-		nextQuestion = storeI18nService.t("messages.askStoryDirectives");
-		nextStep = "ask_story_directives";
-	}
-
-	// Step - When user inputs story_directives, we simply add it to Redux
-	else if (currentStep === "ask_story_directives") {
-		dispatch(addData({ key: "story_directives", value: userAnswer }));
-
-		nextQuestion = storeI18nService.t("messages.readyToWeaveStory");
-		nextStep = "create_world";
-	}
-
-	// Step - When user is ready to create new world, we create the world and ask for character creation
-	else if (currentStep === "create_world") {
-		const classification = await classifyUserMessage(userAnswer);
-
-		// If user is ready for world generation
-		if (classification === "yes") {
-			//console.log("gameData", gameData);
-			const aiResponse = await fetchAIResponse("POST", `/worlds/?lang=${language}`, { world_name, world_genre, story_directives });
-			const { world_id, synopsis } = aiResponse;
-
-			response.push({
-				id: uuidv4(),
-				currentStep: "filler",
-				text: synopsis ?? aiResponse,
-				isUser: false,
-				timestamp: getCurrentTimestamp(),
-			});
-
-			dispatch(addData({ key: "world_id", value: world_id }));
-			dispatch(addData({ key: "synopsis", value: synopsis }));
-
-			// Send user to character creation QA
-			nextQuestion = storeI18nService.t("messages.nameCharacter");
-			nextStep = "ask_character_name";
-		} else if (classification === "no") {
-			response.push({
-				id: `ai_${getCurrentTimestamp()}`,
-				currentStep: "filler",
-				text: storeI18nService.t("messages.changeMindGeneric"),
-				isUser: false,
-				timestamp: getCurrentTimestamp(),
-			});
-
-			nextQuestion = storeI18nService.t("messages.readyToMoveOnWorldCreation");
-			nextStep = currentStep;
-		} else {
-			comprehensionError();
-		}
-	}
-
-	/* ---------------------------------------------------------------- */
-	/*                             CHARACTER                            */
-	/* ---------------------------------------------------------------- */
-
-	// Step - When user asks chooses if he wants to play as a new character or not
-	else if (currentStep === "ask_create_new_character") {
-		nextStep = "ask_character_name";
-		const classification = await classifyUserMessage(userAnswer);
-		if (classification === "yes") {
-			dispatch(addData({ key: "is_new_character", value: true }));
-			nextQuestion = storeI18nService.t("messages.createNewCharacter");
-		} else if (classification === "no") {
-			dispatch(addData({ key: "is_new_character", value: false }));
-			nextQuestion = storeI18nService.t("messages.whichCharacterToPlay");
-		} else {
-			comprehensionError();
-		}
-	}
-
-	// Step when user asks for a character name
-	else if (currentStep === "ask_character_name") {
-		//console.log("gameData", gameData);
-		const aiResponse = await fetchAIResponse("GET", `/characters/check?world_id=${world_id}&character_name=${userAnswer}&lang=${language}`);
-		const { exists, character_name, character_id } = aiResponse;
-		const { is_new_character } = gameData;
-
-		// If the user wants a new character and the name already exists, we ask for name again
-		if (is_new_character && exists) {
-			nextQuestion = storeI18nService.t("messages.characterAlreadyExists", { characterName: character_name });
-			nextStep = currentStep; // Reset
-		}
-
-		// If the user wants a new character and the name doesn't exist, we go to the character description QA
-		else if (is_new_character && !exists) {
-			dispatch(addData({ key: "character_name", value: character_name }));
-
-			response.push({
-				id: uuidv4(),
-				currentStep: "filler",
-				text: storeI18nService.t("messages.startCreatingCharacter"),
-				isUser: false,
-				timestamp: getCurrentTimestamp(),
-			});
-
-			nextQuestion = storeI18nService.t("messages.characterGenderQuestion");
-			nextStep = "ask_character_gender";
-		}
-
-		// If the user doesn't want a new character and the name exists, we ask if player wants to create a new character
-		else if (!is_new_character && exists) {
-			dispatch(addData({ key: "character_name", value: character_name }));
-			dispatch(addData({ key: "character_id", value: character_id }));
-
-			nextQuestion = storeI18nService.t("messages.readyToRejoinWorld", { worldName: world_name });
-			nextStep = "join_game";
-		}
-
-		// If the user doesn't want a new character and the name doesn't exist, we ask if the player wants to create a new character
-		else if (!is_new_character && !exists) {
-			nextQuestion = storeI18nService.t("messages.characterDoesNotExistCreateNew", { characterName: character_name });
-			nextStep = "ask_create_new_character";
-		}
-	}
-
-	// Ask character gender
-	else if (currentStep === "ask_character_gender") {
-		dispatch(addData({ key: "character_gender", value: userAnswer }));
-
-		nextQuestion = storeI18nService.t("messages.characterBackstoryQuestion");
-		nextStep = "ask_character_description";
-	}
-
-	// Ask character description
-	else if (currentStep === "ask_character_description") {
-		dispatch(addData({ key: "character_description", value: userAnswer }));
-
-		nextQuestion = storeI18nService.t("messages.readyToCraftCharacterProfile");
-		nextStep = "create_character";
-	}
-
-	// Create new character
-	else if (currentStep === "create_character") {
-		const classification = await classifyUserMessage(userAnswer);
-		if (classification === "yes") {
-			const { character_gender, character_description } = gameData;
-			//console.log("gameData", gameData);
-			const aiResponse = await fetchAIResponse("POST", `/characters/?lang=${language}`, {
-				world_id,
-				character_name,
-				character_gender,
-				character_description,
-			});
-
-			const { character_id } = aiResponse;
-
-			response.push({
-				id: uuidv4(),
-				currentStep: "filler",
-				text: storeI18nService.t("messages.characterGenerated"),
-				isUser: false,
-				timestamp: getCurrentTimestamp(),
-			});
-
-			dispatch(addData({ key: "character_id", value: character_id }));
-			nextQuestion = storeI18nService.t("messages.readyToJoinWorld", { worldName: world_name });
-			nextStep = "join_game";
-		} else if (classification === "no") {
-			response.push({
-				id: uuidv4(),
-				currentStep: "filler",
-				text: storeI18nService.t("messages.changeMindGeneric"),
-				isUser: false,
-				timestamp: getCurrentTimestamp(),
-			});
-
-			nextQuestion = storeI18nService.t("messages.readyToMoveOnCharacterCreation");
-			nextStep = currentStep;
-		} else {
-			comprehensionError();
-		}
-	}
-
-	/* ---------------------------------------------------------------- */
-	/*                             GAMEPLAY                             */
-	/* ---------------------------------------------------------------- */
-
-	// Join existing game
-	else if (currentStep === "join_game") {
-		const classification = await classifyUserMessage(userAnswer);
-
-		if (classification === "yes") {
-			const aiResponse = await fetchAIResponse("POST", `/game/join?lang=${language}`, { world_name, character_name });
-
-			const { world_id, character_id, world_summary } = aiResponse;
-
-			dispatch(addData({ key: "world_id", value: world_id }));
-			dispatch(addData({ key: "character_id", value: character_id }));
-
-			response.push({
-				id: uuidv4(),
-				currentStep: "filler",
-				text: storeI18nService.t("messages.storySoFar", { worldSummary: world_summary }),
-				isUser: false,
-				timestamp: getCurrentTimestamp(),
-			});
-
-			nextQuestion = storeI18nService.t("messages.shallWeBegin");
-			nextStep = "get_prompt";
-		} else if (classification === "no") {
-			response.push({
-				id: uuidv4(),
-				currentStep: "filler",
-				text: storeI18nService.t("messages.changeMindGeneric"),
-				isUser: false,
-				timestamp: getCurrentTimestamp(),
-			});
-
-			nextQuestion = storeI18nService.t("messages.readyToStartAdventure");
-			nextStep = currentStep;
-		} else {
-			comprehensionError();
-		}
-	}
-
-	// Request prompt from the backend
-	else if (currentStep === "get_prompt") {
-		const classification = await classifyUserMessage(userAnswer);
-		if (classification === "yes") {
-			const aiResponse = await fetchAIResponse("GET", `/game/prompt?world_id=${world_id}&character_id=${character_id}&lang=${language}`);
-			const { ai_prompt } = aiResponse;
-
-			nextQuestion = ai_prompt;
-			nextStep = "get_response";
-		} else if (classification === "no") {
-			response.push({
-				id: uuidv4(),
-				currentStep: "filler",
-				text: storeI18nService.t("messages.changeMindGeneric"),
-				isUser: false,
-				timestamp: getCurrentTimestamp(),
-			});
-
-			nextQuestion = storeI18nService.t("messages.readyToContinueStory");
-			nextStep = currentStep;
-		} else {
-			comprehensionError();
-		}
-	}
-
-	// Get answer from the player
-	else if (currentStep === "get_response") {
-		//console.log("gameData", gameData);
-		const aiResponse = await fetchAIResponse("POST", `/game/action?lang=${language}`, { world_id, character_id, player_answer: userAnswer });
-		const { immediate_events } = aiResponse;
 
 		response.push({
 			id: uuidv4(),
-			currentStep: "filler",
-			text: immediate_events,
+			currentStep: nextStep,
+			text: nextQuestion,
 			isUser: false,
 			timestamp: getCurrentTimestamp(),
 		});
 
-		nextQuestion = storeI18nService.t("messages.continueWithStory");
-		nextStep = "get_prompt";
-	}
+		// Envoi en BDD
+		const prevUserAns = messages.filter((msg: any) => msg.isUser);
+		const lastUserMessage = prevUserAns[prevUserAns.length - 1];
 
-	response.push({
-		id: uuidv4(),
-		currentStep: nextStep,
-		text: nextQuestion,
-		isUser: false,
-		timestamp: getCurrentTimestamp(),
-	});
-
-	// Envoi en BDD
-	const prevUserAns = messages.filter((msg: any) => msg.isUser);
-	const lastUserMessage = prevUserAns[prevUserAns.length - 1];
-
-	await fetch(`${process.env.EXPO_PUBLIC_API_URL}/api/users/interaction?lang=${language}`, {
-		method: "POST",
-		headers: { "Content-Type": "application/json" },
-		body: JSON.stringify({
-			user_uuid,
-			message: lastUserMessage,
-			world_id: world_id.length > 0 ? world_id : null,
-			character_id: character_id.length > 0 ? character_id : null,
-			interaction_source: "user",
-		}),
-	});
-
-	for (const message of response) {
-		message["timestamp"] = getCurrentTimestamp();
 		await fetch(`${process.env.EXPO_PUBLIC_API_URL}/api/users/interaction?lang=${language}`, {
 			method: "POST",
 			headers: { "Content-Type": "application/json" },
 			body: JSON.stringify({
 				user_uuid,
-				message,
+				message: lastUserMessage,
 				world_id: world_id.length > 0 ? world_id : null,
 				character_id: character_id.length > 0 ? character_id : null,
-				interaction_source: "ai",
+				interaction_source: "user",
 			}),
 		});
-		await new Promise((resolve) => setTimeout(resolve, 200));
-	}
 
-	return response;
-});
+		for (const message of response) {
+			message["timestamp"] = getCurrentTimestamp();
+			await fetch(`${process.env.EXPO_PUBLIC_API_URL}/api/users/interaction?lang=${language}`, {
+				method: "POST",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify({
+					user_uuid,
+					message,
+					world_id: world_id.length > 0 ? world_id : null,
+					character_id: character_id.length > 0 ? character_id : null,
+					interaction_source: "ai",
+				}),
+			});
+			await new Promise((resolve) => setTimeout(resolve, 50));
+		}
+
+		return response;
+	}
+);
 
 // Actions de reset
 export const resetConversation = createAsyncThunk("messages/resetConversation", async () => ({

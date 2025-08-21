@@ -48,8 +48,8 @@ class StoreI18nService {
 				textKey: "messages.welcome",
 			},
 			{
-				key: "ask_new_world",
-				textKey: "messages.askNewWorld",
+				key: "cta_ask_new_world",
+				textKey: "messages.askInitQuestion",
 			},
 		];
 	}

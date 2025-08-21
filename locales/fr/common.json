@@ -108,9 +108,69 @@
 		"retry": "Réessayer",
 		"recording": "Enregistrement..."
 	},
+	"cta": {
+		"see_world_list": "Liste-moi les mondes existants",
+		"create_new_world": "Je veux créer un nouveau monde",
+		"join_existing_world": "Je veux rejoindre un monde que je connais",
+
+		"join_created_world": "Je veux rejoindre un de ces mondes",
+		"create_new_world_instead": "Je veux plutôt créer un nouveau monde",
+
+		"play_new_character": "Je veux incarner un nouveau personnage",
+		"play_existing_character": "Je veux incarner un personnage que je connais déjà",
+
+		"create_bis": "Oui, je veux le créer",
+		"restart": "Je veux plutôt recommencer le processus",
+
+		"start_world_creation": "Débute la création du monde",
+		"pause_world_creation": "Pas tout de suite",
+
+		"start_character_creation": "Débute la création du personnage",
+		"pause_character_creation": "Pas tout de suite",
+
+		"rejoin_world": "C'est parti !",
+		"pause_rejoin_world": "Pas tout de suite",
+
+		"continue_story": "Oui !",
+		"pause_story": "Pas tout de suite"
+	},
 	"messages": {
 		"welcome": "Bienvenue dans Odyssai. Réponds à quelques questions et c’est parti !",
-		"askNewWorld": "On crée un monde ?",
+		"askInitQuestion": "Que veux-tu faire en premier ? Découvrir quelques mondes existants ou créer le tien ?",
+
+		"world_presentation": "Voici certains mondes disponibles :",
+		"world_shell": "{{worldName}} : {{worldDescription}}",
+		"world_dilemma": "Que veux-tu faire, maintenant ?",
+
+		"createWorldName": "Super. Quel nom veux-tu donner à ton nouveau monde ?",
+		"joinWorldName": "OK. Comment s'appelle le monde que tu veux rejoindre ?",
+
+		"worldAlreadyExists": "Aïe ! Le monde « {{worldName}} » existe déjà. Recommençons.",
+		"worldRestartProcess": "Veux-tu découvrir quelques mondes existants ou créer le tien ?",
+		"createWorldDescription": "Décris le genre et l’ambiance de ton monde. Mets autant de détails que tu veux.",
+		"worldFound": "Okay, j’ai retrouvé ton monde !",
+
+		"playNewCharacter": "Est-ce que tu veux incarner un nouveau personnage ou en incarner un que tu connais déjà ?",
+		"worldDoesNotExistCreateNew": "Ce monde n’existe pas. Est-ce qu'on le crée ?",
+
+		"createNewCharacter": "Super ! Créons un personnage. Comment veux-tu l’appeler ?",
+		"whichCharacterToPlay": "Avec quel personnage veux-tu jouer ?",
+
+		"askStoryDirectives": "Des thèmes ou intrigues que tu veux explorer ?",
+		"readyToWeaveStory": "Parfait. Je tisse l’histoire de ton monde. On commence ?",
+
+		"characterAlreadyExists": "Le personnage « {{characterName}} » existe déjà. Recommençons.",
+		"characterRestartProcess": "Est-ce que tu veux incarner un nouveau personnage ou en incarner un que tu connais déjà ?",
+		"startCreatingCharacter": "Top, on crée ton personnage.",
+		"characterGenderQuestion": "Ton personnage sera un homme ou une femme ?",
+		"characterBackstoryQuestion": "Quelle est son histoire ?",
+		"characterDoesNotExistCreateNew": "Le personnage « {{characterName}} » n’existe pas. Est-ce qu'on le crée ?",
+
+		"characterGenerated": "Ton personnage est prêt !",
+		"readyToJoinWorld": "On rejoint {{worldName}} ?",
+		"readyToRejoinWorld": "On retourne dans {{worldName}} ?",
+		"readyToMoveOnCharacterCreation": "Fais-moi signe lorsque tu voudras repartir avec la création de to personnage.",
+
 		"createNewWorld": "Parfait ! On crée un monde. Comment veux-tu l’appeler ?",
 		"worldNameReceived": "Top ! {{worldName}} est en cours de création.",
 		"selectCharacter": "À ton tour : quel type de personnage veux-tu incarner ?",
@@ -121,36 +181,19 @@
 		"error": "Oups, une erreur est survenue. Réessaie.",
 		"networkError": "Erreur réseau. Vérifie ta connexion et réessaie.",
 		"invalidResponse": "Réponse invalide. Réessaie.",
-		"createWorldName": "On y va. Quel nom donnes-tu à ce monde ?",
-		"createWorldDescription": "Décris le genre et l’ambiance de ton monde. Mets autant de détails que tu veux.",
-		"worldFound": "Parfait, j’ai retrouvé ton monde !",
-		"playNewCharacter": "Tu veux jouer un nouveau personnage ?",
+
 		"nameCharacter": "Comment s’appelle ton personnage ?",
 		"changeMind": "Ça marche. Dis-moi si tu changes d’avis.",
-		"createNewCharacter": "Super ! Créons un personnage. Comment veux-tu l’appeler ?",
-		"startCreatingCharacter": "Top, on crée ton personnage.",
-		"joinWorldName": "OK. Quel monde veux-tu rejoindre ?",
-		"characterGenerated": "Ton personnage est prêt !",
-		"worldAlreadyExists": "Le monde « {{worldName}} » existe déjà. Choisis un autre nom.",
-		"askStoryDirectives": "Des thèmes ou intrigues que tu veux explorer ?",
-		"readyToWeaveStory": "Parfait. Je tisse l’histoire de ton monde. On commence ?",
+
 		"changeMindGeneric": "Ça marche. Dis-moi si tu changes d’avis.",
-		"readyToMoveOnWorldCreation": "On continue la création du monde ?",
-		"whichCharacterToPlay": "Avec quel personnage veux-tu jouer ?",
-		"characterAlreadyExists": "Le personnage « {{characterName}} » existe déjà. Choisis un autre nom.",
-		"characterGenderQuestion": "Ton personnage sera un homme ou une femme ?",
-		"characterBackstoryQuestion": "Quelle est son histoire ?",
+		"readyToMoveOnWorldCreation": "Fais-moi signe lorsque tu voudras repartir avec la génération de ton monde.",
 		"readyToCraftCharacterProfile": "Parfait. Je crée le profil de ton personnage. On y va ?",
-		"readyToJoinWorld": "On rejoint {{worldName}} ?",
-		"readyToMoveOnCharacterCreation": "On continue la création du personnage ?",
-		"worldDoesNotExistCreateNew": "Ce monde n’existe pas. On en crée un ?",
-		"characterDoesNotExistCreateNew": "Le personnage « {{characterName}} » n’existe pas. On en crée un ?",
-		"readyToRejoinWorld": "On retourne dans {{worldName}} ?",
+
 		"storySoFar": "Récap jusqu’ici : {{worldSummary}}",
-		"shallWeBegin": "On démarre ?",
+		"shallWeBegin": "On démarre ton histoire ?",
 		"readyToStartAdventure": "Prêt à commencer l’aventure ?",
 		"readyToContinueStory": "On continue l’histoire ?",
-		"continueWithStory": "On reprend ?",
+		"continueWithStory": "On continue l'histoire ?",
 		"comprehensionError": "Désolé, je n’ai pas bien compris.",
 		"apiError": "Une erreur s’est produite. On continue quand même."
 	},

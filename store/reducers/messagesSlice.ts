@@ -16,8 +16,8 @@ const getInitialMessages = (): Message[] => [
 	},
 	{
 		id: uuidv4(),
-		currentStep: "ask_new_world",
-		text: storeI18nService.t("messages.askNewWorld"),
+		currentStep: "cta_ask_new_world",
+		text: storeI18nService.t("messages.askInitQuestion"),
 		isUser: false,
 		timestamp: getCurrentTimestamp(),
 	},
@@ -91,8 +91,8 @@ const messagesSlice = createSlice({
 			};
 			const firstQuestion: Message = {
 				id: uuidv4(),
-				currentStep: "ask_new_world",
-				text: storeI18nService.t("messages.askNewWorld"),
+				currentStep: "cta_ask_new_world",
+				text: storeI18nService.t("messages.askInitQuestion"),
 				isUser: false,
 				timestamp: getCurrentTimestamp(),
 			};
@@ -123,8 +123,8 @@ const messagesSlice = createSlice({
 			.addCase(resetConversation.fulfilled, (state, action) => {
 				const firstQuestion: Message = {
 					id: uuidv4(),
-					currentStep: "ask_new_world",
-					text: storeI18nService.t("messages.askNewWorld"),
+					currentStep: "cta_ask_new_world",
+					text: storeI18nService.t("messages.askInitQuestion"),
 					isUser: false,
 					timestamp: getCurrentTimestamp(),
 				};
@@ -138,8 +138,8 @@ const messagesSlice = createSlice({
 			.addCase(resetCompleteStore.fulfilled, (state, action) => {
 				const firstQuestion: Message = {
 					id: uuidv4(),
-					currentStep: "ask_new_world",
-					text: storeI18nService.t("messages.askNewWorld"),
+					currentStep: "cta_ask_new_world",
+					text: storeI18nService.t("messages.askInitQuestion"),
 					isUser: false,
 					timestamp: getCurrentTimestamp(),
 				};

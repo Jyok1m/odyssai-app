@@ -16,6 +16,7 @@ import { useI18n } from "../hooks/useI18n";
 import { v4 as uuidv4 } from "uuid";
 import { getCurrentTimestamp } from "../store/utils/utils";
 import { useToast } from "@/hooks/useToast";
+import { ActionButtons } from "@/components/ActionButtons";
 
 // Composant MessageItem optimisé avec React.memo
 interface MessageItemProps {
@@ -112,6 +113,7 @@ export default function ChatScreen() {
 	/* ---------------------------------------------------------------- */
 
 	const [message, setMessage] = useState("");
+	const [ctaValue, setctaValue] = useState<string | undefined>(undefined);
 	const [showResetModal, setShowResetModal] = useState(false);
 	const [showLogoutConfModal, setShowLogoutConfModal] = useState(false);
 	const [showMenuModal, setShowMenuModal] = useState(false);
@@ -342,7 +344,7 @@ export default function ChatScreen() {
 			},
 			{
 				id: uuidv4(),
-				currentStep: "ask_new_world",
+				currentStep: "cta_ask_new_world",
 				text: "Do you wish to create a new world?",
 				isUser: false,
 				timestamp: timestamp2,
@@ -359,7 +361,7 @@ export default function ChatScreen() {
 			},
 			{
 				id: uuidv4(),
-				currentStep: "ask_new_world",
+				currentStep: "cta_ask_new_world",
 				text: "Souhaitez-vous créer un nouveau monde ?",
 				isUser: false,
 				timestamp: timestamp2,
@@ -650,10 +652,18 @@ export default function ChatScreen() {
 	// Send text message
 	const handleSend = () => {
 		if (String(message).trim().length > 0) {
-			const { currentStep } = visibleMessages.length > 0 ? visibleMessages[visibleMessages.length - 1] : { currentStep: "ask_new_world" };
+			const { currentStep } = visibleMessages.length > 0 ? visibleMessages[visibleMessages.length - 1] : { currentStep: "cta_ask_new_world" };
 
 			sendMessage(message, currentStep);
 			setMessage("");
+		}
+	};
+
+	// Send text message
+	const handleSendCta = (ctaMessage: string, ctaValue: string) => {
+		if (String(ctaMessage).trim().length > 0) {
+			const { currentStep } = visibleMessages.length > 0 ? visibleMessages[visibleMessages.length - 1] : { currentStep: "cta_ask_new_world" };
+			sendMessage(ctaMessage, currentStep, ctaValue);
 		}
 	};
 
@@ -832,6 +842,24 @@ export default function ChatScreen() {
 	);
 
 	/* ---------------------------------------------------------------- */
+	/*                            CTA BUTTON                            */
+	/* ---------------------------------------------------------------- */
+
+	const ctaSteps = [
+		"cta_ask_new_world",
+		"cta_ask_world",
+		"cta_ask_new_character",
+		"cta_ask_new_world_bis",
+		"cta_ask_create_world",
+		"cta_ask_new_character",
+		"cta_ask_new_character_bis",
+		"cta_ask_create_new_character",
+		"cta_ask_join_game",
+		"cta_get_prompt",
+	];
+	const showCta = ctaSteps.includes(messages[messages.length - 1]?.currentStep);
+
+	/* ---------------------------------------------------------------- */
 	/*                                JSX                               */
 	/* ---------------------------------------------------------------- */
 
@@ -894,58 +922,63 @@ export default function ChatScreen() {
 				</View>
 
 				{/* Input Section */}
-				<View style={styles.inputSection}>
-					{(recorderState.isRecording || isRecordingManually) && (
-						<View style={styles.recordingIndicator}>
-							<Text style={styles.recordingText}>{t("common.recording")}</Text>
-						</View>
-					)}
-					<View style={styles.inputContainer}>
-						<TextInput
-							style={styles.textInput}
-							placeholder={t("chat.placeholder")}
-							placeholderTextColor="#9a8c98"
-							value={isTranscribing ? typingDots : message}
-							onChangeText={setMessage}
-							multiline
-							maxLength={500}
-							editable={!isTranscribing}
-						/>
-						<View style={styles.buttonsContainer}>
-							<Pressable
-								style={({ pressed }) => [styles.actionButton, styles.sendButton, { opacity: pressed ? 0.6 : isTranscribing ? 0.5 : 1 }]}
-								onPress={handleSend}
-								disabled={isTranscribing}
-							>
-								<MaterialCommunityIcons name="send" size={20} color="#f2e9e4" />
-							</Pressable>
-							<Pressable
-								style={({ pressed }) => [styles.actionButton, styles.recordButton, { opacity: pressed ? 0.6 : 1 }]}
-								onPressIn={() => {
-									// Commencer l'enregistrement uniquement si pas déjà en cours
-									if (!recorderState.isRecording && !isTranscribing && !isStartingRecord && !isRecordingManually) {
-										handleRecord();
-									}
-								}}
-								onPressOut={() => {
-									// Toujours arrêter l'enregistrement quand on relâche le doigt
-									if (recorderState.isRecording || isRecordingManually) {
-										stopRecording();
-									} else if (isTranscribing) {
-										cancelTranscription();
-									}
-								}}
-								disabled={false}
-							>
-								<MaterialCommunityIcons
-									name={recorderState.isRecording || isRecordingManually ? "stop" : isTranscribing ? "close" : "microphone"}
-									size={20}
-									color={recorderState.isRecording || isRecordingManually ? "#e74c3c" : isTranscribing ? "#e74c3c" : "#f2e9e4"}
-								/>
-							</Pressable>
+
+				{showCta ? (
+					<ActionButtons currentStep={messages[messages.length - 1]?.currentStep ?? "cta_ask_new_world"} onButtonPress={handleSendCta} />
+				) : (
+					<View style={styles.inputSection}>
+						{(recorderState.isRecording || isRecordingManually) && (
+							<View style={styles.recordingIndicator}>
+								<Text style={styles.recordingText}>{t("common.recording")}</Text>
+							</View>
+						)}
+						<View style={styles.inputContainer}>
+							<TextInput
+								style={styles.textInput}
+								placeholder={t("chat.placeholder")}
+								placeholderTextColor="#9a8c98"
+								value={isTranscribing ? typingDots : message}
+								onChangeText={setMessage}
+								multiline
+								maxLength={500}
+								editable={!isTranscribing}
+							/>
+							<View style={styles.buttonsContainer}>
+								<Pressable
+									style={({ pressed }) => [styles.actionButton, styles.sendButton, { opacity: pressed ? 0.6 : isTranscribing ? 0.5 : 1 }]}
+									onPress={handleSend}
+									disabled={isTranscribing}
+								>
+									<MaterialCommunityIcons name="send" size={20} color="#f2e9e4" />
+								</Pressable>
+								<Pressable
+									style={({ pressed }) => [styles.actionButton, styles.recordButton, { opacity: pressed ? 0.6 : 1 }]}
+									onPressIn={() => {
+										// Commencer l'enregistrement uniquement si pas déjà en cours
+										if (!recorderState.isRecording && !isTranscribing && !isStartingRecord && !isRecordingManually) {
+											handleRecord();
+										}
+									}}
+									onPressOut={() => {
+										// Toujours arrêter l'enregistrement quand on relâche le doigt
+										if (recorderState.isRecording || isRecordingManually) {
+											stopRecording();
+										} else if (isTranscribing) {
+											cancelTranscription();
+										}
+									}}
+									disabled={false}
+								>
+									<MaterialCommunityIcons
+										name={recorderState.isRecording || isRecordingManually ? "stop" : isTranscribing ? "close" : "microphone"}
+										size={20}
+										color={recorderState.isRecording || isRecordingManually ? "#e74c3c" : isTranscribing ? "#e74c3c" : "#f2e9e4"}
+									/>
+								</Pressable>
+							</View>
 						</View>
 					</View>
-				</View>
+				)}
 			</KeyboardAvoidingView>
 
 			{/* Reset Modal */}

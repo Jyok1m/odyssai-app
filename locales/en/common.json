@@ -13,14 +13,14 @@
 		"username": "Username",
 		"password": "Password",
 		"loading": "Loading...",
-		"signInSubtitle": "Sign in to keep your adventure going",
+		"signInSubtitle": "Sign in to continue your adventure",
 		"signUpSubtitle": "Join the adventure and create your account",
 		"alreadyHaveAccount": "Already have an account?",
 		"dontHaveAccount": "Don't have an account?",
 		"accountLanguage": "Choose your account language",
 		"selectLanguage": "Select language",
 		"languageWarning": "This will be the language for your game content, stories, and AI interactions. Choose carefully—you won't be able to change it later.",
-		"languageNotModifiable": "⚠️ This language will be permanently tied to your account.",
+		"languageNotModifiable": "⚠️ This language will be permanently linked to your account.",
 		"errors": {
 			"emptyFields": "Enter a username and password",
 			"authFailed": "Sign-in failed",
@@ -30,31 +30,31 @@
 	"chat": {
 		"placeholder": "Type your message here...",
 		"send": "Send",
-		"thinking": "The AI is thinking...",
+		"thinking": "The AI is thinking…",
 		"newConversation": "New conversation",
 		"clearHistory": "Clear history",
 		"assistant": "Assistant",
 		"loadMore": "Load more ({{count}} older messages)",
 		"errors": {
-			"microphonePermission": "Mic access is required for voice messages. Enable it in settings.",
-			"microphonePermissionDenied": "Please allow microphone access in settings.",
+			"microphonePermission": "The microphone is required for voice messages. Enable the permission in settings.",
+			"microphonePermissionDenied": "Allow microphone access in settings.",
 			"audioSetup": "Audio setup error",
-			"audioSetupDetails": "Couldn't set up audio. Voice recording won't be available.\n\nDetails: ",
+			"audioSetupDetails": "Unable to set up audio. Voice recording won't be available.\n\nDetails: ",
 			"noTextDetected": "No text detected in the audio",
 			"transcriptionFailed": "Audio transcription failed",
-			"requestCancelled": "Transcription canceled. Try typing instead.",
-			"requestTimeout": "Timed out. The audio may be too long or your connection unstable. Try typing for now.",
+			"requestCancelled": "Transcription cancelled. Try text instead.",
+			"requestTimeout": "Timed out. The audio might be too long or the connection unstable. Try text instead.",
 			"networkError": "Network error. Check your Internet connection.",
 			"apiAuthFailed": "API authentication failed. Check your OpenAI key.",
-			"rateLimitExceeded": "Too many requests. Try again in a moment.",
+			"rateLimitExceeded": "Too many requests. Try again shortly.",
 			"audioTooLarge": "Audio file too large. Record a shorter message.",
 			"transcriptionError": "Transcription error",
 			"technicalDetails": "Technical details",
-			"recordingStartFailed": "Couldn't start recording",
-			"microphoneBusy": "The mic is in use by another app.",
-			"microphoneHardware": "Microphone hardware issue.",
+			"recordingStartFailed": "Unable to start recording",
+			"microphoneBusy": "The microphone is in use by another app.",
+			"microphoneHardware": "Hardware issue with the microphone.",
 			"recordingError": "Recording error",
-			"resetChatFailed": "Chat reset failed"
+			"resetChatFailed": "Failed to reset chat"
 		}
 	},
 	"menu": {
@@ -68,18 +68,18 @@
 		"reset": "Reset conversation",
 		"resetDescription": "Delete all messages and start over",
 		"gameData": "View game data",
-		"gameDataDescription": "See info about your character and world"
+		"gameDataDescription": "Info about your character and your world"
 	},
 	"modals": {
 		"logout": {
 			"title": "Log out",
-			"message": "You'll be signed out and returned to the home screen.",
+			"message": "You are about to log out and return to the home screen.",
 			"confirm": "Log out",
 			"cancel": "Cancel"
 		},
 		"reset": {
 			"title": "Reset conversation",
-			"message": "This will permanently delete all messages and start a new session with Odyssai.",
+			"message": "This action permanently deletes all messages and starts a new session with Odyssai.",
 			"warning": "Irreversible action",
 			"confirm": "Reset",
 			"cancel": "Cancel"
@@ -91,7 +91,7 @@
 			"inTheWorld": "In the world",
 			"notSet": "Not set",
 			"noGameData": "No game data",
-			"startConversation": "Start a chat with Odyssai to create your character and world."
+			"startConversation": "Start a conversation with Odyssai to create your character and your world."
 		}
 	},
 	"common": {
@@ -105,61 +105,104 @@
 		"error": "Error",
 		"success": "Success",
 		"loading": "Loading...",
-		"retry": "Try again",
+		"retry": "Retry",
 		"recording": "Recording..."
 	},
+	"cta": {
+		"see_world_list": "Show me the existing worlds",
+		"create_new_world": "I want to create a new world",
+		"join_existing_world": "I want to join a world I know",
+
+		"join_created_world": "I want to join one of these worlds",
+		"create_new_world_instead": "I'd rather create a new world",
+
+		"play_new_character": "I want to play a new character",
+		"play_existing_character": "I want to play a character I already know",
+
+		"create_bis": "Yes, I want to create it",
+		"restart": "I'd rather restart the process",
+
+		"start_world_creation": "Start world creation",
+		"pause_world_creation": "Not right now",
+
+		"start_character_creation": "Start character creation",
+		"pause_character_creation": "Not right now",
+
+		"rejoin_world": "Let's go!",
+		"pause_rejoin_world": "Not right now",
+
+		"continue_story": "Yes!",
+		"pause_story": "Not right now"
+	},
 	"messages": {
-		"welcome": "Welcome to Odyssai. Answer a few questions and you're off!",
-		"askNewWorld": "Create a world?",
-		"createNewWorld": "Great! Let's make a world. What do you want to call it?",
-		"worldNameReceived": "Nice! {{worldName}} is being created.",
-		"selectCharacter": "Your turn—what kind of character do you want to play?",
-		"characterSelected": "Nice pick! You'll play as {{characterType}}.",
+		"welcome": "Welcome to Odyssai. Answer a few questions and we’re off!",
+		"askInitQuestion": "What do you want to do first? Discover some existing worlds or create your own?",
+
+		"world_presentation": "Here are some worlds available:",
+		"world_shell": "{{worldName}}: {{worldDescription}}",
+		"world_dilemma": "What do you want to do now?",
+
+		"createWorldName": "Great. What name do you want to give your new world?",
+		"joinWorldName": "OK. What's the name of the world you want to join?",
+
+		"worldAlreadyExists": "Oops! The world “{{worldName}}” already exists. Let's start over.",
+		"worldRestartProcess": "Do you want to discover some existing worlds or create your own?",
+		"createWorldDescription": "Describe the genre and vibe of your world. Add as much detail as you want.",
+		"worldFound": "Okay, I found your world!",
+
+		"playNewCharacter": "Do you want to play a new character or one you already know?",
+		"worldDoesNotExistCreateNew": "This world doesn't exist. Shall we create it?",
+
+		"createNewCharacter": "Great! Let's create a character. What would you like to name them?",
+		"whichCharacterToPlay": "Which character do you want to play?",
+
+		"askStoryDirectives": "Any themes or plots you'd like to explore?",
+		"readyToWeaveStory": "Perfect. I'm weaving your world's story. Shall we begin?",
+
+		"characterAlreadyExists": "The character “{{characterName}}” already exists. Let's start over.",
+		"characterRestartProcess": "Do you want to play a new character or one you already know?",
+		"startCreatingCharacter": "Great, let's create your character.",
+		"characterGenderQuestion": "Will your character be male or female?",
+		"characterBackstoryQuestion": "What is their backstory?",
+		"characterDoesNotExistCreateNew": "The character “{{characterName}}” doesn't exist. Shall we create them?",
+
+		"characterGenerated": "Your character is ready!",
+		"readyToJoinWorld": "Shall we join {{worldName}}?",
+		"readyToRejoinWorld": "Shall we return to {{worldName}}?",
+		"readyToMoveOnCharacterCreation": "Let me know when you want to pick up character creation again.",
+
+		"createNewWorld": "Perfect! Let's create a world. What do you want to call it?",
+		"worldNameReceived": "Great! {{worldName}} is being created.",
+		"selectCharacter": "Your turn: what type of character do you want to play?",
+		"characterSelected": "Good choice! You'll play {{characterType}}.",
 		"characterNamePrompt": "What's your character's name?",
 		"characterNameReceived": "Welcome, {{characterName}}, {{characterType}} of {{worldName}}! The adventure begins.",
-		"gameStart": "Here we go...",
+		"gameStart": "Here we go…",
 		"error": "Oops, something went wrong. Try again.",
 		"networkError": "Network error. Check your connection and try again.",
 		"invalidResponse": "Invalid response. Try again.",
-		"createWorldName": "Let's do it. What's this world's name?",
-		"createWorldDescription": "Describe your world's genre and vibe. Add as much detail as you like.",
-		"worldFound": "Nice, I found your world!",
-		"playNewCharacter": "Want to play a new character?",
+
 		"nameCharacter": "What's your character's name?",
 		"changeMind": "Got it. Tell me if you change your mind.",
-		"createNewCharacter": "Awesome! Let's create a character. What should we call them?",
-		"startCreatingCharacter": "Great, let's build your character.",
-		"joinWorldName": "Okay. Which world do you want to join?",
-		"characterGenerated": "Your character is ready!",
-		"worldAlreadyExists": "The world \"{{worldName}}\" already exists. Pick another name.",
-		"askStoryDirectives": "Any themes or plotlines you want to explore?",
-		"readyToWeaveStory": "Perfect. I'll weave your world's story. Shall we start?",
+
 		"changeMindGeneric": "Got it. Tell me if you change your mind.",
-		"readyToMoveOnWorldCreation": "Continue creating the world?",
-		"whichCharacterToPlay": "Which character do you want to play?",
-		"characterAlreadyExists": "The character \"{{characterName}}\" already exists. Choose another name.",
-		"characterGenderQuestion": "Will your character be male or female?",
-		"characterBackstoryQuestion": "What's their backstory?",
-		"readyToCraftCharacterProfile": "Great. I'll create your character profile. Ready?",
-		"readyToJoinWorld": "Ready to enter {{worldName}}?",
-		"readyToMoveOnCharacterCreation": "Continue creating your character?",
-		"worldDoesNotExistCreateNew": "That world doesn't exist. Want to make a new one?",
-		"characterDoesNotExistCreateNew": "The character \"{{characterName}}\" doesn't exist. Create a new one?",
-		"readyToRejoinWorld": "Jump back into {{worldName}}?",
+		"readyToMoveOnWorldCreation": "Let me know when you want to resume generating your world.",
+		"readyToCraftCharacterProfile": "Perfect. I'm creating your character's profile. Shall we?",
+
 		"storySoFar": "Recap so far: {{worldSummary}}",
-		"shallWeBegin": "Shall we begin?",
-		"readyToStartAdventure": "Ready to start your adventure?",
-		"readyToContinueStory": "Keep the story going?",
-		"continueWithStory": "Pick up where we left off?",
+		"shallWeBegin": "Shall we start your story?",
+		"readyToStartAdventure": "Ready to start the adventure?",
+		"readyToContinueStory": "Shall we continue the story?",
+		"continueWithStory": "Shall we continue the story?",
 		"comprehensionError": "Sorry, I didn't quite get that.",
-		"apiError": "Something went wrong. Let's keep going anyway."
+		"apiError": "An error occurred. Shall we continue anyway?"
 	},
 	"gameFlow": {
 		"welcome": "Welcome to your new adventure!",
 		"chooseAction": "What do you want to do?",
 		"continueStory": "Continue the story",
 		"exploreWorld": "Explore the world",
-		"checkInventory": "Check inventory",
+		"checkInventory": "View inventory",
 		"saveGame": "Save game"
 	}
 }

@@ -52,7 +52,7 @@ i18n
 	.init({
 		compatibilityJSON: "v4", // Required for React Native
 		fallbackLng: "en",
-		debug: __DEV__, // Enable debug mode in development
+		// debug: __DEV__, // Enable debug mode in development
 
 		resources: {
 			en: {

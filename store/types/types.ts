@@ -3,6 +3,7 @@ export interface Message {
 	currentStep: string;
 	text: string;
 	isUser: boolean;
+	ctaValue?: string;
 	timestamp: string; // Utiliser string au lieu de Date pour la sérialisation
 }
 

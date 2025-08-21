@@ -10,17 +10,18 @@ export const useChatActions = () => {
 	const dispatch = useAppDispatch();
 
 	const sendMessage = useCallback(
-		(text: string, currentStep = "N/A") => {
+		(text: string, currentStep = "N/A", ctaValue?: string) => {
 			const newMessage: Message = {
 				id: Date.now().toString(),
 				currentStep: currentStep,
 				text,
 				isUser: true,
 				timestamp: getCurrentTimestamp(),
+				ctaValue,
 			};
 
 			dispatch(addMessage(newMessage));
-			dispatch(sendMessageToAI(text));
+			dispatch(sendMessageToAI({ text, ctaValue }));
 		},
 		[dispatch]
 	);
