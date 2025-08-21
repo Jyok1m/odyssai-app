@@ -23,7 +23,7 @@ export const ResetModal: React.FC<ResetModalProps> = ({ visible, onClose, onConf
 			<View style={styles.overlay}>
 				<View style={styles.modalContainer}>
 					<View style={styles.modalHeader}>
-						<MaterialCommunityIcons name="delete-sweep" size={24} color="#e74c3c" />
+						<MaterialCommunityIcons name="delete-sweep" size={20} color="#e74c3c" />
 						<Text style={styles.modalTitle}>{t("modals.reset.title")}</Text>
 					</View>
 
@@ -40,7 +40,7 @@ export const ResetModal: React.FC<ResetModalProps> = ({ visible, onClose, onConf
 						</Pressable>
 
 						<Pressable style={[styles.button, styles.confirmButton]} onPress={handleConfirm}>
-							<MaterialCommunityIcons name="delete" size={18} color="#f2e9e4" />
+							<MaterialCommunityIcons name="delete" size={16} color="#f2e9e4" />
 							<Text style={styles.confirmButtonText}>{t("modals.reset.confirm")}</Text>
 						</Pressable>
 					</View>
@@ -61,28 +61,28 @@ const styles = StyleSheet.create({
 	modalContainer: {
 		backgroundColor: "#22223b",
 		borderRadius: 16,
-		padding: 24,
+		padding: 20,
 		width: "100%",
-		maxWidth: 400,
+		maxWidth: 380,
 		borderWidth: 1,
 		borderColor: "#4a4e69",
 	},
 	modalHeader: {
 		flexDirection: "row",
 		alignItems: "center",
-		marginBottom: 16,
+		marginBottom: 12,
 	},
 	modalTitle: {
-		fontSize: 18,
+		fontSize: 16,
 		fontWeight: "600",
 		color: "#f2e9e4",
-		marginLeft: 12,
+		marginLeft: 10,
 	},
 	modalText: {
-		fontSize: 16,
+		fontSize: 14,
 		color: "#c9ada7",
-		lineHeight: 24,
-		marginBottom: 24,
+		lineHeight: 20,
+		marginBottom: 16,
 	},
 	buttonContainer: {
 		flexDirection: "row",
@@ -90,13 +90,13 @@ const styles = StyleSheet.create({
 	},
 	button: {
 		flex: 1,
-		paddingVertical: 12,
-		paddingHorizontal: 16,
+		paddingVertical: 10,
+		paddingHorizontal: 14,
 		borderRadius: 8,
 		alignItems: "center",
 		justifyContent: "center",
 		flexDirection: "row",
-		gap: 8,
+		gap: 6,
 	},
 	cancelButton: {
 		backgroundColor: "transparent",
@@ -108,12 +108,12 @@ const styles = StyleSheet.create({
 	},
 	cancelButtonText: {
 		color: "#9a8c98",
-		fontSize: 16,
+		fontSize: 15,
 		fontWeight: "500",
 	},
 	confirmButtonText: {
 		color: "#f2e9e4",
-		fontSize: 16,
+		fontSize: 15,
 		fontWeight: "500",
 	},
 	warningBox: {
@@ -121,15 +121,15 @@ const styles = StyleSheet.create({
 		alignItems: "center",
 		backgroundColor: "rgba(243, 156, 18, 0.1)",
 		borderRadius: 8,
-		padding: 12,
-		marginBottom: 20,
+		padding: 10,
+		marginBottom: 16,
 		borderWidth: 1,
 		borderColor: "rgba(243, 156, 18, 0.3)",
 	},
 	warningText: {
 		color: "#f39c12",
-		fontSize: 14,
+		fontSize: 13,
 		fontWeight: "500",
-		marginLeft: 8,
+		marginLeft: 6,
 	},
 });

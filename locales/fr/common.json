@@ -68,7 +68,11 @@
 		"reset": "Réinitialiser la conversation",
 		"resetDescription": "Supprime tous les messages et recommence",
 		"gameData": "Voir les données du jeu",
-		"gameDataDescription": "Infos sur ton personnage et ton monde"
+		"gameDataDescription": "Infos sur ton personnage et ton monde",
+		"voiceToActivate": "Touche pour activer la synthèse vocale",
+		"voiceActivated": "Lecture vocale activée",
+		"voiceToDeactivate": "Les messages seront lus à voix haute",
+		"voiceDeactivated": "Lecture vocale désactivée"
 	},
 	"modals": {
 		"logout": {

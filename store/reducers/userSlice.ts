@@ -5,6 +5,7 @@ export interface UserState {
 	username: string | null;
 	isAuthenticated: boolean;
 	language: string | null;
+	ttsEnabled: boolean;
 }
 
 const initialState: UserState = {
@@ -12,6 +13,7 @@ const initialState: UserState = {
 	username: null,
 	isAuthenticated: false,
 	language: null,
+	ttsEnabled: true,
 };
 
 const userSlice = createSlice({
@@ -29,9 +31,13 @@ const userSlice = createSlice({
 			state.username = null;
 			state.isAuthenticated = false;
 			state.language = null;
+			state.ttsEnabled = true;
+		},
+		toggleTTS: (state) => {
+			state.ttsEnabled = !state.ttsEnabled;
 		},
 	},
 });
 
-export const { setUser, clearUser } = userSlice.actions;
+export const { setUser, clearUser, toggleTTS } = userSlice.actions;
 export default userSlice.reducer;

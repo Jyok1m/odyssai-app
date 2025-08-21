@@ -21,17 +21,17 @@ export const GameDataModal: React.FC<GameDataModalProps> = ({ visible, onClose, 
 			<View style={styles.overlay}>
 				<View style={styles.modalContainer}>
 					<View style={styles.modalHeader}>
-						<MaterialCommunityIcons name="account-details" size={24} color="#9a8c98" />
+						<MaterialCommunityIcons name="account-details" size={20} color="#9a8c98" />
 						<Text style={styles.modalTitle}>{t("modals.gameData.title")}</Text>
 						<Pressable style={styles.closeButton} onPress={onClose}>
-							<MaterialCommunityIcons name="close" size={20} color="#9a8c98" />
+							<MaterialCommunityIcons name="close" size={18} color="#9a8c98" />
 						</Pressable>
 					</View>
 
 					<View style={styles.content}>
 						{/* Playing As */}
 						<View style={styles.infoItem}>
-							<MaterialCommunityIcons name="account" size={24} color="#9a8c98" />
+							<MaterialCommunityIcons name="account" size={20} color="#9a8c98" />
 							<View style={styles.infoContent}>
 								<Text style={styles.infoLabel}>{t("modals.gameData.playingAs")} :</Text>
 								<Text style={styles.infoValue}>{gameData?.characterName?.toUpperCase() || t("modals.gameData.notSet")}</Text>
@@ -40,7 +40,7 @@ export const GameDataModal: React.FC<GameDataModalProps> = ({ visible, onClose, 
 
 						{/* In the world */}
 						<View style={styles.infoItem}>
-							<MaterialCommunityIcons name="earth" size={24} color="#9a8c98" />
+							<MaterialCommunityIcons name="earth" size={20} color="#9a8c98" />
 							<View style={styles.infoContent}>
 								<Text style={styles.infoLabel}>{t("modals.gameData.inTheWorld")} :</Text>
 								<Text style={styles.infoValue}>{gameData?.worldName?.toUpperCase() || t("modals.gameData.notSet")}</Text>
@@ -87,84 +87,84 @@ const styles = StyleSheet.create({
 		alignItems: "center",
 		justifyContent: "space-between",
 		paddingHorizontal: 20,
-		paddingVertical: 20,
+		paddingVertical: 16,
 		borderBottomWidth: 1,
 		borderBottomColor: "#4a4e69",
 		borderRadius: 20,
 	},
 	modalTitle: {
-		fontSize: 18,
+		fontSize: 16,
 		fontWeight: "600",
 		color: "#f2e9e4",
 		flex: 1,
-		marginLeft: 12,
+		marginLeft: 10,
 	},
 	closeButton: {
-		width: 32,
-		height: 32,
-		borderRadius: 16,
+		width: 28,
+		height: 28,
+		borderRadius: 14,
 		alignItems: "center",
 		justifyContent: "center",
 		backgroundColor: "rgba(154, 140, 152, 0.1)",
 	},
 	content: {
 		paddingHorizontal: 20,
-		paddingVertical: 20,
-		gap: 20,
+		paddingVertical: 16,
+		gap: 16,
 	},
 	infoItem: {
 		flexDirection: "row",
 		alignItems: "center",
 		backgroundColor: "rgba(154, 140, 152, 0.1)",
-		borderRadius: 12,
-		padding: 16,
+		borderRadius: 10,
+		padding: 12,
 		borderWidth: 1,
 		borderColor: "rgba(154, 140, 152, 0.2)",
 	},
 	infoContent: {
 		flex: 1,
-		marginLeft: 16,
+		marginLeft: 12,
 		backgroundColor: "transparent",
 	},
 	infoLabel: {
-		fontSize: 14,
+		fontSize: 13,
 		fontWeight: "500",
 		color: "#c9ada7",
-		marginBottom: 4,
+		marginBottom: 2,
 	},
 	infoValue: {
-		fontSize: 18,
+		fontSize: 16,
 		fontWeight: "600",
 		color: "#f2e9e4",
 	},
 	emptyState: {
 		alignItems: "center",
-		paddingVertical: 40,
+		paddingVertical: 30,
 		paddingHorizontal: 20,
 	},
 	emptyTitle: {
-		fontSize: 18,
+		fontSize: 16,
 		fontWeight: "600",
 		color: "#c9ada7",
-		marginTop: 16,
-		marginBottom: 8,
+		marginTop: 12,
+		marginBottom: 6,
 	},
 	emptyDescription: {
-		fontSize: 14,
+		fontSize: 13,
 		color: "#c9ada7",
 		textAlign: "center",
-		lineHeight: 20,
+		lineHeight: 18,
 	},
 	footer: {
 		paddingHorizontal: 20,
-		paddingVertical: 24,
+		paddingVertical: 18,
 		borderTopWidth: 1,
 		borderRadius: 20,
 		borderTopColor: "#4a4e69",
 	},
 	closeFooterButton: {
-		paddingVertical: 12,
-		paddingHorizontal: 16,
+		paddingVertical: 10,
+		paddingHorizontal: 14,
 		borderRadius: 8,
 		alignItems: "center",
 		justifyContent: "center",
@@ -172,7 +172,7 @@ const styles = StyleSheet.create({
 	},
 	closeButtonText: {
 		color: "#f2e9e4",
-		fontSize: 16,
+		fontSize: 15,
 		fontWeight: "500",
 	},
 });

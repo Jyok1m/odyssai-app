@@ -24,10 +24,11 @@ interface MessageItemProps {
 	isTTSActive: boolean;
 	isTTSPlaying: boolean;
 	isTTSLoading: boolean;
+	isTTSEnabled: boolean;
 	onTTSReplay: (id: string, text: string) => void;
 }
 
-const MessageItem = React.memo<MessageItemProps>(({ item, isTTSActive, isTTSPlaying, isTTSLoading, onTTSReplay }) => {
+const MessageItem = React.memo<MessageItemProps>(({ item, isTTSActive, isTTSPlaying, isTTSLoading, isTTSEnabled, onTTSReplay }) => {
 	return (
 		<View style={[styles.messageContainer, item.isUser ? styles.userMessage : styles.botMessage]}>
 			<View style={styles.messageContent}>
@@ -41,22 +42,24 @@ const MessageItem = React.memo<MessageItemProps>(({ item, isTTSActive, isTTSPlay
 				) : (
 					<>
 						<Text style={[styles.timestamp, styles.botTimestamp]}>{formatTimestamp(item.timestamp)}</Text>
-						<Pressable
-							style={({ pressed }) => [
-								styles.ttsButton,
-								isTTSActive && styles.ttsButtonActive,
-								pressed && { backgroundColor: "#f39c12", borderColor: "#f39c12" },
-								{ opacity: pressed ? 1 : isTTSLoading && !isTTSActive ? 0.5 : 1 },
-							]}
-							onPress={() => onTTSReplay(item.id, item.text)}
-							disabled={isTTSLoading && !isTTSActive}
-						>
-							<MaterialCommunityIcons
-								name={isTTSActive ? (isTTSPlaying ? "volume-high" : "loading") : "volume-medium"}
-								size={16}
-								color={isTTSActive ? "#f39c12" : "#c9ada7"}
-							/>
-						</Pressable>
+						{isTTSEnabled && (
+							<Pressable
+								style={({ pressed }) => [
+									styles.ttsButton,
+									isTTSActive && styles.ttsButtonActive,
+									pressed && { backgroundColor: "#f39c12", borderColor: "#f39c12" },
+									{ opacity: pressed ? 1 : isTTSLoading && !isTTSActive ? 0.5 : 1 },
+								]}
+								onPress={() => onTTSReplay(item.id, item.text)}
+								disabled={isTTSLoading && !isTTSActive}
+							>
+								<MaterialCommunityIcons
+									name={isTTSActive ? (isTTSPlaying ? "volume-high" : "loading") : "volume-medium"}
+									size={16}
+									color={isTTSActive ? "#f39c12" : "#c9ada7"}
+								/>
+							</Pressable>
+						)}
 					</>
 				)}
 			</View>
@@ -267,7 +270,7 @@ export default function ChatScreen() {
 	// Gestion TTS pour les nouveaux messages de l'IA
 	useEffect(() => {
 		const handleNewAIMessages = () => {
-			if (visibleMessages.length > 0 && isTTSReady) {
+			if (visibleMessages.length > 0 && isTTSReady && userState.ttsEnabled) {
 				// Traiter tous les messages IA non vus
 				visibleMessages.forEach((message: Message) => {
 					// Si c'est un message de l'IA et qu'il n'est pas en cours de chargement
@@ -283,7 +286,7 @@ export default function ChatScreen() {
 		};
 
 		handleNewAIMessages();
-	}, [messages, isLoading, queueTTSMessage, isTTSReady, visibleMessagesCount]);
+	}, [messages, isLoading, queueTTSMessage, isTTSReady, visibleMessagesCount, userState.ttsEnabled]);
 
 	// Gestion de la transcription après arrêt de l'enregistrement
 	useEffect(() => {
@@ -835,10 +838,17 @@ export default function ChatScreen() {
 			const isTTSActive = currentTTSItem?.id === item.id;
 
 			return (
-				<MessageItem item={item} isTTSActive={isTTSActive} isTTSPlaying={isTTSPlaying} isTTSLoading={isTTSLoading} onTTSReplay={handleTTSReplay} />
+				<MessageItem
+					item={item}
+					isTTSActive={isTTSActive}
+					isTTSPlaying={isTTSPlaying}
+					isTTSLoading={isTTSLoading}
+					isTTSEnabled={userState.ttsEnabled}
+					onTTSReplay={handleTTSReplay}
+				/>
 			);
 		},
-		[currentTTSItem?.id, isTTSPlaying, isTTSLoading, handleTTSReplay]
+		[currentTTSItem?.id, isTTSPlaying, isTTSLoading, userState.ttsEnabled, handleTTSReplay]
 	);
 
 	/* ---------------------------------------------------------------- */

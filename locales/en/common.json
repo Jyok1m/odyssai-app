@@ -68,7 +68,11 @@
 		"reset": "Reset conversation",
 		"resetDescription": "Delete all messages and start over",
 		"gameData": "View game data",
-		"gameDataDescription": "Info about your character and your world"
+		"gameDataDescription": "Info about your character and your world",
+		"voiceToActivate": "Read messages aloud",
+		"voiceActivated": "Voice reading enabled",
+		"voiceToDeactivate": "Stop reading messages aloud",
+		"voiceDeactivated": "Voice reading disabled"
 	},
 	"modals": {
 		"logout": {
