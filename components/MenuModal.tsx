@@ -1,6 +1,7 @@
 import React from "react";
 import { Modal, StyleSheet, Alert } from "react-native";
 import { View, Text, Pressable } from "@/components/Themed";
+import { useAppSelector } from "@/store/hooks/typedHooks";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import { useI18n } from "@/hooks/useI18n";
 
@@ -13,6 +14,7 @@ interface MenuModalProps {
 }
 
 export const MenuModal: React.FC<MenuModalProps> = ({ visible, onClose, onResetConversation, onViewGameData, onLogout }) => {
+	const userState = useAppSelector((state) => state.user);
 	const { t } = useI18n();
 
 	const handleResetConversation = () => {
@@ -36,7 +38,7 @@ export const MenuModal: React.FC<MenuModalProps> = ({ visible, onClose, onResetC
 				<View style={styles.modalContainer}>
 					<View style={styles.modalHeader}>
 						<MaterialCommunityIcons name="menu" size={24} color="#9a8c98" />
-						<Text style={styles.modalTitle}>{t("menu.title")}</Text>
+						<Text style={styles.modalTitle}>{t("menu.title", { username: userState.username })}</Text>
 						<Pressable style={styles.closeButton} onPress={onClose}>
 							<MaterialCommunityIcons name="close" size={20} color="#9a8c98" />
 						</Pressable>

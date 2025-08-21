@@ -58,7 +58,7 @@
 		}
 	},
 	"menu": {
-		"title": "Menu",
+		"title": "Welcome, {{username}}",
 		"chooseAction": "Choose an action",
 		"profile": "Profile",
 		"settings": "Settings",
