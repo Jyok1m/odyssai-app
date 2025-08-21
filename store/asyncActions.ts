@@ -345,7 +345,7 @@ export const sendMessageToAI = createAsyncThunk(
 				dispatch(addData({ key: "character_description", value: userAnswer }));
 
 				nextQuestion = storeI18nService.t("messages.readyToCraftCharacterProfile");
-				nextStep = "create_character";
+				nextStep = "cta_ask_create_character";
 				break;
 			}
 

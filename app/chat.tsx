@@ -853,7 +853,7 @@ export default function ChatScreen() {
 		"cta_ask_create_world",
 		"cta_ask_new_character",
 		"cta_ask_new_character_bis",
-		"cta_ask_create_new_character",
+		"cta_ask_create_character",
 		"cta_ask_join_game",
 		"cta_get_prompt",
 	];

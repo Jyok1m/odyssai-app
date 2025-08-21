@@ -131,7 +131,7 @@ const getButtonsForStep = (step: string, t: (key: string) => string): ActionButt
 			];
 		}
 
-		case "cta_ask_create_new_character": {
+		case "cta_ask_create_character": {
 			return [
 				{
 					id: uuidv4(),
