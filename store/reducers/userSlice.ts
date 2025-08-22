@@ -13,7 +13,7 @@ const initialState: UserState = {
 	username: null,
 	isAuthenticated: false,
 	language: null,
-	ttsEnabled: true,
+	ttsEnabled: false,
 };
 
 const userSlice = createSlice({
@@ -25,14 +25,14 @@ const userSlice = createSlice({
 			state.username = action.payload.username;
 			state.isAuthenticated = true;
 			state.language = action.payload.language;
-			state.ttsEnabled = true;
+			state.ttsEnabled = action.payload.ttsEnabled;
 		},
 		clearUser: (state) => {
 			state.user_uuid = null;
 			state.username = null;
 			state.isAuthenticated = false;
 			state.language = null;
-			state.ttsEnabled = true;
+			state.ttsEnabled = false;
 		},
 		toggleTTS: (state) => {
 			state.ttsEnabled = !state.ttsEnabled;
