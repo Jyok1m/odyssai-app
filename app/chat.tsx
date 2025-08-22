@@ -239,10 +239,13 @@ export default function ChatScreen() {
 			setIsKeyboardVisible(true);
 			setKeyboardHeight(event.endCoordinates.height);
 
-			// Scroll vers le bas quand le clavier s'ouvre
-			setTimeout(() => {
-				scrollToBottom(true);
-			}, 100);
+			// Scroll vers le bas quand le clavier s'ouvre avec un délai plus court sur iOS
+			setTimeout(
+				() => {
+					scrollToBottom(true);
+				},
+				Platform.OS === "ios" ? 50 : 100
+			);
 		};
 
 		const keyboardWillHide = () => {
@@ -252,9 +255,12 @@ export default function ChatScreen() {
 
 		const keyboardDidShow = (event: any) => {
 			// Double vérification pour s'assurer qu'on voit le dernier message
-			setTimeout(() => {
-				scrollToBottom(true);
-			}, 200);
+			setTimeout(
+				() => {
+					scrollToBottom(true);
+				},
+				Platform.OS === "ios" ? 100 : 200
+			);
 		};
 
 		// Platform-specific listeners
@@ -742,9 +748,20 @@ export default function ChatScreen() {
 	// Handle input focus with auto scroll
 	const handleInputFocus = useCallback(() => {
 		// Scroll vers le bas quand l'utilisateur focus sur l'input
-		setTimeout(() => {
-			scrollToBottom(true);
-		}, 100);
+		// Délai plus court sur iOS pour une meilleure réactivité
+		setTimeout(
+			() => {
+				scrollToBottom(true);
+			},
+			Platform.OS === "ios" ? 50 : 100
+		);
+
+		// Deuxième scroll pour s'assurer que l'input reste visible sur iOS
+		if (Platform.OS === "ios") {
+			setTimeout(() => {
+				scrollToBottom(true);
+			}, 300);
+		}
 	}, [scrollToBottom]);
 
 	// Send text message
@@ -971,9 +988,21 @@ export default function ChatScreen() {
 			</View>
 
 			{/* Main Content with Keyboard Avoiding */}
-			<KeyboardAvoidingView behavior="padding" style={styles.keyboardAvoidingContainer} keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 20}>
+			<KeyboardAvoidingView
+				behavior={Platform.OS === "ios" ? "padding" : "height"}
+				style={styles.keyboardAvoidingContainer}
+				keyboardVerticalOffset={Platform.OS === "ios" ? 60 : 20}
+			>
 				{/* Messages Panel */}
-				<View style={[styles.messagesPanel, { paddingBottom: isKeyboardVisible ? 10 : 0 }]}>
+				<View
+					style={[
+						styles.messagesPanel,
+						{
+							paddingBottom: isKeyboardVisible ? 0 : 0,
+							marginBottom: Platform.OS === "ios" && isKeyboardVisible ? keyboardHeight * 0.05 : 0,
+						},
+					]}
+				>
 					{/* Load More Indicator - DÉSACTIVÉ */}
 
 					<FlatList
@@ -982,7 +1011,7 @@ export default function ChatScreen() {
 						renderItem={renderMessage}
 						keyExtractor={keyExtractor}
 						style={styles.messagesList}
-						contentContainerStyle={styles.messagesContent}
+						contentContainerStyle={[styles.messagesContent, { paddingBottom: Platform.OS === "ios" && isKeyboardVisible ? 20 : 16 }]}
 						showsVerticalScrollIndicator={false}
 						onScroll={handleScroll}
 						scrollEventThrottle={16}
@@ -1011,15 +1040,39 @@ export default function ChatScreen() {
 						disabled={isLoading}
 					/>
 				) : (
-					<View style={styles.inputSection}>
+					<View
+						style={[
+							styles.inputSection,
+							Platform.OS === "ios" &&
+								isKeyboardVisible && {
+									paddingBottom: 10,
+									marginBottom: 0,
+								},
+						]}
+					>
 						{(recorderState.isRecording || isRecordingManually) && (
 							<View style={styles.recordingIndicator}>
 								<Text style={styles.recordingText}>{t("common.recording")}</Text>
 							</View>
 						)}
-						<View style={styles.inputContainer}>
+						<View
+							style={[
+								styles.inputContainer,
+								Platform.OS === "ios" &&
+									isKeyboardVisible && {
+										paddingBottom: 8,
+									},
+							]}
+						>
 							<TextInput
-								style={styles.textInput}
+								style={[
+									styles.textInput,
+									Platform.OS === "ios" &&
+										isKeyboardVisible && {
+											backgroundColor: "#5a5e79",
+											borderColor: "#b4a7c2",
+										},
+								]}
 								placeholder={t("chat.placeholder")}
 								placeholderTextColor="#9a8c98"
 								value={isTranscribing ? typingDots : message}
@@ -1028,6 +1081,8 @@ export default function ChatScreen() {
 								multiline
 								maxLength={500}
 								editable={!isTranscribing && !isLoading}
+								returnKeyType="send"
+								blurOnSubmit={false}
 							/>
 							<View style={styles.buttonsContainer}>
 								<Pressable
@@ -1094,6 +1149,7 @@ const styles = StyleSheet.create({
 	container: {
 		flex: 1,
 		paddingTop: Platform.OS === "ios" ? 0 : 20,
+		backgroundColor: "#22223b", // Ajout d'une couleur de fond
 	},
 	keyboardAvoidingContainer: {
 		flex: 1,
@@ -1257,13 +1313,16 @@ const styles = StyleSheet.create({
 	inputSection: {
 		borderTopWidth: 1,
 		borderTopColor: "#4a4e69",
+		backgroundColor: "#22223b", // Même couleur que le conteneur
+		marginBottom: Platform.OS === "ios" ? 0 : 45,
 	},
 	inputContainer: {
 		flexDirection: "row",
 		alignItems: "flex-end",
 		paddingHorizontal: 16,
-		paddingVertical: 12,
+		paddingVertical: Platform.OS === "ios" ? 16 : 12, // Plus de padding sur iOS
 		gap: 12,
+		marginBottom: Platform.OS === "ios" ? 0 : 45,
 	},
 	textInput: {
 		flex: 1,
