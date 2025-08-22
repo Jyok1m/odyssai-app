@@ -114,7 +114,9 @@ class TTSService {
 
 	// ------------------------- SSML helpers -------------------------
 	private escapeSSML(s: string) {
-		return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&apos;");
+		// Note: on n'échappe pas les apostrophes (') car cela peut causer des pauses non désirées en français
+		// Les apostrophes sont généralement bien gérées directement par les moteurs TTS
+		return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 	}
 
 	private stripSSML(ssml: string): string {
