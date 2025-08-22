@@ -405,15 +405,7 @@ export const sendMessageToAI = createAsyncThunk(
 						dispatch(addData({ key: "world_id", value: world_id }));
 						dispatch(addData({ key: "character_id", value: character_id }));
 
-						response.push({
-							id: uuidv4(),
-							currentStep: "filler",
-							text: storeI18nService.t("messages.storySoFar", { worldSummary: world_summary }),
-							isUser: false,
-							timestamp: getCurrentTimestamp(),
-						});
-
-						nextQuestion = storeI18nService.t("messages.shallWeBegin");
+						nextQuestion = storeI18nService.t("messages.storySoFar", { worldSummary: world_summary });
 						nextStep = "cta_get_prompt";
 						break;
 					}
