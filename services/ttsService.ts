@@ -113,12 +113,6 @@ class TTSService {
 	}
 
 	// ------------------------- SSML helpers -------------------------
-	private escapeSSML(s: string) {
-		// Note: on n'échappe pas les apostrophes (') car cela peut causer des pauses non désirées en français
-		// Les apostrophes sont généralement bien gérées directement par les moteurs TTS
-		return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
-	}
-
 	private stripSSML(ssml: string): string {
 		// Remplacement simple des <break> par ponctuation, puis suppression des balises
 		let t = ssml.replace(/<break[^>]*time="(\d+)ms"[^>]*\/>/gi, (_m, ms) => (Number(ms) >= 250 ? " … " : ", "));
@@ -132,10 +126,10 @@ class TTSService {
 	}
 
 	private buildOdyssaiSSML(text: string, opt: TTSOptions, voiceName?: string) {
-		const t = this.escapeSSML(text.trim());
+		const t = text.trim();
 		const paras = t
 			.split(/\n{2,}/)
-			.map((p) => p.trim())
+			.map((p: string) => p.trim())
 			.filter(Boolean);
 
 		const commaMs = opt.commaPauseMs ?? 140;
@@ -178,8 +172,8 @@ class TTSService {
 		const punctuBreaks = (s: string) => s.replace(/,\s+/g, `,<break time="${commaMs}ms"/> `).replace(/([.!?])\s+/g, `$1<break time="${sentMs}ms"/> `);
 
 		const body = paras
-			.map((p, idx) => {
-				let seg = punctuBreaks(applyPhonemes(this.escapeSSML(p)));
+			.map((p: string, idx: number) => {
+				let seg = punctuBreaks(applyPhonemes(p));
 				const lead = idx === 0 ? `<break time="${Math.max(0, sentMs - 80)}ms"/>` : `<break time="${Math.max(120, sentMs)}ms"/>`;
 				return `<p>${lead}<s>${seg}</s></p>`;
 			})
