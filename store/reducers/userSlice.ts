@@ -25,6 +25,7 @@ const userSlice = createSlice({
 			state.username = action.payload.username;
 			state.isAuthenticated = true;
 			state.language = action.payload.language;
+			state.ttsEnabled = true;
 		},
 		clearUser: (state) => {
 			state.user_uuid = null;

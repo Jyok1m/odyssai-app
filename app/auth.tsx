@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { StyleSheet, TextInput, KeyboardAvoidingView, Platform } from "react-native";
+import { StyleSheet, TextInput, KeyboardAvoidingView, Platform, ScrollView } from "react-native";
 import { Text, View, Pressable } from "@/components/Themed";
 import { useRouter } from "expo-router";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
@@ -150,75 +150,77 @@ export default function AuthScreen() {
 	};
 
 	return (
-		<KeyboardAvoidingView style={styles.container} behavior={Platform.OS === "ios" ? "padding" : "height"}>
-			<View style={styles.headerSection}>
-				<MaterialCommunityIcons name="book-open-variant" size={60} color="#9a8c98" style={styles.icon} />
-				<Text style={styles.appTitle}>{t("app.name")}</Text>
-				<Text style={styles.subtitle}>{isSignUp ? t("auth.signUpSubtitle") : t("auth.signInSubtitle")}</Text>
-			</View>
+		<KeyboardAvoidingView style={styles.container} behavior="padding" keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 20}>
+			<ScrollView contentContainerStyle={styles.scrollContainer} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
+				<View style={styles.headerSection}>
+					<MaterialCommunityIcons name="book-open-variant" size={60} color="#9a8c98" style={styles.icon} />
+					<Text style={styles.appTitle}>{t("app.name")}</Text>
+					<Text style={styles.subtitle}>{isSignUp ? t("auth.signUpSubtitle") : t("auth.signInSubtitle")}</Text>
+				</View>
 
-			<View style={styles.formSection}>
-				{isSignUp && (
-					<View style={styles.languageSelectionContainer}>
-						<Text style={styles.languageLabel}>{t("auth.accountLanguage")}</Text>
-						<Text style={styles.languageDescription}>{t("auth.languageWarning")}</Text>
-						<Pressable style={styles.languageSelector} onPress={handleLanguageSelect}>
-							<MaterialCommunityIcons name="translate" size={20} color="#9a8c98" />
-							<Text style={styles.languageSelectorText}>
-								{selectedLang.flag} {selectedLang.name}
-							</Text>
-							<MaterialCommunityIcons name="chevron-down" size={16} color="#9a8c98" />
-						</Pressable>
-						<Text style={styles.languageWarning}>{t("auth.languageNotModifiable")}</Text>
+				<View style={styles.formSection}>
+					{isSignUp && (
+						<View style={styles.languageSelectionContainer}>
+							<Text style={styles.languageLabel}>{t("auth.accountLanguage")}</Text>
+							<Text style={styles.languageDescription}>{t("auth.languageWarning")}</Text>
+							<Pressable style={styles.languageSelector} onPress={handleLanguageSelect}>
+								<MaterialCommunityIcons name="translate" size={20} color="#9a8c98" />
+								<Text style={styles.languageSelectorText}>
+									{selectedLang.flag} {selectedLang.name}
+								</Text>
+								<MaterialCommunityIcons name="chevron-down" size={16} color="#9a8c98" />
+							</Pressable>
+							<Text style={styles.languageWarning}>{t("auth.languageNotModifiable")}</Text>
+						</View>
+					)}
+
+					<View style={styles.inputContainer}>
+						<MaterialCommunityIcons name="account" size={20} color="#9a8c98" style={styles.inputIcon} />
+						<TextInput
+							style={styles.input}
+							placeholder={t("auth.username")}
+							placeholderTextColor="#9a8c98"
+							value={username}
+							onChangeText={setUsername}
+							autoCapitalize="none"
+							autoCorrect={false}
+						/>
 					</View>
-				)}
 
-				<View style={styles.inputContainer}>
-					<MaterialCommunityIcons name="account" size={20} color="#9a8c98" style={styles.inputIcon} />
-					<TextInput
-						style={styles.input}
-						placeholder={t("auth.username")}
-						placeholderTextColor="#9a8c98"
-						value={username}
-						onChangeText={setUsername}
-						autoCapitalize="none"
-						autoCorrect={false}
-					/>
+					<View style={styles.inputContainer}>
+						<MaterialCommunityIcons name="lock" size={20} color="#9a8c98" style={styles.inputIcon} />
+						<TextInput
+							style={styles.input}
+							placeholder={t("auth.password")}
+							placeholderTextColor="#9a8c98"
+							value={password}
+							onChangeText={setPassword}
+							secureTextEntry
+							autoCapitalize="none"
+							autoCorrect={false}
+						/>
+					</View>
+
+					<Pressable style={[styles.authButton, isLoading && styles.disabledButton]} onPress={handleAuth} disabled={isLoading}>
+						<Text style={styles.authButtonText}>{isLoading ? t("auth.loading") : isSignUp ? t("auth.signUp") : t("auth.signIn")}</Text>
+					</Pressable>
 				</View>
 
-				<View style={styles.inputContainer}>
-					<MaterialCommunityIcons name="lock" size={20} color="#9a8c98" style={styles.inputIcon} />
-					<TextInput
-						style={styles.input}
-						placeholder={t("auth.password")}
-						placeholderTextColor="#9a8c98"
-						value={password}
-						onChangeText={setPassword}
-						secureTextEntry
-						autoCapitalize="none"
-						autoCorrect={false}
-					/>
+				<View style={styles.switchSection}>
+					<Text style={styles.switchText}>{isSignUp ? t("auth.alreadyHaveAccount") : t("auth.dontHaveAccount")}</Text>
+					<Pressable onPress={toggleAuthMode} style={styles.switchLinkContainer}>
+						<Text style={styles.switchLink}>{isSignUp ? t("auth.signIn") : t("auth.signUp")}</Text>
+					</Pressable>
 				</View>
 
-				<Pressable style={[styles.authButton, isLoading && styles.disabledButton]} onPress={handleAuth} disabled={isLoading}>
-					<Text style={styles.authButtonText}>{isLoading ? t("auth.loading") : isSignUp ? t("auth.signUp") : t("auth.signIn")}</Text>
-				</Pressable>
-			</View>
-
-			<View style={styles.switchSection}>
-				<Text style={styles.switchText}>{isSignUp ? t("auth.alreadyHaveAccount") : t("auth.dontHaveAccount")}</Text>
-				<Pressable onPress={toggleAuthMode} style={styles.switchLinkContainer}>
-					<Text style={styles.switchLink}>{isSignUp ? t("auth.signIn") : t("auth.signUp")}</Text>
-				</Pressable>
-			</View>
-
-			<LanguageSelectionModal
-				visible={showLanguageModal}
-				onClose={() => setShowLanguageModal(false)}
-				onSelect={handleLanguageModalSelect}
-				selectedLanguage={selectedLanguage}
-				languages={languages}
-			/>
+				<LanguageSelectionModal
+					visible={showLanguageModal}
+					onClose={() => setShowLanguageModal(false)}
+					onSelect={handleLanguageModalSelect}
+					selectedLanguage={selectedLanguage}
+					languages={languages}
+				/>
+			</ScrollView>
 		</KeyboardAvoidingView>
 	);
 }
@@ -226,10 +228,13 @@ export default function AuthScreen() {
 const styles = StyleSheet.create({
 	container: {
 		flex: 1,
+		backgroundColor: "#22223b",
+	},
+	scrollContainer: {
+		flexGrow: 1,
 		paddingHorizontal: 24,
 		paddingVertical: 60,
 		justifyContent: "center",
-		backgroundColor: "#22223b",
 	},
 	languageContainer: {
 		position: "absolute",

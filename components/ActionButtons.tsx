@@ -1,7 +1,7 @@
 import "react-native-get-random-values";
 import React from "react";
 import { v4 as uuidv4 } from "uuid";
-import { StyleSheet, Pressable } from "react-native";
+import { StyleSheet, Pressable, Platform } from "react-native";
 import { View, Text } from "@/components/Themed";
 import { useI18n } from "../hooks/useI18n";
 
@@ -207,6 +207,7 @@ const styles = StyleSheet.create({
 		paddingHorizontal: 16,
 		paddingVertical: 12,
 		backgroundColor: "transparent",
+		marginBottom: Platform.OS === "ios" ? 0 : 45,
 	},
 	buttonsGrid: {
 		flexDirection: "column",

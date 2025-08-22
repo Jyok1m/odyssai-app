@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect, useCallback, useMemo } from "react";
-import { StyleSheet, FlatList, KeyboardAvoidingView, Platform, Alert, Keyboard } from "react-native";
+import { StyleSheet, FlatList, KeyboardAvoidingView, Platform, Alert, Keyboard, StatusBar } from "react-native";
 import { useAudioRecorder, AudioModule, RecordingPresets, setAudioModeAsync, useAudioRecorderState } from "expo-audio";
-import { SafeAreaView, View, Text, TextInput, Pressable } from "@/components/Themed";
+import { View, Text, TextInput, Pressable } from "@/components/Themed";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import { useRouter } from "expo-router";
 import { useAppSelector, useAppDispatch, useChatActions, Message, formatTimestamp, resetStore } from "../store";
@@ -144,11 +144,14 @@ export default function ChatScreen() {
 	const { sendMessage, resetChat } = useChatActions();
 	const { t, currentLanguage } = useI18n();
 
-	// TTS Hook - Initialize only after component mount
+	// TTS Hook - Initialize only after component mount and audio setup
 	const [isTTSReady, setIsTTSReady] = useState(false);
+	const [audioConfigured, setAudioConfigured] = useState(false);
+
+	// Always initialize the TTS hook
 	const ttsHook = useTTS();
 
-	// Destructure TTS hook only when ready
+	// Destructure TTS hook - now always available
 	const {
 		isLoading: isTTSLoading,
 		isPlaying: isTTSPlaying,
@@ -157,17 +160,7 @@ export default function ChatScreen() {
 		queueMessage: queueTTSMessage,
 		playMessage: playTTSMessage,
 		clearQueue: clearTTSQueue,
-	} = isTTSReady
-		? ttsHook
-		: {
-				isLoading: false,
-				isPlaying: false,
-				currentItem: null,
-				queue: [],
-				queueMessage: async () => {},
-				playMessage: async () => {},
-				clearQueue: () => {},
-		  };
+	} = ttsHook;
 
 	const flatListRef = useRef<FlatList>(null);
 	const seenMessageIds = useRef<Set<string>>(new Set());
@@ -226,7 +219,12 @@ export default function ChatScreen() {
 					allowsRecording: true,
 				});
 
-				setIsTTSReady(true);
+				setAudioConfigured(true);
+
+				// Wait a bit more to ensure audio system is fully ready
+				setTimeout(() => {
+					setIsTTSReady(true);
+				}, 500);
 			} catch (error) {
 				toast.error(t("chat.errors.audioSetup") + (error instanceof Error ? error.message : String(error)));
 			}
@@ -339,7 +337,8 @@ export default function ChatScreen() {
 	// Gestion TTS pour les nouveaux messages de l'IA
 	useEffect(() => {
 		const handleNewAIMessages = () => {
-			if (visibleMessages.length > 0 && isTTSReady && userState.ttsEnabled) {
+			// Wait for TTS to be ready, audio configured, and user TTS enabled
+			if (visibleMessages.length > 0 && isTTSReady && audioConfigured && userState.ttsEnabled) {
 				// Traiter tous les messages IA non vus
 				visibleMessages.forEach((message: Message) => {
 					// Si c'est un message de l'IA et qu'il n'est pas en cours de chargement
@@ -347,7 +346,10 @@ export default function ChatScreen() {
 						// Vérifier si ce message est vraiment nouveau (pas rechargé depuis le store)
 						if (!seenMessageIds.current.has(message.id)) {
 							seenMessageIds.current.add(message.id);
-							queueTTSMessage(message.id, message.text);
+							// Add a small delay to ensure TTS system is fully ready
+							setTimeout(() => {
+								queueTTSMessage(message.id, message.text);
+							}, 100);
 						}
 					}
 				});
@@ -355,7 +357,7 @@ export default function ChatScreen() {
 		};
 
 		handleNewAIMessages();
-	}, [messages, isLoading, queueTTSMessage, isTTSReady, userState.ttsEnabled]);
+	}, [messages, isLoading, queueTTSMessage, isTTSReady, audioConfigured, userState.ttsEnabled]);
 
 	// Gestion de la transcription après arrêt de l'enregistrement
 	useEffect(() => {
@@ -954,7 +956,7 @@ export default function ChatScreen() {
 	/* ---------------------------------------------------------------- */
 
 	return (
-		<SafeAreaView style={styles.container}>
+		<View style={styles.container}>
 			{/* Header */}
 			<View style={styles.header}>
 				<View style={styles.headerLeft}>
@@ -969,11 +971,7 @@ export default function ChatScreen() {
 			</View>
 
 			{/* Main Content with Keyboard Avoiding */}
-			<KeyboardAvoidingView
-				behavior={Platform.OS === "ios" ? "padding" : "height"}
-				style={styles.keyboardAvoidingContainer}
-				keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 20}
-			>
+			<KeyboardAvoidingView behavior="padding" style={styles.keyboardAvoidingContainer} keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 20}>
 				{/* Messages Panel */}
 				<View style={[styles.messagesPanel, { paddingBottom: isKeyboardVisible ? 10 : 0 }]}>
 					{/* Load More Indicator - DÉSACTIVÉ */}
@@ -1088,13 +1086,14 @@ export default function ChatScreen() {
 
 			{/* Game Data Modal */}
 			<GameDataModal visible={showGameDataModal} onClose={() => setShowGameDataModal(false)} gameData={getGameData()} />
-		</SafeAreaView>
+		</View>
 	);
 }
 
 const styles = StyleSheet.create({
 	container: {
 		flex: 1,
+		paddingTop: Platform.OS === "ios" ? 0 : 20,
 	},
 	keyboardAvoidingContainer: {
 		flex: 1,

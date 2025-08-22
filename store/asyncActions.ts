@@ -18,13 +18,13 @@ export const fetchAIResponse = async (method: string, endpoint: string, body?: a
 
 	try {
 		const response = await fetch(`${API_BASE_URL}/api${endpoint}`, options);
+		const data = await response.json();
 
 		if (![200, 201].includes(response.status)) {
-			console.error("API call failed:", response);
+			console.error("API call failed:", data);
 			return "An error occurred. Let's continue anyway.";
 		}
 
-		const data = await response.json();
 		return data;
 	} catch (error) {
 		console.error("API call failed:", error);

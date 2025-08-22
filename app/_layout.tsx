@@ -4,6 +4,7 @@ import { useFonts } from "expo-font";
 import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { useEffect } from "react";
+import { SafeAreaView, StatusBar, Platform } from "react-native";
 import { ReduxProvider } from "../store";
 import { useLanguageSync } from "../hooks/useLanguageSync";
 import "react-native-reanimated";
@@ -63,20 +64,23 @@ function AppContent() {
 	useLanguageSync();
 
 	return (
-		<GestureHandlerRootView>
-			<ThemeProvider value={DarkTheme}>
-				<Stack>
-					<Stack.Screen name="index" options={{ headerShown: false }} />
-					<Stack.Screen name="auth" options={{ headerShown: false }} />
-					<Stack.Screen name="chat" options={{ headerShown: false }} />
-				</Stack>
-				<Toasts
-					defaultStyle={{
-						view: { padding: 12, borderRadius: 8, backgroundColor: "#4a4e69" },
-						text: { color: "#f2e9e4", fontSize: 14, fontWeight: "400" },
-					}}
-				/>
-			</ThemeProvider>
-		</GestureHandlerRootView>
+		<SafeAreaView style={{ flex: 1, backgroundColor: "#22223b" }}>
+			<StatusBar barStyle="light-content" backgroundColor="#22223b" translucent={false} />
+			<GestureHandlerRootView style={{ flex: 1 }}>
+				<ThemeProvider value={DarkTheme}>
+					<Stack>
+						<Stack.Screen name="index" options={{ headerShown: false }} />
+						<Stack.Screen name="auth" options={{ headerShown: false }} />
+						<Stack.Screen name="chat" options={{ headerShown: false }} />
+					</Stack>
+					<Toasts
+						defaultStyle={{
+							view: { padding: 12, borderRadius: 8, backgroundColor: "#4a4e69" },
+							text: { color: "#f2e9e4", fontSize: 14, fontWeight: "400" },
+						}}
+					/>
+				</ThemeProvider>
+			</GestureHandlerRootView>
+		</SafeAreaView>
 	);
 }

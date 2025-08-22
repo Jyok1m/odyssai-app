@@ -28,6 +28,7 @@ export const useTTS = (): UseTTSReturn => {
 	const [currentItem, setCurrentItem] = useState<TTSQueueItem | null>(null);
 	const [queue, setQueue] = useState<TTSQueueItem[]>([]);
 	const [audioCache, setAudioCache] = useState<Map<string, string>>(new Map());
+	const [isAudioReady, setIsAudioReady] = useState(false);
 
 	const audioPlayer = useAudioPlayer();
 	const toast = useToast();
@@ -40,8 +41,15 @@ export const useTTS = (): UseTTSReturn => {
 				await AudioModule.setAudioModeAsync({
 					playsInSilentMode: true,
 				});
+
+				// Wait for audio player to be fully initialized
+				setTimeout(() => {
+					setIsAudioReady(true);
+				}, 200);
 			} catch (error) {
 				console.warn("Failed to configure audio session:", error);
+				// Still set as ready even if configuration failed
+				setIsAudioReady(true);
 			}
 		};
 
@@ -51,7 +59,7 @@ export const useTTS = (): UseTTSReturn => {
 	// Default TTS options - laisse le service TTS détecter automatiquement la langue
 	const defaultOptions: Partial<TTSOptions> = {
 		audioEncoding: "MP3",
-		speakingRate: 0.95,
+		speakingRate: 1,
 		pitch: 0.0,
 		useSSML: true,
 		googleStyle: "lively",
@@ -61,7 +69,8 @@ export const useTTS = (): UseTTSReturn => {
 
 	// Process the queue
 	const processQueue = useCallback(async () => {
-		if (isProcessingQueue.current || queue.length === 0 || currentItem !== null) {
+		// Wait for audio to be ready before processing
+		if (isProcessingQueue.current || queue.length === 0 || currentItem !== null || !isAudioReady) {
 			return;
 		}
 
@@ -117,7 +126,7 @@ export const useTTS = (): UseTTSReturn => {
 			setCurrentItem(null);
 			isProcessingQueue.current = false;
 		}
-	}, [queue, currentItem, audioCache, audioPlayer]);
+	}, [queue, currentItem, audioCache, audioPlayer, isAudioReady]);
 
 	// Handle audio player status changes
 	useEffect(() => {
@@ -150,6 +159,12 @@ export const useTTS = (): UseTTSReturn => {
 	// Queue a new message for TTS
 	const queueMessage = useCallback(
 		async (id: string, text: string, options?: Partial<TTSOptions>) => {
+			// Only queue if audio is ready
+			if (!isAudioReady) {
+				console.log("TTS: Audio not ready, skipping queue");
+				return;
+			}
+
 			const newItem: TTSQueueItem = {
 				id,
 				text: text.trim(),
@@ -161,12 +176,18 @@ export const useTTS = (): UseTTSReturn => {
 				return newQueue;
 			});
 		},
-		[queue.length]
+		[isAudioReady]
 	);
 
 	// Play a specific message (replay functionality)
 	const playMessage = useCallback(
 		async (id: string, text?: string) => {
+			// Only play if audio is ready
+			if (!isAudioReady) {
+				console.log("TTS: Audio not ready, skipping play");
+				return;
+			}
+
 			try {
 				// Check if message is already in cache
 				const cachedAudioUri = audioCache.get(id);
@@ -205,7 +226,7 @@ export const useTTS = (): UseTTSReturn => {
 				toast.error("Failed to replay audio");
 			}
 		},
-		[audioCache, audioPlayer, queueMessage, isPlaying]
+		[audioCache, audioPlayer, queueMessage, isPlaying, isAudioReady]
 	);
 
 	// Stop current playback
