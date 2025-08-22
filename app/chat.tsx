@@ -18,7 +18,52 @@ import { getCurrentTimestamp } from "../store/utils/utils";
 import { useToast } from "@/hooks/useToast";
 import { ActionButtons } from "@/components/ActionButtons";
 
-// Composant MessageItem optimisé avec React.memo
+// Composant TTSButton séparé pour une meilleure optimisation
+interface TTSButtonProps {
+	isTTSActive: boolean;
+	isTTSPlaying: boolean;
+	isTTSLoading: boolean;
+	onTTSReplay: () => void;
+}
+
+const TTSButton = React.memo<TTSButtonProps>(
+	({ isTTSActive, isTTSPlaying, isTTSLoading, onTTSReplay }) => {
+		// Mémoiser les propriétés de l'icône TTS
+		const ttsIconProps = useMemo(
+			() => ({
+				name: isTTSActive ? (isTTSPlaying ? "volume-high" : "loading") : ("volume-medium" as any),
+				size: 16,
+				color: isTTSActive ? "#f39c12" : "#c9ada7",
+			}),
+			[isTTSActive, isTTSPlaying]
+		);
+
+		return (
+			<Pressable
+				style={({ pressed }) => [
+					styles.ttsButton,
+					isTTSActive && styles.ttsButtonActive,
+					pressed && { backgroundColor: "#f39c12", borderColor: "#f39c12" },
+					{ opacity: pressed ? 1 : isTTSLoading && !isTTSActive ? 0.5 : 1 },
+				]}
+				onPress={onTTSReplay}
+				disabled={isTTSLoading && !isTTSActive}
+			>
+				<MaterialCommunityIcons {...ttsIconProps} />
+			</Pressable>
+		);
+	},
+	// Fonction de comparaison pour TTSButton
+	(prevProps, nextProps) => {
+		return (
+			prevProps.isTTSActive === nextProps.isTTSActive &&
+			prevProps.isTTSPlaying === nextProps.isTTSPlaying &&
+			prevProps.isTTSLoading === nextProps.isTTSLoading
+		);
+	}
+);
+
+// Composant MessageItem optimisé avec React.memo et fonction de comparaison personnalisée
 interface MessageItemProps {
 	item: Message;
 	isTTSActive: boolean;
@@ -28,44 +73,60 @@ interface MessageItemProps {
 	onTTSReplay: (id: string, text: string) => void;
 }
 
-const MessageItem = React.memo<MessageItemProps>(({ item, isTTSActive, isTTSPlaying, isTTSLoading, isTTSEnabled, onTTSReplay }) => {
-	return (
-		<View style={[styles.messageContainer, item.isUser ? styles.userMessage : styles.botMessage]}>
-			<View style={styles.messageContent}>
-				<Text style={[styles.messageText, item.isUser ? styles.userMessageText : styles.botMessageText]} numberOfLines={0}>
-					{item.text}
-				</Text>
+const MessageItem = React.memo<MessageItemProps>(
+	({ item, isTTSActive, isTTSPlaying, isTTSLoading, isTTSEnabled, onTTSReplay }) => {
+		// Mémoiser les styles pour éviter la re-création à chaque render
+		const messageContainerStyle = useMemo(() => [styles.messageContainer, item.isUser ? styles.userMessage : styles.botMessage], [item.isUser]);
+
+		const messageTextStyle = useMemo(() => [styles.messageText, item.isUser ? styles.userMessageText : styles.botMessageText], [item.isUser]);
+
+		const timestampStyle = useMemo(() => [styles.timestamp, item.isUser ? styles.userTimestamp : styles.botTimestamp], [item.isUser]);
+
+		// Mémoiser le timestamp formaté
+		const formattedTimestamp = useMemo(() => formatTimestamp(item.timestamp), [item.timestamp]);
+
+		// Mémoiser la fonction de rappel TTS
+		const handleTTSReplay = useCallback(() => {
+			onTTSReplay(item.id, item.text);
+		}, [item.id, item.text, onTTSReplay]);
+
+		return (
+			<View style={messageContainerStyle}>
+				<View style={styles.messageContent}>
+					<Text style={messageTextStyle} numberOfLines={0}>
+						{item.text}
+					</Text>
+				</View>
+				<View style={styles.messageFooter}>
+					{item.isUser ? (
+						<Text style={timestampStyle}>{formattedTimestamp}</Text>
+					) : (
+						<>
+							<Text style={timestampStyle}>{formattedTimestamp}</Text>
+							{isTTSEnabled && (
+								<TTSButton isTTSActive={isTTSActive} isTTSPlaying={isTTSPlaying} isTTSLoading={isTTSLoading} onTTSReplay={handleTTSReplay} />
+							)}
+						</>
+					)}
+				</View>
 			</View>
-			<View style={styles.messageFooter}>
-				{item.isUser ? (
-					<Text style={[styles.timestamp, styles.userTimestamp]}>{formatTimestamp(item.timestamp)}</Text>
-				) : (
-					<>
-						<Text style={[styles.timestamp, styles.botTimestamp]}>{formatTimestamp(item.timestamp)}</Text>
-						{isTTSEnabled && (
-							<Pressable
-								style={({ pressed }) => [
-									styles.ttsButton,
-									isTTSActive && styles.ttsButtonActive,
-									pressed && { backgroundColor: "#f39c12", borderColor: "#f39c12" },
-									{ opacity: pressed ? 1 : isTTSLoading && !isTTSActive ? 0.5 : 1 },
-								]}
-								onPress={() => onTTSReplay(item.id, item.text)}
-								disabled={isTTSLoading && !isTTSActive}
-							>
-								<MaterialCommunityIcons
-									name={isTTSActive ? (isTTSPlaying ? "volume-high" : "loading") : "volume-medium"}
-									size={16}
-									color={isTTSActive ? "#f39c12" : "#c9ada7"}
-								/>
-							</Pressable>
-						)}
-					</>
-				)}
-			</View>
-		</View>
-	);
-});
+		);
+	},
+	// Fonction de comparaison personnalisée pour optimiser les re-rendus
+	(prevProps, nextProps) => {
+		// Comparer les propriétés essentielles
+		if (prevProps.item.id !== nextProps.item.id) return false;
+		if (prevProps.item.text !== nextProps.item.text) return false;
+		if (prevProps.item.isUser !== nextProps.item.isUser) return false;
+		if (prevProps.item.timestamp !== nextProps.item.timestamp) return false;
+		if (prevProps.isTTSActive !== nextProps.isTTSActive) return false;
+		if (prevProps.isTTSPlaying !== nextProps.isTTSPlaying) return false;
+		if (prevProps.isTTSLoading !== nextProps.isTTSLoading) return false;
+		if (prevProps.isTTSEnabled !== nextProps.isTTSEnabled) return false;
+
+		return true; // Les props sont identiques, pas besoin de re-render
+	}
+);
 
 export default function ChatScreen() {
 	const audioRecorder = useAudioRecorder(RecordingPresets.HIGH_QUALITY);
@@ -110,6 +171,13 @@ export default function ChatScreen() {
 
 	const flatListRef = useRef<FlatList>(null);
 	const seenMessageIds = useRef<Set<string>>(new Set());
+
+	// Fonction pour forcer le scroll vers le bas
+	const scrollToBottom = useCallback((animated = true) => {
+		if (flatListRef.current) {
+			flatListRef.current.scrollToEnd({ animated });
+		}
+	}, []);
 
 	/* ---------------------------------------------------------------- */
 	/*                            State hooks                           */
@@ -175,9 +243,7 @@ export default function ChatScreen() {
 
 			// Scroll vers le bas quand le clavier s'ouvre
 			setTimeout(() => {
-				if (flatListRef.current) {
-					flatListRef.current.scrollToEnd({ animated: true });
-				}
+				scrollToBottom(true);
 			}, 100);
 		};
 
@@ -189,9 +255,7 @@ export default function ChatScreen() {
 		const keyboardDidShow = (event: any) => {
 			// Double vérification pour s'assurer qu'on voit le dernier message
 			setTimeout(() => {
-				if (flatListRef.current) {
-					flatListRef.current.scrollToEnd({ animated: true });
-				}
+				scrollToBottom(true);
 			}, 200);
 		};
 
@@ -234,11 +298,9 @@ export default function ChatScreen() {
 				setShowLoadMore(messages.length > visibleMessagesCount);
 
 				// Auto-scroll pour les nouveaux messages
-				if (flatListRef.current) {
-					setTimeout(() => {
-						flatListRef.current?.scrollToEnd({ animated: true });
-					}, 100);
-				}
+				setTimeout(() => {
+					scrollToBottom(true);
+				}, 100);
 			}
 		};
 
@@ -247,25 +309,39 @@ export default function ChatScreen() {
 
 	// Scroll initial quand le composant se monte avec des messages
 	useEffect(() => {
-		if (messages.length > 0 && flatListRef.current) {
+		if (messages.length > 0) {
 			// Délai plus long pour s'assurer que la FlatList est entièrement rendue
 			setTimeout(() => {
-				flatListRef.current?.scrollToEnd({ animated: false });
+				scrollToBottom(false);
 			}, 300);
 		}
-	}, []);
+	}, [scrollToBottom]);
 
 	// Scroll supplémentaire pour s'assurer qu'on voit le dernier message
 	useEffect(() => {
-		if (messages.length > 2 && flatListRef.current) {
-			// Scroll après le rendu initial
+		if (messages.length > 2) {
+			// Scroll après le rendu initial avec un délai plus court
 			const timer = setTimeout(() => {
-				flatListRef.current?.scrollToEnd({ animated: true });
-			}, 500);
+				scrollToBottom(true);
+			}, 200);
 
 			return () => clearTimeout(timer);
 		}
-	}, [messages.length > 2]);
+	}, [messages.length, scrollToBottom]);
+
+	// Effet spécifique pour détecter les nouveaux messages et forcer le scroll
+	useEffect(() => {
+		if (messages.length > 0) {
+			// Utiliser requestAnimationFrame pour s'assurer que le rendu est terminé
+			const scrollTimeout = setTimeout(() => {
+				requestAnimationFrame(() => {
+					scrollToBottom(true);
+				});
+			}, 50);
+
+			return () => clearTimeout(scrollTimeout);
+		}
+	}, [messages, scrollToBottom]);
 
 	// Gestion TTS pour les nouveaux messages de l'IA
 	useEffect(() => {
@@ -659,6 +735,9 @@ export default function ChatScreen() {
 
 			sendMessage(message, currentStep);
 			setMessage("");
+
+			// Force scroll après envoi du message
+			setTimeout(() => scrollToBottom(true), 100);
 		}
 	};
 
@@ -667,12 +746,15 @@ export default function ChatScreen() {
 		if (String(ctaMessage).trim().length > 0) {
 			const { currentStep } = visibleMessages.length > 0 ? visibleMessages[visibleMessages.length - 1] : { currentStep: "cta_ask_new_world" };
 			sendMessage(ctaMessage, currentStep, ctaValue);
+
+			// Force scroll après envoi du message CTA
+			setTimeout(() => scrollToBottom(true), 100);
 		}
 	};
 
 	/* ----------------------------- TTS ------------------------------ */
 
-	// Handle TTS replay for a specific message
+	// Handle TTS replay for a specific message - optimisé pour éviter les re-créations
 	const handleTTSReplay = useCallback(
 		async (messageId: string, messageText: string) => {
 			await playTTSMessage(messageId, messageText);
@@ -833,6 +915,7 @@ export default function ChatScreen() {
 	/*                             Variables                            */
 	/* ---------------------------------------------------------------- */
 
+	// Optimisation de la fonction renderMessage avec useCallback et dépendances stables
 	const renderMessage = useCallback(
 		({ item }: { item: Message }) => {
 			const isTTSActive = currentTTSItem?.id === item.id;
@@ -850,6 +933,9 @@ export default function ChatScreen() {
 		},
 		[currentTTSItem?.id, isTTSPlaying, isTTSLoading, userState.ttsEnabled, handleTTSReplay]
 	);
+
+	// Fonction keyExtractor optimisée
+	const keyExtractor = useCallback((item: Message) => item.id, []);
 
 	/* ---------------------------------------------------------------- */
 	/*                            CTA BUTTON                            */
@@ -910,18 +996,27 @@ export default function ChatScreen() {
 						ref={flatListRef}
 						data={visibleMessages}
 						renderItem={renderMessage}
-						keyExtractor={(item) => item.id}
+						keyExtractor={keyExtractor}
 						style={styles.messagesList}
 						contentContainerStyle={styles.messagesContent}
 						showsVerticalScrollIndicator={false}
 						onScroll={handleScroll}
-						scrollEventThrottle={400}
-						removeClippedSubviews={true}
-						initialNumToRender={10}
-						maxToRenderPerBatch={5}
+						scrollEventThrottle={16}
+						removeClippedSubviews={false}
+						initialNumToRender={20}
+						maxToRenderPerBatch={10}
 						updateCellsBatchingPeriod={50}
 						windowSize={10}
-						getItemLayout={undefined}
+						disableVirtualization={false}
+						legacyImplementation={false}
+						onContentSizeChange={() => {
+							// Forcer le scroll quand le contenu change
+							setTimeout(() => scrollToBottom(false), 50);
+						}}
+						onLayout={() => {
+							// Forcer le scroll lors du layout initial
+							setTimeout(() => scrollToBottom(false), 100);
+						}}
 					/>
 					{/* Loading Indicator */}
 					{isLoading && (
