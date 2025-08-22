@@ -471,20 +471,22 @@ export const sendMessageToAI = createAsyncThunk(
 		});
 
 		// Envoi en BDD
-		const prevUserAns = messages.filter((msg: any) => msg.isUser);
-		const lastUserMessage = prevUserAns[prevUserAns.length - 1];
+		if (!["continue_story", "pause_story"].includes(ctaValue ?? "")) {
+			const prevUserAns = messages.filter((msg: any) => msg.isUser);
+			const lastUserMessage = prevUserAns[prevUserAns.length - 1];
 
-		await fetch(`${process.env.EXPO_PUBLIC_API_URL}/api/users/interaction?lang=${language}`, {
-			method: "POST",
-			headers: { "Content-Type": "application/json" },
-			body: JSON.stringify({
-				user_uuid,
-				message: lastUserMessage,
-				world_id: world_id.length > 0 ? world_id : null,
-				character_id: character_id.length > 0 ? character_id : null,
-				interaction_source: "user",
-			}),
-		});
+			await fetch(`${process.env.EXPO_PUBLIC_API_URL}/api/users/interaction?lang=${language}`, {
+				method: "POST",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify({
+					user_uuid,
+					message: lastUserMessage,
+					world_id: world_id.length > 0 ? world_id : null,
+					character_id: character_id.length > 0 ? character_id : null,
+					interaction_source: "user",
+				}),
+			});
+		}
 
 		for (const message of response) {
 			message["timestamp"] = getCurrentTimestamp();

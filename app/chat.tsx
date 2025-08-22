@@ -198,10 +198,10 @@ export default function ChatScreen() {
 	const [pendingTranscriptionUri, setPendingTranscriptionUri] = useState<string | null>(null);
 	const [recordingStartTime, setRecordingStartTime] = useState<number | null>(null);
 
-	// Pagination des messages
-	const [visibleMessagesCount, setVisibleMessagesCount] = useState(50); // Nombre de messages visibles initialement
-	const [showLoadMore, setShowLoadMore] = useState(false);
-	const MESSAGES_PER_LOAD = 25; // Nombre de messages à charger à chaque fois
+	// Pagination des messages - DÉSACTIVÉE
+	// const [visibleMessagesCount, setVisibleMessagesCount] = useState(50);
+	// const [showLoadMore, setShowLoadMore] = useState(false);
+	// const MESSAGES_PER_LOAD = 25;
 
 	// Keyboard management
 	const [isKeyboardVisible, setIsKeyboardVisible] = useState(false);
@@ -274,74 +274,67 @@ export default function ChatScreen() {
 		};
 	}, []);
 
-	// Gestion de l'initialisation et du scroll des messages
+	// État pour tracker si on est en train de charger plus de messages
+	// const isLoadingMore = useRef(false);  // DÉSACTIVÉ
+	const previousMessageLength = useRef(0);
+
+	// Gestion de l'initialisation et du scroll des messages - SIMPLIFIÉ
 	useEffect(() => {
-		const handleMessagesUpdate = async () => {
+		const handleMessagesUpdate = () => {
 			if (messages.length === 0) {
 				dispatch(resetStore());
-				// Réinitialiser le set des messages vus quand on reset
 				seenMessageIds.current.clear();
-				setVisibleMessagesCount(50);
-				setShowLoadMore(false);
+				previousMessageLength.current = 0;
 			} else {
 				// Au premier chargement, marquer tous les messages existants comme "vus"
-				// pour éviter de jouer automatiquement les anciens messages
 				if (seenMessageIds.current.size === 0 && messages.length > 0) {
 					messages.forEach((message) => {
 						if (!message.isUser) {
 							seenMessageIds.current.add(message.id);
 						}
 					});
+					previousMessageLength.current = messages.length;
 				}
 
-				// Vérifier s'il y a plus de messages que ceux visibles
-				setShowLoadMore(messages.length > visibleMessagesCount);
+				// SEULEMENT scroll vers le bas si :
+				// 1. Ce n'est pas en cours de chargement des messages API
+				// 2. Le nombre de messages a vraiment augmenté (nouveaux messages)
+				const hasNewMessages = messages.length > previousMessageLength.current;
 
-				// Auto-scroll pour les nouveaux messages
-				setTimeout(() => {
-					scrollToBottom(true);
-				}, 100);
+				if (!isLoading && hasNewMessages) {
+					setTimeout(() => {
+						scrollToBottom(true);
+					}, 100);
+				}
+
+				previousMessageLength.current = messages.length;
 			}
 		};
 
 		handleMessagesUpdate();
-	}, [messages.length, dispatch, isLoading, visibleMessagesCount]);
+	}, [messages, dispatch, isLoading, scrollToBottom]);
 
-	// Scroll initial quand le composant se monte avec des messages
+	// Scroll initial au montage du composant - AMÉLIORE
 	useEffect(() => {
-		if (messages.length > 0) {
-			// Délai plus long pour s'assurer que la FlatList est entièrement rendue
-			setTimeout(() => {
-				scrollToBottom(false);
-			}, 300);
-		}
-	}, [scrollToBottom]);
+		// Scroll initial plus agressif pour s'assurer qu'on voit les derniers messages
+		const timer1 = setTimeout(() => {
+			scrollToBottom(false); // Pas d'animation au début
+		}, 50);
 
-	// Scroll supplémentaire pour s'assurer qu'on voit le dernier message
-	useEffect(() => {
-		if (messages.length > 2) {
-			// Scroll après le rendu initial avec un délai plus court
-			const timer = setTimeout(() => {
-				scrollToBottom(true);
-			}, 200);
+		const timer2 = setTimeout(() => {
+			scrollToBottom(false); // Double vérification
+		}, 200);
 
-			return () => clearTimeout(timer);
-		}
-	}, [messages.length, scrollToBottom]);
+		const timer3 = setTimeout(() => {
+			scrollToBottom(true); // Avec animation pour finaliser
+		}, 500);
 
-	// Effet spécifique pour détecter les nouveaux messages et forcer le scroll
-	useEffect(() => {
-		if (messages.length > 0) {
-			// Utiliser requestAnimationFrame pour s'assurer que le rendu est terminé
-			const scrollTimeout = setTimeout(() => {
-				requestAnimationFrame(() => {
-					scrollToBottom(true);
-				});
-			}, 50);
-
-			return () => clearTimeout(scrollTimeout);
-		}
-	}, [messages, scrollToBottom]);
+		return () => {
+			clearTimeout(timer1);
+			clearTimeout(timer2);
+			clearTimeout(timer3);
+		};
+	}, []); // Se déclenche uniquement au montage
 
 	// Gestion TTS pour les nouveaux messages de l'IA
 	useEffect(() => {
@@ -362,7 +355,7 @@ export default function ChatScreen() {
 		};
 
 		handleNewAIMessages();
-	}, [messages, isLoading, queueTTSMessage, isTTSReady, visibleMessagesCount, userState.ttsEnabled]);
+	}, [messages, isLoading, queueTTSMessage, isTTSReady, userState.ttsEnabled]);
 
 	// Gestion de la transcription après arrêt de l'enregistrement
 	useEffect(() => {
@@ -728,6 +721,30 @@ export default function ChatScreen() {
 
 	/* ----------------------------- Text ----------------------------- */
 
+	// Handle text change with auto scroll
+	const handleTextChange = useCallback(
+		(text: string) => {
+			setMessage(text);
+
+			// Scroll vers le bas quand l'utilisateur commence à taper
+			// Seulement si le clavier est visible pour éviter les scrolls inutiles
+			if (isKeyboardVisible) {
+				setTimeout(() => {
+					scrollToBottom(true);
+				}, 50);
+			}
+		},
+		[isKeyboardVisible, scrollToBottom]
+	);
+
+	// Handle input focus with auto scroll
+	const handleInputFocus = useCallback(() => {
+		// Scroll vers le bas quand l'utilisateur focus sur l'input
+		setTimeout(() => {
+			scrollToBottom(true);
+		}, 100);
+	}, [scrollToBottom]);
+
 	// Send text message
 	const handleSend = () => {
 		if (String(message).trim().length > 0) {
@@ -865,36 +882,13 @@ export default function ChatScreen() {
 		}
 	};
 
-	/* ----------------------------- Message Pagination -------------- */
+	/* ----------------------------- Message Pagination - DÉSACTIVÉ -------------- */
 
-	// Charger plus de messages
-	const loadMoreMessages = () => {
-		const newCount = Math.min(visibleMessagesCount + MESSAGES_PER_LOAD, messages.length);
-		setVisibleMessagesCount(newCount);
-	};
-
-	// Calculer les messages visibles (les plus récents) avec useMemo pour optimiser les performances
-	const visibleMessages = useMemo(() => {
-		const totalMessages = messages.length;
-		if (totalMessages <= visibleMessagesCount) {
-			return messages;
-		}
-
-		// Prendre les derniers messages (les plus récents)
-		const startIndex = Math.max(0, totalMessages - visibleMessagesCount);
-		return messages.slice(startIndex);
-	}, [messages, visibleMessagesCount]);
-
-	// Gérer le scroll pour détecter le haut de la liste
+	// Montrer tous les messages maintenant (pas de pagination)
+	const visibleMessages = messages; // Gérer le scroll - SIMPLIFIÉ (plus de détection load more)
 	const handleScroll = (event: any) => {
-		const { contentOffset, contentSize, layoutMeasurement } = event.nativeEvent;
-
-		// Si on scroll vers le haut et qu'on est proche du début
-		if (contentOffset.y <= 100 && showLoadMore) {
-			loadMoreMessages();
-		}
+		// Plus de logique de load more - juste un handler vide pour la FlatList
 	};
-
 	useEffect(() => {
 		(async () => {
 			if (username) {
@@ -982,15 +976,7 @@ export default function ChatScreen() {
 			>
 				{/* Messages Panel */}
 				<View style={[styles.messagesPanel, { paddingBottom: isKeyboardVisible ? 10 : 0 }]}>
-					{/* Load More Indicator */}
-					{showLoadMore && (
-						<View style={styles.loadMoreIndicator}>
-							<Pressable style={styles.loadMoreButton} onPress={loadMoreMessages}>
-								<MaterialCommunityIcons name="chevron-up" size={16} color="#9a8c98" />
-								<Text style={styles.loadMoreText}>{t("chat.loadMore", { count: messages.length - visibleMessagesCount })}</Text>
-							</Pressable>
-						</View>
-					)}
+					{/* Load More Indicator - DÉSACTIVÉ */}
 
 					<FlatList
 						ref={flatListRef}
@@ -1009,14 +995,6 @@ export default function ChatScreen() {
 						windowSize={10}
 						disableVirtualization={false}
 						legacyImplementation={false}
-						onContentSizeChange={() => {
-							// Forcer le scroll quand le contenu change
-							setTimeout(() => scrollToBottom(false), 50);
-						}}
-						onLayout={() => {
-							// Forcer le scroll lors du layout initial
-							setTimeout(() => scrollToBottom(false), 100);
-						}}
 					/>
 					{/* Loading Indicator */}
 					{isLoading && (
@@ -1047,7 +1025,8 @@ export default function ChatScreen() {
 								placeholder={t("chat.placeholder")}
 								placeholderTextColor="#9a8c98"
 								value={isTranscribing ? typingDots : message}
-								onChangeText={setMessage}
+								onChangeText={handleTextChange}
+								onFocus={handleInputFocus}
 								multiline
 								maxLength={500}
 								editable={!isTranscribing && !isLoading}

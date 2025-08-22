@@ -20,7 +20,7 @@ export const useChatActions = () => {
 				ctaValue,
 			};
 
-			if (!["continue_story", "pause_story"].includes(ctaValue || "")) {
+			if (!["continue_story", "pause_story"].includes(ctaValue ?? "")) {
 				dispatch(addMessage(newMessage));
 			}
 			dispatch(sendMessageToAI({ text, ctaValue }));
