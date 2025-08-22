@@ -4,15 +4,27 @@ export interface TTSOptions {
 	text: string;
 	languageCode?: string;
 	voiceName?: string;
-	gender?: string;
-	audioEncoding?: string;
-	speakingRate?: number;
-	pitch?: number;
+	gender?: string; // "MALE" | "FEMALE" | "NEUTRAL"
+	audioEncoding?: string; // "MP3" | "OGG_OPUS" | "LINEAR16"
+	speakingRate?: number; // fallback si pas de SSML
+	pitch?: number; // fallback si pas de SSML
+
+	// --- Ajouts pour diction dynamique/envoûtante ---
+	useSSML?: boolean; // bascule en SSML
+	style?: "enchanted" | "neutral" | "urgent"; // presets prosodie Odyssai
+	googleStyle?: "lively" | "calm" | "empathetic" | "firm" | "apologetic"; // si voix compatible
+	phonemes?: Array<{ word: string; ipa: string }>; // prononciations personnalisées
+	commaPauseMs?: number; // pause après virgules (par défaut 120ms)
+	sentencePauseMs?: number; // pause fin de phrase (par défaut 280ms)
+	volumeGainDb?: number; // -96.0 à +16.0
+	sampleRateHertz?: number; // ex: 22050, 24000, 44100
+	effectsProfileId?: string[]; // ex: ["headphone-class-device"]
 }
 
 interface GoogleTTSRequest {
 	input: {
-		text: string;
+		text?: string;
+		ssml?: string;
 	};
 	voice: {
 		languageCode: string;
@@ -21,8 +33,11 @@ interface GoogleTTSRequest {
 	};
 	audioConfig: {
 		audioEncoding: string;
-		speakingRate: number;
-		pitch: number;
+		speakingRate?: number;
+		pitch?: number;
+		volumeGainDb?: number;
+		sampleRateHertz?: number;
+		effectsProfileId?: string[];
 	};
 }
 
@@ -50,13 +65,13 @@ class TTSService {
 
 		// Map les codes de langue i18n vers les codes TTS Google Cloud
 		const languageMap: { [key: string]: string } = {
-			en: "en-US",
+			en: "en-GB",
 			fr: "fr-FR",
-			"en-US": "en-US",
+			"en-US": "en-GB",
 			"fr-FR": "fr-FR",
 		};
 
-		const mappedLanguage = languageMap[currentLanguage] || "en-US";
+		const mappedLanguage = languageMap[currentLanguage] || "en-GB";
 
 		return mappedLanguage;
 	}
@@ -69,15 +84,63 @@ class TTSService {
 
 		// Voix par défaut recommandées pour chaque langue
 		const voiceMap: { [key: string]: string } = {
-			en: "en-US-Wavenet-D", // Voix masculine naturelle
-			"en-US": "en-US-Wavenet-D",
-			fr: "fr-FR-Wavenet-D",
-			"fr-FR": "fr-FR-Wavenet-D",
+			en: "en-GB-Chirp3-HD-Leda",
+			"en-GB": "en-GB-Chirp3-HD-Leda",
+			fr: "fr-FR-Chirp3-HD-Charon",
+			"fr-FR": "fr-FR-Chirp3-HD-Charon",
 		};
 
 		const selectedVoice = voiceMap[currentLanguage];
 
 		return selectedVoice;
+	}
+
+	// ========================== Helpers SSML ==========================
+
+	private escapeSSML(s: string) {
+		return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&apos;");
+	}
+
+	private buildOdyssaiSSML(text: string, opt: TTSOptions): string {
+		const t = this.escapeSSML(text.trim());
+
+		// Pauses
+		const comma = (opt.commaPauseMs ?? 140) + "ms";
+		const sent = (opt.sentencePauseMs ?? 300) + "ms";
+
+		let withBreaks = t.replace(/,\s+/g, `,<break time="${comma}"/> `).replace(/([.!?])\s+/g, `$1<break time="${sent}"/> `);
+
+		// Phonèmes
+		if (opt.phonemes?.length) {
+			for (const { word, ipa } of opt.phonemes) {
+				const re = new RegExp(`\\b${word}\\b`, "gi");
+				withBreaks = withBreaks.replace(re, `<phoneme alphabet="ipa" ph="${ipa}">${word}</phoneme>`);
+			}
+		}
+
+		// Prosodie par preset
+		let rate = "1.0";
+		let pitch = "0st";
+		switch (opt.style) {
+			case "enchanted":
+				rate = "0.98";
+				pitch = "+1st";
+				break;
+			case "urgent":
+				rate = "1.08";
+				pitch = "+0st";
+				break;
+			case "neutral":
+			default:
+				rate = "1.0";
+				pitch = "0st";
+		}
+
+		// Encapsulage optionnel style Google (si demandé)
+		const styleOpen = opt.googleStyle ? `<google:style name="${opt.googleStyle}">` : "";
+		const styleClose = opt.googleStyle ? `</google:style>` : "";
+
+		return `<speak>${styleOpen}<prosody rate="${rate}" pitch="${pitch}">${withBreaks}</prosody>${styleClose}</speak>`;
 	}
 
 	/**
@@ -94,20 +157,27 @@ class TTSService {
 			// Utilise automatiquement la langue courante de l'app
 			const languageCode = options.languageCode || this.getLanguageCode();
 			const defaultVoice = this.getDefaultVoice();
+			const voiceName = options.voiceName || defaultVoice;
+
+			// Bascule SSML si demandé
+			const useSSML = !!options.useSSML;
+			const ssml = useSSML ? this.buildOdyssaiSSML(options.text, options) : undefined;
 
 			const request: GoogleTTSRequest = {
-				input: {
-					text: options.text,
-				},
+				input: ssml ? { ssml } : { text: options.text },
 				voice: {
 					languageCode: languageCode,
-					name: options.voiceName || defaultVoice,
+					name: voiceName,
 					ssmlGender: options.gender || "NEUTRAL",
 				},
 				audioConfig: {
 					audioEncoding: options.audioEncoding || "MP3",
-					speakingRate: options.speakingRate || 1.0,
-					pitch: options.pitch || 0.0,
+					// Si SSML est fourni, speakingRate/pitch peuvent être omis (gérés par <prosody>)
+					speakingRate: useSSML ? undefined : options.speakingRate || 1.0,
+					pitch: useSSML ? undefined : options.pitch || 0.0,
+					volumeGainDb: options.volumeGainDb ?? 0.0,
+					sampleRateHertz: options.sampleRateHertz,
+					effectsProfileId: options.effectsProfileId,
 				},
 			};
 

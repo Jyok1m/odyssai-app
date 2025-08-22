@@ -934,7 +934,11 @@ export default function ChatScreen() {
 				{/* Input Section */}
 
 				{showCta ? (
-					<ActionButtons currentStep={messages[messages.length - 1]?.currentStep ?? "cta_ask_new_world"} onButtonPress={handleSendCta} />
+					<ActionButtons
+						currentStep={messages[messages.length - 1]?.currentStep ?? "cta_ask_new_world"}
+						onButtonPress={handleSendCta}
+						disabled={isLoading}
+					/>
 				) : (
 					<View style={styles.inputSection}>
 						{(recorderState.isRecording || isRecordingManually) && (
@@ -951,13 +955,13 @@ export default function ChatScreen() {
 								onChangeText={setMessage}
 								multiline
 								maxLength={500}
-								editable={!isTranscribing}
+								editable={!isTranscribing && !isLoading}
 							/>
 							<View style={styles.buttonsContainer}>
 								<Pressable
 									style={({ pressed }) => [styles.actionButton, styles.sendButton, { opacity: pressed ? 0.6 : isTranscribing ? 0.5 : 1 }]}
 									onPress={handleSend}
-									disabled={isTranscribing}
+									disabled={isTranscribing || isLoading}
 								>
 									<MaterialCommunityIcons name="send" size={20} color="#f2e9e4" />
 								</Pressable>
@@ -977,7 +981,7 @@ export default function ChatScreen() {
 											cancelTranscription();
 										}
 									}}
-									disabled={false}
+									disabled={isLoading}
 								>
 									<MaterialCommunityIcons
 										name={recorderState.isRecording || isRecordingManually ? "stop" : isTranscribing ? "close" : "microphone"}

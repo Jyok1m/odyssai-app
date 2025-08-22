@@ -51,7 +51,7 @@ export const useTTS = (): UseTTSReturn => {
 	// Default TTS options - laisse le service TTS détecter automatiquement la langue
 	const defaultOptions: Partial<TTSOptions> = {
 		audioEncoding: "MP3",
-		speakingRate: 1.0,
+		speakingRate: 0.9,
 		pitch: 0.0,
 		// Pas de languageCode ni voiceName - détection automatique par le service
 	};

@@ -446,15 +446,7 @@ export const sendMessageToAI = createAsyncThunk(
 					}
 
 					case "pause_story": {
-						response.push({
-							id: uuidv4(),
-							currentStep: "filler",
-							text: storeI18nService.t("messages.changeMindGeneric"),
-							isUser: false,
-							timestamp: getCurrentTimestamp(),
-						});
-
-						nextQuestion = storeI18nService.t("messages.readyToContinueStory");
+						nextQuestion = storeI18nService.t("messages.changeMindGeneric");
 						nextStep = currentStep;
 					}
 				}
@@ -465,15 +457,7 @@ export const sendMessageToAI = createAsyncThunk(
 				const aiResponse = await fetchAIResponse("POST", `/game/action?lang=${language}`, { world_id, character_id, player_answer: userAnswer });
 				const { immediate_events } = aiResponse;
 
-				response.push({
-					id: uuidv4(),
-					currentStep: "filler",
-					text: immediate_events,
-					isUser: false,
-					timestamp: getCurrentTimestamp(),
-				});
-
-				nextQuestion = storeI18nService.t("messages.continueWithStory");
+				nextQuestion = immediate_events;
 				nextStep = "cta_get_prompt";
 			}
 		}

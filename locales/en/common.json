@@ -135,8 +135,8 @@
 		"rejoin_world": "Let's go!",
 		"pause_rejoin_world": "Not right now",
 
-		"continue_story": "Yes!",
-		"pause_story": "Not right now"
+		"continue_story": "Next scene",
+		"pause_story": "Pause"
 	},
 	"messages": {
 		"welcome": "Welcome to Odyssai. Answer a few questions and we’re off!",
