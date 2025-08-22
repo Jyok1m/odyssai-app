@@ -20,7 +20,7 @@ const userSlice = createSlice({
 	name: "user",
 	initialState,
 	reducers: {
-		setUser: (state, action: PayloadAction<{ user_uuid: string; username: string; language: string | null }>) => {
+		setUser: (state, action: PayloadAction<{ user_uuid: string; username: string; language: string | null; ttsEnabled: boolean }>) => {
 			state.user_uuid = action.payload.user_uuid;
 			state.username = action.payload.username;
 			state.isAuthenticated = true;

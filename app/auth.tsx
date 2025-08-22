@@ -59,7 +59,7 @@ export default function AuthScreen() {
 					}
 				};
 				await sendDefaultMessages();
-				dispatch(setUser({ username, user_uuid: user_id, language: selectedLanguage }));
+				dispatch(setUser({ username, user_uuid: user_id, language: selectedLanguage, ttsEnabled: true }));
 			} else if (response.status === 200) {
 				const {
 					username,
@@ -109,7 +109,7 @@ export default function AuthScreen() {
 					);
 
 					// Dispatcher l'utilisateur en dernier
-					dispatch(setUser({ username, user_uuid: uuid, language }));
+					dispatch(setUser({ username, user_uuid: uuid, language, ttsEnabled: true }));
 
 					// Attendre que le state soit mis à jour avant de changer la langue
 					setTimeout(() => {
